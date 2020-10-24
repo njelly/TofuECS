@@ -7,5 +7,6 @@ namespace Tofunaut.TofuECS
     public struct WorldConfig
     {
         public Fix64 DeltaTime;
+        public int MaxComponents;
     }
 }
