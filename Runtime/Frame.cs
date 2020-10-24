@@ -9,7 +9,7 @@ namespace Tofunaut.TofuECS
     [Serializable]
     public unsafe class Frame
     {
-        public ulong Number;
+        public ulong number;
         public Fix64 DeltaTime;
         private Dictionary<Type, void*[]> _typeToComponentArray;
         private Dictionary<Type, bool[]> _typeToComponentInUseArray;
@@ -19,7 +19,7 @@ namespace Tofunaut.TofuECS
         public Frame(Fix64 deltaTime)
         {
             DeltaTime = deltaTime;
-            Number = 0;
+            number = 0;
             _typeToComponentArray = new Dictionary<Type, void*[]>();
             _typeToComponentInUseArray = new Dictionary<Type, bool[]>();
             _entityToComponentTypeToIndex = new Dictionary<int, Dictionary<Type, int>>();
@@ -28,7 +28,7 @@ namespace Tofunaut.TofuECS
 
         public Frame(Frame previousFrame)
         {
-            Number = previousFrame.Number + 1;
+            number = previousFrame.number + 1;
             DeltaTime = previousFrame.DeltaTime;
             _typeToComponentArray = new Dictionary<Type, void*[]>(previousFrame._typeToComponentArray);
             _typeToComponentInUseArray = new Dictionary<Type, bool[]>(previousFrame._typeToComponentInUseArray);
@@ -44,7 +44,9 @@ namespace Tofunaut.TofuECS
 
         public int Create()
         {
-            return _entityCounter++;
+            _entityCounter++;
+            _entityToComponentTypeToIndex.Add(_entityCounter, new Dictionary<Type, int>());
+            return _entityCounter;
         }
 
         public void Destroy(int entity)
@@ -54,6 +56,8 @@ namespace Tofunaut.TofuECS
 
             foreach (var componentType in typeToComponentIndex.Keys)
                 _typeToComponentInUseArray[componentType][typeToComponentIndex[componentType]] = false;
+            
+            _entityToComponentTypeToIndex.Remove(entity);
         }
 
         public Filter<TComponent> Filter<TComponent>() where TComponent : unmanaged, IComponent
@@ -79,7 +83,8 @@ namespace Tofunaut.TofuECS
         {
             // find the index of the component that is not in use
             if(!_typeToComponentInUseArray.TryGetValue(typeof(TComponent), out var inUseArray))
-                throw new InvalidOperationException($"the type {typeof(TComponent).FullName} has not been registered and cannot be added to the entity");
+                throw new InvalidOperationException(
+                    $"the type {typeof(TComponent).FullName} has not been registered and cannot be added to the entity");
             var i = 0;
             for(; i < inUseArray.Length; i++)
                 if (!inUseArray[i])
@@ -92,7 +97,8 @@ namespace Tofunaut.TofuECS
             if (!_entityToComponentTypeToIndex.TryGetValue(entity, out var typeToComponentIndex))
                 throw new InvalidOperationException($"the entity {i} has not been created yet");
             if (typeToComponentIndex.ContainsKey(typeof(TComponent)))
-                throw new InvalidOperationException($"the entity {i} already has a component of type {typeof(TComponent).FullName}");
+                throw new InvalidOperationException(
+                    $"the entity {i} already has a component of type {typeof(TComponent).FullName}");
 
             // record the entity as using the i'th component
             typeToComponentIndex.Add(typeof(TComponent), i);

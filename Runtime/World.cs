@@ -14,7 +14,7 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// The most recent frame to be verified over the network.
         /// </summary>
-        public Frame Verified { get; private set; }
+        public Frame Verified { get; private set; } // TODO: rollback
         
         /// <summary>
         /// Contains initialization data about the ECS World.
@@ -24,7 +24,7 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// Has the first Update() been called?
         /// </summary>
-        public bool HasStarted => Predicted.Number > 0;
+        public bool HasStarted => Predicted.number > 0;
 
         private readonly System[] _systems;
 

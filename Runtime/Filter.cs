@@ -6,8 +6,10 @@ namespace Tofunaut.TofuECS
 {
     public unsafe class Filter<TComponent> where TComponent : unmanaged, IComponent
     {
+        public int Count => _entities.Length;
+        
         private readonly Frame _f;
-        private int[] _entities;
+        private readonly int[] _entities;
         private int _currentIndex;
         
         internal Filter(Frame frame, int[] entities)
@@ -19,10 +21,20 @@ namespace Tofunaut.TofuECS
         
         public bool Next(out int entity, out TComponent* component)
         {
-            entity = _entities[_currentIndex++];
+            entity = 0;
             component = null;
+
+            if (_currentIndex >= _entities.Length)
+                return false;
+
+            entity = _entities[_currentIndex];
+
+            if (!_f.TryGetComponent(_entities[_currentIndex], out component)) 
+                return false;
             
-            return _currentIndex < _entities.Length && _f.TryGetComponent(entity, out component);
+            _currentIndex++;
+            return true;
+
         }
     }
 }
