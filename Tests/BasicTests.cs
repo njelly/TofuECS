@@ -32,7 +32,7 @@ namespace Tofunaut.TofuECS.Tests
             counter->SomeNum += 1;
             
             world.Predicted.TryGetComponent(counterEntity, out Counter* theSameCounter);
-            Assert.IsTrue(theSameCounter->SomeNum == counter->SomeNum);
+            Assert.IsTrue(theSameCounter->SomeNum == 1);
             
             Assert.IsTrue(world.Predicted.number == 0);
             world.Update();
