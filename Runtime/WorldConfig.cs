@@ -8,5 +8,6 @@ namespace Tofunaut.TofuECS
     {
         public Fix64 DeltaTime;
         public int MaxComponents;
+        public int MaxEntities;
     }
 }
