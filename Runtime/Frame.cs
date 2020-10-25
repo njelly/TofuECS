@@ -11,7 +11,7 @@ namespace Tofunaut.TofuECS
     {
         public ulong number;
         public Fix64 DeltaTime;
-        private Dictionary<Type, void*[]> _typeToComponentArray;
+        private Dictionary<Type, IComponent[]> _typeToComponentArray;
         private Dictionary<Type, bool[]> _typeToComponentInUseArray;
         private Dictionary<int, Dictionary<Type, int>> _entityToComponentTypeToIndex;
         private int _entityCounter;
@@ -20,7 +20,7 @@ namespace Tofunaut.TofuECS
         {
             DeltaTime = deltaTime;
             number = 0;
-            _typeToComponentArray = new Dictionary<Type, void*[]>();
+            _typeToComponentArray = new Dictionary<Type, IComponent[]>();
             _typeToComponentInUseArray = new Dictionary<Type, bool[]>();
             _entityToComponentTypeToIndex = new Dictionary<int, Dictionary<Type, int>>();
             _entityCounter = int.MinValue;
@@ -30,15 +30,15 @@ namespace Tofunaut.TofuECS
         {
             number = previousFrame.number + 1;
             DeltaTime = previousFrame.DeltaTime;
-            _typeToComponentArray = new Dictionary<Type, void*[]>(previousFrame._typeToComponentArray);
+            _typeToComponentArray = new Dictionary<Type, IComponent[]>(previousFrame._typeToComponentArray);
             _typeToComponentInUseArray = new Dictionary<Type, bool[]>(previousFrame._typeToComponentInUseArray);
             _entityToComponentTypeToIndex = new Dictionary<int, Dictionary<Type, int>>(previousFrame._entityToComponentTypeToIndex);
             _entityCounter = previousFrame._entityCounter;
         }
 
-        internal void RegisterComponent<TComponent>(int max) where TComponent : unmanaged, IComponent
+        internal void RegisterComponent<TComponent>(int max) where TComponent : class, IComponent, new()
         {
-            _typeToComponentArray.Add(typeof(TComponent), new void*[max]);
+            _typeToComponentArray.Add(typeof(TComponent), new IComponent[max]);
             _typeToComponentInUseArray.Add(typeof(TComponent), new bool[max]);
         }
 
@@ -60,13 +60,13 @@ namespace Tofunaut.TofuECS
             _entityToComponentTypeToIndex.Remove(entity);
         }
 
-        public Filter<TComponent> Filter<TComponent>() where TComponent : unmanaged, IComponent
+        public Filter<TComponent> Filter<TComponent>() where TComponent : class, IComponent, new()
         {
             var entitiesWithComponent = _entityToComponentTypeToIndex.Keys.Where(entity => _entityToComponentTypeToIndex[entity].ContainsKey(typeof(TComponent))).ToArray();
             return new Filter<TComponent>(this, entitiesWithComponent);
         }
 
-        public bool TryGetComponent<TComponent>(int entity, out TComponent* component) where TComponent : unmanaged, IComponent
+        public bool TryGetComponent<TComponent>(int entity, out TComponent component) where TComponent : class, IComponent, new()
         {
             component = null;
             
@@ -75,11 +75,11 @@ namespace Tofunaut.TofuECS
                 !typeToIndex.TryGetValue(typeof(TComponent), out var index)) 
                 return false;
             
-            component = (TComponent*)componentArray[index];
+            component = (TComponent)componentArray[index];
             return true;
         }
 
-        public TComponent* AddComponent<TComponent>(int entity) where TComponent : unmanaged, IComponent
+        public TComponent AddComponent<TComponent>(int entity) where TComponent : class, IComponent, new()
         {
             // find the index of the component that is not in use
             if(!_typeToComponentInUseArray.TryGetValue(typeof(TComponent), out var inUseArray))
@@ -114,11 +114,11 @@ namespace Tofunaut.TofuECS
             
             // reset the component
             var newComponent = new TComponent();
-            componentArray[i] = &newComponent;
-            return (TComponent*)componentArray[i];
+            componentArray[i] = newComponent;
+            return (TComponent)componentArray[i];
         }
 
-        public void RemoveComponent<TComponent>(int entity) where TComponent : unmanaged, IComponent
+        public void RemoveComponent<TComponent>(int entity) where TComponent : class, IComponent, new()
         {
             if (_typeToComponentInUseArray.TryGetValue(typeof(TComponent), out var inUseArray)
                 && _entityToComponentTypeToIndex.TryGetValue(entity, out var typeToComponentIndex))

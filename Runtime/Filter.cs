@@ -4,7 +4,7 @@ using Tofunaut.TofuECS.Interfaces;
 
 namespace Tofunaut.TofuECS
 {
-    public unsafe class Filter<TComponent> where TComponent : unmanaged, IComponent
+    public class Filter<TComponent> where TComponent : class, IComponent, new()
     {
         public int Count => _entities.Length;
         
@@ -19,7 +19,7 @@ namespace Tofunaut.TofuECS
             _currentIndex = 0;
         }
         
-        public bool Next(out int entity, out TComponent* component)
+        public bool Next(out int entity, out TComponent component)
         {
             entity = 0;
             component = null;

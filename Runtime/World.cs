@@ -36,7 +36,7 @@ namespace Tofunaut.TofuECS
             _systems = systems;
         }
 
-        public void RegisterComponent<T>() where T : unmanaged, IComponent
+        public void RegisterComponent<T>() where T : class, IComponent, new()
         {
             if(HasStarted)
                 throw new InvalidOperationException("the World has already started, and new component types cannot be registered");
