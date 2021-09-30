@@ -1,0 +1,17 @@
+{
+  "name": "com.tofunaut.tofuecs",
+  "version": "1.0.0",
+  "displayName": "TofuECS",
+  "description": "A bare-bones Entity Component System for Unity",
+  "unity": "2020.3",
+  "keywords": [
+    "entity",
+    "component",
+    "system",
+    "ecs"
+  ],
+  "author": {
+    "name": "Nathaniel Ellingson",
+    "url": "https://www.tofunaut.com"
+  }
+}

@@ -2,6 +2,6 @@ namespace Tofunaut.TofuECS
 {
     public interface ISystem
     {
-        void Process(Simulation simulation);
+        void Process(Simulation sim);
     }
 }

@@ -47,21 +47,11 @@ public class RuntimeTests
 
     private unsafe class TestSystem : ISystem
     {
-        public void Process(Simulation simulation)
+        public void Process(Simulation sim)
         {
-            var iter = simulation.GetIterator<TestComponent>();
+            var iter = sim.GetIterator<TestComponent>();
             while (iter.NextUnsafe(out var entity, out var testComponent))
                 testComponent->Value++;
         }
     }
-
-    //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
-    //// `yield return null;` to skip a frame.
-    //[UnityTest]
-    //public IEnumerator RuntimeTestsWithEnumeratorPasses()
-    //{
-    //    // Use the Assert class to test conditions.
-    //    // Use yield to skip a frame.
-    //    yield return null;
-    //}
 }
