@@ -12,17 +12,21 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         [SerializeField] private Text _tickIntervalSliderText;
         [SerializeField] private Button _pauseButton;
         [SerializeField] private Text _pauseButtonLabel;
+        [SerializeField] private Text _tickNumberLabel;
+        [SerializeField] private InputField _seedInputField;
+        [SerializeField] private Button _resetButton;
 
         private float _tickTimer;
         private float _tickInterval = 0.017f;
         private bool _isPaused;
 
-        private void Awake()
+        private void Start()
         {
             _tickButton.onClick.RemoveAllListeners();
             _tickButton.onClick.AddListener(() => 
             {
                 _simulationRunner.DoTick();
+                _tickNumberLabel.text = $"Tick: {_simulationRunner.TickNumber}";
             });
 
             void UpdateIntervalSliderText(float interval)
@@ -46,6 +50,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _isPaused = !_isPaused;
                 _pauseButtonLabel.text = _isPaused ? "Unpause" : "Pause";
             });
+
+            _seedInputField.text = _simulationRunner.Seed.ToString();
+
+            _resetButton.onClick.RemoveAllListeners();
+            _resetButton.onClick.AddListener(() =>
+            {
+                _simulationRunner.Reset(_seedInputField.text.GetHashCode());
+            });
         }
 
         private void Update()
@@ -58,6 +70,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             {
                 _tickTimer += _tickInterval;
                 _simulationRunner.DoTick();
+                _tickNumberLabel.text = $"Tick: {_simulationRunner.TickNumber}";
             }
         }
     }

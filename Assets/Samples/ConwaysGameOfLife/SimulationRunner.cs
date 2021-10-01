@@ -10,13 +10,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
     {
         [SerializeField] private Vector2Int _worldSize;
 
+        public int TickNumber => _sim.TickNumber;
         public int Seed { get; private set; }
 
         private Simulation _sim;
         private Entity _boardEntity;
         private Texture2D _tex2D;
 
-        private void Start()
+        private void Awake()
         {
             var spriteGo = new GameObject("Sprite", typeof(SpriteRenderer));
             var spriteRenderer = spriteGo.GetComponent<SpriteRenderer>();
@@ -25,6 +26,16 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             var sprite = Sprite.Create(_tex2D, new Rect(0, 0, _worldSize.x, _worldSize.y), Vector2.zero, 16f);
             spriteRenderer.sprite = sprite;
 
+            Reset((int)DateTime.Now.Ticks);
+        }
+
+        public void Reset(int seed)
+        {
+            if(_sim != null)
+            {
+                _sim.GetComponent<Board>(_boardEntity).Dispose();
+            }
+
             _sim = new Simulation();
             _sim.RegisterComponent<Board>();
             var boardSystem = new BoardSystem();
@@ -32,11 +43,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _boardEntity = _sim.CreateEntity();
             _sim.AddComponent<Board>(_boardEntity);
 
+            Seed = seed;
+            var r = new System.Random(Seed);
+
             var board = _sim.GetComponentUnsafe<Board>(_boardEntity);
             board->Init(_worldSize.x, _worldSize.y);
             Board.OnSetCellValue += Board_OnSetCellValue;
 
-            var perlinOffset = new Vector2(UnityEngine.Random.value * 9999f, UnityEngine.Random.value * 9999f);
+            var perlinOffset = new Vector2((float)r.NextDouble() * 9999f, (float)r.NextDouble() * 9999f);
             var perlinScale = 0.01f;
 
             for (var x = 0; x < _worldSize.x; x++)
@@ -44,7 +58,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 for (var y = 0; y < _worldSize.y; y++)
                 {
                     var perlinCoord = new Vector2(x * perlinScale, y * perlinScale) + perlinOffset;
-                    SetCellValue(x, y, UnityEngine.Random.value > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y) / 1.2f);
+                    SetCellValue(x, y, r.NextDouble() > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y) / 1.2f);
                 }
             }
         }
@@ -89,6 +103,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
             public void Init(int width, int height)
             {
+                Dispose();
+
                 Width = width;
                 Height = height;
                 State = (bool*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)) * Width * Height);
