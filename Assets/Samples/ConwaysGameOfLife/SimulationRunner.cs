@@ -9,43 +9,49 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
     public unsafe class SimulationRunner : MonoBehaviour
     {
         [SerializeField] private Vector2Int _worldSize;
-        [SerializeField] private CellView _cellViewPrefab;
+
+        public int Seed { get; private set; }
 
         private Simulation _sim;
-        private CellView[,] _cellViews;
         private Entity _boardEntity;
+        private Texture2D _tex2D;
 
         private void Start()
         {
-            _cellViews = new CellView[_worldSize.x, _worldSize.y];
+            var spriteGo = new GameObject("Sprite", typeof(SpriteRenderer));
+            var spriteRenderer = spriteGo.GetComponent<SpriteRenderer>();
+            _tex2D = new Texture2D(_worldSize.x, _worldSize.y);
+            _tex2D.filterMode = FilterMode.Point;
+            var sprite = Sprite.Create(_tex2D, new Rect(0, 0, _worldSize.x, _worldSize.y), Vector2.zero, 16f);
+            spriteRenderer.sprite = sprite;
 
             _sim = new Simulation();
             _sim.RegisterComponent<Board>();
             var boardSystem = new BoardSystem();
-            boardSystem.OnSetCellValue += BoardSystem_OnSetCellValue;
             _sim.RegisterSystem(boardSystem);
             _boardEntity = _sim.CreateEntity();
             _sim.AddComponent<Board>(_boardEntity);
 
             var board = _sim.GetComponentUnsafe<Board>(_boardEntity);
             board->Init(_worldSize.x, _worldSize.y);
+            Board.OnSetCellValue += Board_OnSetCellValue;
 
-            for(var x = 0; x < _worldSize.x; x++)
+            var perlinOffset = new Vector2(UnityEngine.Random.value * 9999f, UnityEngine.Random.value * 9999f);
+            var perlinScale = 0.01f;
+
+            for (var x = 0; x < _worldSize.x; x++)
             {
-                for(var y = 0; y < _worldSize.y; y++)
+                for (var y = 0; y < _worldSize.y; y++)
                 {
-                    CreateCell(x, y);
+                    var perlinCoord = new Vector2(x * perlinScale, y * perlinScale) + perlinOffset;
+                    SetCellValue(x, y, UnityEngine.Random.value > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y) / 1.2f);
                 }
             }
-
-            //SetValue(10, 10, true);
-            //SetValue(10, 12, true);
-            //SetValue(11, 11, true);
         }
 
-        private void BoardSystem_OnSetCellValue(object sender, (Vector2Int, bool) e)
+        private void Board_OnSetCellValue(object sender, (Vector2Int, bool) e)
         {
-            SetValue(e.Item1.x, e.Item1.y, e.Item2);
+            _tex2D.SetPixel(e.Item1.x, e.Item1.y, e.Item2 ? Color.white : Color.black);
         }
 
         private void OnDestroy()
@@ -54,32 +60,29 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             board.Dispose();
         }
 
-        public void SetValue(int x, int y, bool v)
+        public void SetCellValue(int x, int y, bool v)
         {
             var board = _sim.GetComponentUnsafe<Board>(_boardEntity);
-            board->SetState(x, y, v);
-            _cellViews[x, y].SetState(v);
+            board->SetCellValue(x, y, v);
         }
 
-        public void DoTick() => _sim.Tick();
+        public void DoTick()
+        {
+            _sim.Tick();
+            _tex2D.Apply();
+        }
 
-        public bool GetValue(int x, int y)
+        public bool GetCellValue(int x, int y)
         {
             var board = _sim.GetComponent<Board>(_boardEntity);
             return board.GetState(x, y);
         }
 
-        private void CreateCell(int x, int y)
-        {
-            var cellView = Instantiate(_cellViewPrefab);
-            cellView.transform.position = new Vector3(x, y, 0);
-            cellView.SetState(false);
-            _cellViews[x, y] = cellView;
-        }
-
         [StructLayout(LayoutKind.Sequential)]
         private struct Board
         {
+            public static event EventHandler<(Vector2Int, bool)> OnSetCellValue;
+
             public int Width;
             public int Height;
             public bool* State;
@@ -99,13 +102,15 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
             public bool GetState(int x, int y) => State[y * Width + x];
 
-            public void SetState(int x, int y, bool v) => State[y * Width + x] = v;
+            public void SetCellValue(int x, int y, bool v)
+            {
+                State[y * Width + x] = v;
+                OnSetCellValue.Invoke(this, (new Vector2Int(x, y), v));
+            }
         }
 
         private class BoardSystem : ISystem
         {
-            public event EventHandler<(Vector2Int, bool)> OnSetCellValue;
-
             public void Process(Simulation sim)
             {
                 var iter = sim.GetIterator<Board>();
@@ -117,20 +122,25 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                         for(var y = 0; y < board->Height; y++)
                         {
                             var currentValue = board->GetState(x, y);
+                            var numAlive = 0;
 
-                            var neighbors = new[]
-                            {
-                                board->GetState(BetterMod(x - 1, board->Width), BetterMod(y + 1, board->Height)),
-                                board->GetState(x, BetterMod(y - 1, board->Height)),
-                                board->GetState(BetterMod(x + 1, board->Width), BetterMod(y + 1, board->Height)),
-                                board->GetState(BetterMod(x - 1, board->Width), y),
-                                board->GetState(BetterMod(x + 1, board->Width), y),
-                                board->GetState(BetterMod(x - 1, board->Width), BetterMod(y - 1, board->Height)),
-                                board->GetState(x, BetterMod(y - 1, board->Height)),
-                                board->GetState(BetterMod(x + 1, board->Width), BetterMod(y - 1, board->Height)),
-                            };
+                            if (board->GetState(BetterMod(x - 1, board->Width), BetterMod(y + 1, board->Height)))
+                                numAlive++;
+                            if (board->GetState(x, BetterMod(y + 1, board->Height)))
+                                numAlive++;
+                            if (board->GetState(BetterMod(x + 1, board->Width), BetterMod(y + 1, board->Height)))
+                                numAlive++;
+                            if (board->GetState(BetterMod(x - 1, board->Width), y))
+                                numAlive++;
+                            if (board->GetState(BetterMod(x + 1, board->Width), y))
+                                numAlive++;
+                            if (board->GetState(BetterMod(x - 1, board->Width), BetterMod(y - 1, board->Height)))
+                                numAlive++;
+                            if (board->GetState(x, BetterMod(y - 1, board->Height)))
+                                numAlive++;
+                            if (board->GetState(BetterMod(x + 1, board->Width), BetterMod(y - 1, board->Height)))
+                                numAlive++;
 
-                            var numAlive = neighbors.Count(x => x);
                             if (currentValue && numAlive <= 1)
                                 toFlip.Add(new Vector2Int(x, y));
                             else if (!currentValue && numAlive == 3)
@@ -143,8 +153,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                     foreach (var coord in toFlip)
                     {
                         var newValue = !board->GetState(coord.x, coord.y);
-                        board->SetState(coord.x, coord.y, newValue);
-                        OnSetCellValue.Invoke(this, (coord, newValue));
+                        board->SetCellValue(coord.x, coord.y, newValue);
                     }
                 }
             }
