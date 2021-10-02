@@ -26,7 +26,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _tickButton.onClick.AddListener(() => 
             {
                 _simulationRunner.DoTick();
-                _tickNumberLabel.text = $"Tick: {_simulationRunner.TickNumber}";
+                _tickNumberLabel.text = $"Tick: {_simulationRunner.FrameNumber}";
             });
 
             void UpdateIntervalSliderText(float interval)
@@ -70,7 +70,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             {
                 _tickTimer += _tickInterval;
                 _simulationRunner.DoTick();
-                _tickNumberLabel.text = $"Tick: {_simulationRunner.TickNumber}";
+                _tickNumberLabel.text = $"Frame: {_simulationRunner.FrameNumber}";
             }
         }
     }

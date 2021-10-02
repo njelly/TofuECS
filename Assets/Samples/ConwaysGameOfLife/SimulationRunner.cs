@@ -10,7 +10,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
     {
         [SerializeField] private Vector2Int _worldSize;
 
-        public int TickNumber => _sim.TickNumber;
+        public int FrameNumber => _sim.CurrentFrame.Number;
         public int Seed { get; private set; }
 
         private Simulation _sim;
@@ -62,6 +62,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                     SetCellValue(x, y, r.NextDouble() > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y) / 1.2f);
                 }
             }
+
+            _tex2D.Apply();
         }
 
         private void Board_OnSetCellValue(object sender, (Vector2Int, bool) e)

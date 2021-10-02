@@ -5,13 +5,14 @@ namespace Tofunaut.TofuECS
 {
     public class Simulation
     {
-        public int TickNumber { get; private set; } = -1;
         public ISimulationConfig Config { get; }
+        public Frame CurrentFrame { get; private set; }
         
         private int _entityCounter;
         private readonly Dictionary<Type, IComponentBuffer> _typeToComponentBuffers;
         private readonly Dictionary<Type, IEntityComponentIterator> _typeToEntityComponentIterator;
         private ISystem[] _systems;
+        private Frame[] _frames;
 
         public Simulation(ISimulationConfig config, ISystem[] systems)
         {
@@ -19,6 +20,12 @@ namespace Tofunaut.TofuECS
             _typeToComponentBuffers = new Dictionary<Type, IComponentBuffer>();
             _typeToEntityComponentIterator = new Dictionary<Type, IEntityComponentIterator>();
             _systems = systems;
+            _frames = new Frame[config.MaxRollback];
+
+            for (var i = 0; i < _frames.Length; i++)
+                _frames[i] = new Frame(this);
+
+            CurrentFrame = _frames[_frames.Length - 1];
         }
 
         public Entity CreateEntity() => new Entity(_entityCounter++);
@@ -28,13 +35,8 @@ namespace Tofunaut.TofuECS
             if (entity.IsDestroyed)
                 return;
 
-            foreach (var pair in entity.TypeToComponentIndexes)
-            {
-                var buffer = _typeToComponentBuffers[pair.Key];
-                buffer.Release(pair.Value);
-                var iterator = _typeToEntityComponentIterator[pair.Key];
-                iterator.RemoveEntity(entity);
-            }
+            foreach (var type in entity.TypeToComponentIndexes.Keys)
+                RemoveComponent(type, entity);
             
             entity.Destroy();
         }
@@ -50,6 +52,16 @@ namespace Tofunaut.TofuECS
         {
             entity.AssignComponent(typeof(TComponent), _typeToComponentBuffers[typeof(TComponent)].Request());
             _typeToEntityComponentIterator[typeof(TComponent)].AddEntity(entity);
+        }
+
+        public void RemoveComponent<TComponent>(Entity entity) where TComponent : unmanaged => RemoveComponent(typeof(TComponent), entity);
+
+        private void RemoveComponent(Type type, Entity entity)
+        {
+            var buffer = _typeToComponentBuffers[type];
+            buffer.Release(entity[type]);
+            var iterator = _typeToEntityComponentIterator[type];
+            iterator.RemoveEntity(entity);
         }
 
         public TComponent GetComponent<TComponent>(Entity entity) where TComponent : unmanaged
@@ -117,7 +129,9 @@ namespace Tofunaut.TofuECS
 
         public void Tick()
         {
-            TickNumber++;
+            var prevFrame = CurrentFrame;
+            CurrentFrame = _frames[(prevFrame.Number + 1) % _frames.Length];
+            CurrentFrame.Reset(prevFrame);
 
             foreach (var system in _systems)
                 system.Process(this);
