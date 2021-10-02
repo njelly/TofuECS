@@ -33,7 +33,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         {
             if(_sim != null)
             {
-                _sim.GetComponent<Board>(_boardEntity).Dispose();
+                _sim.CurrentFrame.GetComponent<Board>(_boardEntity).Dispose();
             }
 
             _sim = new Simulation(new DummySimulationConfig(), new [] 
@@ -42,12 +42,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             });
             _sim.RegisterComponent<Board>();
             _boardEntity = _sim.CreateEntity();
-            _sim.AddComponent<Board>(_boardEntity);
+            _sim.CurrentFrame.AddComponent<Board>(_boardEntity);
 
             Seed = seed;
             var r = new System.Random(Seed);
 
-            var board = _sim.GetComponentUnsafe<Board>(_boardEntity);
+            var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);
             board->Init(_worldSize.x, _worldSize.y);
             Board.OnSetCellValue += Board_OnSetCellValue;
 
@@ -73,13 +73,13 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private void OnDestroy()
         {
-            var board = _sim.GetComponent<Board>(_boardEntity);
+            var board = _sim.CurrentFrame.GetComponent<Board>(_boardEntity);
             board.Dispose();
         }
 
         public void SetCellValue(int x, int y, bool v)
         {
-            var board = _sim.GetComponentUnsafe<Board>(_boardEntity);
+            var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);
             board->SetCellValue(x, y, v);
         }
 
@@ -91,7 +91,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         public bool GetCellValue(int x, int y)
         {
-            var board = _sim.GetComponent<Board>(_boardEntity);
+            var board = _sim.CurrentFrame.GetComponent<Board>(_boardEntity);
             return board.GetState(x, y);
         }
 
@@ -142,9 +142,9 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private class BoardSystem : ISystem
         {
-            public void Process(Simulation sim)
+            public void Process(Frame f)
             {
-                var iter = sim.GetIterator<Board>();
+                var iter = f.GetIterator<Board>();
                 while(iter.NextUnsafe(out var e, out var board))
                 {
                     var toFlip = new List<Vector2Int>();

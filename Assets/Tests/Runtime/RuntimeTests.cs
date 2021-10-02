@@ -16,26 +16,26 @@ public class RuntimeTests
         sim.RegisterComponent<TestComponent>();
 
         var entityA = sim.CreateEntity();
-        sim.AddComponent<TestComponent>(entityA);
+        sim.CurrentFrame.AddComponent<TestComponent>(entityA);
 
         for(var i = 0; i < 100; i++)
         {
             var e = sim.CreateEntity();
-            sim.AddComponent<TestComponent>(e);
+            sim.CurrentFrame.AddComponent<TestComponent>(e);
         }
 
-        Assert.IsTrue(sim.GetComponent<TestComponent>(entityA).Value == 0);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 0);
 
         sim.Tick();
 
-        Assert.IsTrue(sim.GetComponent<TestComponent>(entityA).Value == 1);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 1);
 
         sim.Tick();
         sim.Tick();
 
-        Assert.IsTrue(sim.GetComponent<TestComponent>(entityA).Value == 3);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 3);
 
-        sim.DestroyEntity(entityA);
+        sim.CurrentFrame.DestroyEntity(entityA);
 
         sim.Tick();
     }
@@ -59,9 +59,9 @@ public class RuntimeTests
 
     private unsafe class TestSystem : ISystem
     {
-        public void Process(Simulation sim)
+        public void Process(Frame f)
         {
-            var iter = sim.GetIterator<TestComponent>();
+            var iter = f.GetIterator<TestComponent>();
             while (iter.NextUnsafe(out var entity, out var testComponent))
                 testComponent->Value++;
         }
