@@ -8,9 +8,12 @@ public class RuntimeTests
     [Test]
     public void RuntimeTestsSimplePasses()
     {
-        var sim = new Simulation();
+        var sim = new Simulation(new DummySimulationConfig(), new[]
+        {
+            new TestSystem(),
+        });
+
         sim.RegisterComponent<TestComponent>();
-        sim.RegisterSystem(new TestSystem());
 
         var entityA = sim.CreateEntity();
         sim.AddComponent<TestComponent>(entityA);
@@ -21,23 +24,32 @@ public class RuntimeTests
             sim.AddComponent<TestComponent>(e);
         }
 
-        Debug.Log(sim.GetComponent<TestComponent>(entityA).Value);
         Assert.IsTrue(sim.GetComponent<TestComponent>(entityA).Value == 0);
 
         sim.Tick();
 
-        Debug.Log(sim.GetComponent<TestComponent>(entityA).Value);
         Assert.IsTrue(sim.GetComponent<TestComponent>(entityA).Value == 1);
 
         sim.Tick();
         sim.Tick();
 
-        Debug.Log(sim.GetComponent<TestComponent>(entityA).Value);
         Assert.IsTrue(sim.GetComponent<TestComponent>(entityA).Value == 3);
 
         sim.DestroyEntity(entityA);
 
         sim.Tick();
+    }
+
+    private class DummySimulationConfig : ISimulationConfig
+    {
+        public int MaxRollback => 60;
+
+        public SimulationMode Mode => SimulationMode.Offline;
+
+        public TAsset GetAsset<TAsset>(int id)
+        {
+            return default;
+        }
     }
 
     private struct TestComponent

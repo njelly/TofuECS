@@ -36,10 +36,11 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _sim.GetComponent<Board>(_boardEntity).Dispose();
             }
 
-            _sim = new Simulation();
+            _sim = new Simulation(new DummySimulationConfig(), new [] 
+            {
+                new BoardSystem()
+            });
             _sim.RegisterComponent<Board>();
-            var boardSystem = new BoardSystem();
-            _sim.RegisterSystem(boardSystem);
             _boardEntity = _sim.CreateEntity();
             _sim.AddComponent<Board>(_boardEntity);
 
@@ -90,6 +91,18 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         {
             var board = _sim.GetComponent<Board>(_boardEntity);
             return board.GetState(x, y);
+        }
+
+        private class DummySimulationConfig : ISimulationConfig
+        {
+            public int MaxRollback => 60;
+
+            public SimulationMode Mode => SimulationMode.Offline;
+
+            public TAsset GetAsset<TAsset>(int id)
+            {
+                return default;
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]

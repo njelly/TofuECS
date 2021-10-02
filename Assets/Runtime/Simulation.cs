@@ -6,21 +6,19 @@ namespace Tofunaut.TofuECS
     public class Simulation
     {
         public int TickNumber { get; private set; } = -1;
+        public ISimulationConfig Config { get; }
         
         private int _entityCounter;
         private readonly Dictionary<Type, IComponentBuffer> _typeToComponentBuffers;
         private readonly Dictionary<Type, IEntityComponentIterator> _typeToEntityComponentIterator;
-        private readonly List<ISystem> _systemsToAdd;
-        private readonly List<ISystem> _systemsToRemove;
-        private readonly List<ISystem> _systems;
+        private ISystem[] _systems;
 
-        public Simulation()
+        public Simulation(ISimulationConfig config, ISystem[] systems)
         {
+            Config = config;
             _typeToComponentBuffers = new Dictionary<Type, IComponentBuffer>();
             _typeToEntityComponentIterator = new Dictionary<Type, IEntityComponentIterator>();
-            _systems = new List<ISystem>();
-            _systemsToAdd = new List<ISystem>();
-            _systemsToRemove = new List<ISystem>();
+            _systems = systems;
         }
 
         public Entity CreateEntity() => new Entity(_entityCounter++);
@@ -40,9 +38,6 @@ namespace Tofunaut.TofuECS
             
             entity.Destroy();
         }
-
-        public void RegisterSystem(ISystem system) => _systemsToAdd.Add(system);
-        public void UnregisterSystem(ISystem system) => _systemsToRemove.Add(system);
 
         public void RegisterComponent<TComponent>() where TComponent : unmanaged
         {
@@ -123,15 +118,6 @@ namespace Tofunaut.TofuECS
         public void Tick()
         {
             TickNumber++;
-
-            foreach (var system in _systemsToAdd)
-                _systems.Add(system);
-
-            foreach (var system in _systemsToRemove)
-                _systems.Remove(system);
-            
-            _systemsToAdd.Clear();
-            _systemsToRemove.Clear();
 
             foreach (var system in _systems)
                 system.Process(this);
