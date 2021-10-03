@@ -16,8 +16,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private void Update()
         {
-            _targetOrthoSize = Mathf.Clamp(_targetOrthoSize + Input.mouseScrollDelta.y, 1f, 34f);
-            _camera.orthographicSize = Mathf.Lerp(_camera.orthographicSize, _targetOrthoSize, Time.deltaTime);
+            _camera.orthographicSize = Mathf.Clamp(_camera.orthographicSize + Input.mouseScrollDelta.y * 0.5f, 1, 34);
 
             var moveInput = new Vector2(Input.GetKey(KeyCode.A) ? -1 : Input.GetKey(KeyCode.D) ? 1f : 0f,
                 Input.GetKey(KeyCode.S) ? -1 : Input.GetKey(KeyCode.W) ? 1f : 0f);

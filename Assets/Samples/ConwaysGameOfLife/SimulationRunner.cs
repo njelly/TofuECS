@@ -59,7 +59,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 for (var y = 0; y < _worldSize.y; y++)
                 {
                     var perlinCoord = new Vector2(x * perlinScale, y * perlinScale) + perlinOffset;
-                    SetCellValue(x, y, r.NextDouble() > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y) / 1.2f);
+                    SetCellValue(x, y, r.NextDouble() > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y) * 0.5f);
                 }
             }
 

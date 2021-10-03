@@ -7,6 +7,7 @@ namespace Tofunaut.TofuECS
     {
         public ISimulationConfig Config { get; }
         public Frame CurrentFrame { get; private set; }
+        public int LastVerifiedFrame { get; private set; }
 
         internal Dictionary<Type, IComponentBuffer> TypeToComponentBuffers { get; }
         internal Dictionary<Type, IEntityComponentIterator> TypeToEntityComponentIterator { get; }
@@ -42,7 +43,13 @@ namespace Tofunaut.TofuECS
         {
             var prevFrame = CurrentFrame;
             CurrentFrame = _frames[(prevFrame.Number + 1) % _frames.Length];
-            CurrentFrame.Reset(prevFrame);
+            CurrentFrame.Recycle(prevFrame);
+
+            if (Config.Mode != SimulationMode.Client)
+            {
+                LastVerifiedFrame = CurrentFrame.Number;
+                CurrentFrame.Verify();
+            }
 
             foreach (var system in _systems)
                 system.Process(CurrentFrame);

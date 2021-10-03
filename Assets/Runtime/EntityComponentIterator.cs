@@ -37,9 +37,11 @@ namespace Tofunaut.TofuECS
             }
 
             entity = _entities[_currentIndex];
+            entity.TryGetComponentIndex(typeof(TComponent), out var index);
+
             unsafe
             {
-                component = _buffer.Get(entity[typeof(TComponent)]);
+                component = _buffer.Get(index);
             }
             _currentIndex++;
             return true;
@@ -55,7 +57,8 @@ namespace Tofunaut.TofuECS
             }
 
             entity = _entities[_currentIndex];
-            component = _buffer.GetUnsafe(entity[typeof(TComponent)]);
+            entity.TryGetComponentIndex(typeof(TComponent), out var index);
+            component = _buffer.GetUnsafe(index);
             _currentIndex++;
             return true;
         }

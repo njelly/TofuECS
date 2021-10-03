@@ -9,6 +9,7 @@ namespace Tofunaut.TofuECS
     public class Frame
     {
         public int Number { get; private set; }
+        public bool IsVerified { get; private set; }
 
         private readonly Simulation _sim;
 
@@ -23,15 +24,12 @@ namespace Tofunaut.TofuECS
             if (entity.IsDestroyed)
                 return;
 
-            foreach (var type in entity.TypeToComponentIndexes.Keys)
-                RemoveComponent(type, entity);
-
-            entity.Destroy();
+            entity.Destroy(Number, IsVerified);
         }
 
         public void AddComponent<TComponent>(Entity entity) where TComponent : unmanaged
         {
-            entity.AssignComponent(typeof(TComponent), _sim.TypeToComponentBuffers[typeof(TComponent)].Request());
+            entity.AssignComponent(typeof(TComponent), Number, IsVerified, _sim.TypeToComponentBuffers[typeof(TComponent)].Request());
             _sim.TypeToEntityComponentIterator[typeof(TComponent)].AddEntity(entity);
         }
 
@@ -39,63 +37,56 @@ namespace Tofunaut.TofuECS
 
         private void RemoveComponent(Type type, Entity entity)
         {
+            if (!entity.TryGetComponentIndex(type, out var index))
+                return;
+
             var buffer = _sim.TypeToComponentBuffers[type];
-            buffer.Release(entity[type]);
+            buffer.Release(index);
             var iterator = _sim.TypeToEntityComponentIterator[type];
             iterator.RemoveEntity(entity);
         }
 
         public TComponent GetComponent<TComponent>(Entity entity) where TComponent : unmanaged
         {
-            try
-            {
-                var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
-                unsafe
-                {
-                    return buffer.Get(entity[typeof(TComponent)]);
-                }
-            }
-            catch
-            {
+            if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
                 throw new EntityDoesNotContainComponentException<TComponent>(entity);
+            var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
+            unsafe
+            {
+                return buffer.Get(index);
             }
         }
 
         public unsafe TComponent* GetComponentUnsafe<TComponent>(Entity entity) where TComponent : unmanaged
         {
-            try
-            {
-                var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
-                return buffer.GetUnsafe(entity[typeof(TComponent)]);
-            }
-            catch
-            {
+            if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
                 throw new EntityDoesNotContainComponentException<TComponent>(entity);
-            }
+
+            var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
+            return buffer.GetUnsafe(index);
         }
 
         public bool TryGetComponent<TComponent>(Entity entity, out TComponent component) where TComponent : unmanaged
         {
-            if (!entity.TypeToComponentIndexes.TryGetValue(typeof(TComponent), out var index))
+            if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
             {
                 component = default;
                 return false;
             }
+
             var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
-            unsafe
-            {
-                component = buffer.Get(index);
-                return true;
-            }
+            component = buffer.Get(index);
+            return true;
         }
 
         public unsafe bool TryGetComponentUnsafe<TComponent>(Entity entity, out TComponent* component) where TComponent : unmanaged
         {
-            if (!entity.TypeToComponentIndexes.TryGetValue(typeof(TComponent), out var index))
+            if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
             {
-                component = null;
+                component = default;
                 return false;
             }
+
             var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
             component = buffer.GetUnsafe(index);
             return true;
@@ -108,9 +99,15 @@ namespace Tofunaut.TofuECS
             return iterator;
         }
 
-        public void Reset(Frame prevFrame)
+        internal void Recycle(Frame prevFrame)
         {
             Number = prevFrame.Number + 1;
+            IsVerified = false;
+        }
+
+        internal void Verify()
+        {
+            IsVerified = true;
         }
     }
 }
