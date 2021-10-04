@@ -47,12 +47,17 @@ namespace Tofunaut.TofuECS
 
             if (Config.Mode != SimulationMode.Client)
             {
+                VerifyFrame(CurrentFrame);
                 LastVerifiedFrame = CurrentFrame.Number;
-                CurrentFrame.Verify();
             }
 
             foreach (var system in _systems)
                 system.Process(CurrentFrame);
+        }
+
+        private void VerifyFrame(Frame f)
+        {
+            f.Verify();
         }
     }
 

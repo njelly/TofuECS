@@ -36,30 +36,35 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _sim.CurrentFrame.GetComponent<Board>(_boardEntity).Dispose();
             }
 
+            Seed = seed;
+            var r = new System.Random(Seed);
+
             _sim = new Simulation(new DummySimulationConfig(), new [] 
             {
-                new BoardSystem()
+                new BoardSystem(r)
             });
             _sim.RegisterComponent<Board>();
             _boardEntity = _sim.CreateEntity();
             _sim.CurrentFrame.AddComponent<Board>(_boardEntity);
 
-            Seed = seed;
-            var r = new System.Random(Seed);
 
             var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);
+            board->StartStaticThreshold = 0.002f;
+            board->StaticDeteriotationRate = 0.9992f;
             board->Init(_worldSize.x, _worldSize.y);
             Board.OnSetCellValue += Board_OnSetCellValue;
 
-            var perlinOffset = new Vector2((float)r.NextDouble() * 9999f, (float)r.NextDouble() * 9999f);
-            var perlinScale = 0.01f;
+            //var perlinOffset = new Vector2((float)r.NextDouble() * 9999f, (float)r.NextDouble() * 9999f);
+            //var perlinScale = 0.01f;
 
             for (var x = 0; x < _worldSize.x; x++)
             {
                 for (var y = 0; y < _worldSize.y; y++)
                 {
-                    var perlinCoord = new Vector2(x * perlinScale, y * perlinScale) + perlinOffset;
-                    SetCellValue(x, y, r.NextDouble() > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y) * 0.5f);
+                    SetCellValue(x, y, false);
+
+                    //var perlinCoord = new Vector2(x * perlinScale, y * perlinScale) + perlinOffset;
+                    //SetCellValue(x, y, r.NextDouble() * 0.5f > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y));
                 }
             }
 
@@ -115,6 +120,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public int Width;
             public int Height;
             public bool* State;
+            public float StartStaticThreshold;
+            public float StaticDeteriotationRate;
 
             public void Init(int width, int height)
             {
@@ -142,11 +149,20 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private class BoardSystem : ISystem
         {
+            private readonly System.Random _r;
+
+            public BoardSystem(System.Random r)
+            {
+                _r = r;
+            }
+
             public void Process(Frame f)
             {
                 var iter = f.GetIterator<Board>();
                 while(iter.NextUnsafe(out var e, out var board))
                 {
+                    board->StartStaticThreshold *= board->StaticDeteriotationRate;
+
                     var toFlip = new List<Vector2Int>();
                     for(var x = 0; x < board->Width; x++)
                     {
@@ -177,6 +193,10 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                             else if (!currentValue && numAlive == 3)
                                 toFlip.Add(new Vector2Int(x, y));
                             else if (currentValue && numAlive >= 4)
+                                toFlip.Add(new Vector2Int(x, y));
+
+                            // non-conway rules, just a test
+                            else if (_r.NextDouble() <= board->StartStaticThreshold)
                                 toFlip.Add(new Vector2Int(x, y));
                         }
                     }
