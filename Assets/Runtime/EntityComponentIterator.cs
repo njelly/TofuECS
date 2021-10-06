@@ -7,16 +7,15 @@ namespace Tofunaut.TofuECS
         private readonly List<Entity> _entities;
         private readonly List<Entity> _entitiesToRemove;
         private int _currentIndex;
-        private readonly ComponentBuffer<TComponent> _buffer;
+        internal ComponentBuffer<TComponent> buffer;
 
-        internal EntityComponentIterator(ComponentBuffer<TComponent> buffer)
+        internal EntityComponentIterator()
         {
-            _buffer = buffer;
             _entities = new List<Entity>();
             _entitiesToRemove = new List<Entity>();
         }
 
-        internal void Reset()
+        public void Reset()
         { 
             _currentIndex = 0;
             foreach (var entity in _entitiesToRemove)
@@ -24,6 +23,7 @@ namespace Tofunaut.TofuECS
             
             _entitiesToRemove.Clear();
         }
+
         public void AddEntity(Entity entity) => _entities.Add(entity);
         public void RemoveEntity(Entity entity) => _entitiesToRemove.Add(entity);
 
@@ -41,7 +41,7 @@ namespace Tofunaut.TofuECS
 
             unsafe
             {
-                component = _buffer.Get(index);
+                component = buffer.Get(index);
             }
             _currentIndex++;
             return true;
@@ -58,9 +58,19 @@ namespace Tofunaut.TofuECS
 
             entity = _entities[_currentIndex];
             entity.TryGetComponentIndex(typeof(TComponent), out var index);
-            component = _buffer.GetUnsafe(index);
+            component = buffer.GetUnsafe(index);
             _currentIndex++;
             return true;
+        }
+
+        public void CopyFrom(IEntityComponentIterator other)
+        {
+            var otherIterator = (EntityComponentIterator<TComponent>)other;
+            otherIterator.Reset();
+            Reset();
+            _entities.Clear();
+            foreach (var otherEntity in otherIterator._entities)
+                _entities.Add(otherEntity);
         }
     }
 }

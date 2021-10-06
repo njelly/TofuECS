@@ -35,9 +35,13 @@ public class RuntimeTests
 
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 3);
 
-        sim.CurrentFrame.DestroyEntity(entityA);
+        sim.RollbackTo(1);
+
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 1);
 
         sim.Tick();
+
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 2);
     }
 
     private class DummySimulationConfig : ISimulationConfig

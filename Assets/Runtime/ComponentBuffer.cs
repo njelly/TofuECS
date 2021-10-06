@@ -53,5 +53,20 @@ namespace Tofunaut.TofuECS
                 return ptr;
             }
         }
+
+        public void CopyFrom(IComponentBuffer other)
+        {
+            var otherBuffer = (ComponentBuffer<TComponent>)other;
+
+            if (_components.Length < otherBuffer._components.Length)
+                _components = new TComponent[otherBuffer._components.Length];
+
+            Array.Copy(otherBuffer._components, _components, otherBuffer._components.Length);
+
+            _freeIndexes.Clear();
+
+            foreach (var freeIndex in otherBuffer._freeIndexes)
+                _freeIndexes.Enqueue(freeIndex);
+        }
     }
 }

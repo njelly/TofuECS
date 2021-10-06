@@ -9,18 +9,15 @@ namespace Tofunaut.TofuECS
         public Frame CurrentFrame { get; private set; }
         public int LastVerifiedFrame { get; private set; }
 
-        internal Dictionary<Type, IComponentBuffer> TypeToComponentBuffers { get; }
-        internal Dictionary<Type, IEntityComponentIterator> TypeToEntityComponentIterator { get; }
-
         private int _entityCounter;
         private ISystem[] _systems;
         private Frame[] _frames;
+        private Dictionary<Type, int> _typeToIndex;
+        private int _typeIndexCounter;
 
         public Simulation(ISimulationConfig config, ISystem[] systems)
         {
             Config = config;
-            TypeToComponentBuffers = new Dictionary<Type, IComponentBuffer>();
-            TypeToEntityComponentIterator = new Dictionary<Type, IEntityComponentIterator>();
             _systems = systems;
             _frames = new Frame[config.MaxRollback];
 
@@ -28,16 +25,22 @@ namespace Tofunaut.TofuECS
                 _frames[i] = new Frame(this);
 
             CurrentFrame = _frames[_frames.Length - 1];
+
+            _typeToIndex = new Dictionary<Type, int>();
         }
 
         public Entity CreateEntity() => new Entity(_entityCounter++);
 
         public void RegisterComponent<TComponent>() where TComponent : unmanaged
         {
-            var buffer = new ComponentBuffer<TComponent>();
-            TypeToComponentBuffers.Add(typeof(TComponent), buffer);
-            TypeToEntityComponentIterator.Add(typeof(TComponent), new EntityComponentIterator<TComponent>(buffer));
+            foreach (var f in _frames)
+                f.RegisterComponent<TComponent>();
+
+            _typeToIndex.Add(typeof(TComponent), _typeIndexCounter);
+            _typeIndexCounter++;
         }
+
+        internal int GetIndexForType(Type type) => _typeToIndex[type];
 
         public void Tick()
         {
@@ -47,7 +50,7 @@ namespace Tofunaut.TofuECS
 
             if (Config.Mode != SimulationMode.Client)
             {
-                VerifyFrame(CurrentFrame);
+                CurrentFrame.Verify();
                 LastVerifiedFrame = CurrentFrame.Number;
             }
 
@@ -55,9 +58,9 @@ namespace Tofunaut.TofuECS
                 system.Process(CurrentFrame);
         }
 
-        private void VerifyFrame(Frame f)
+        public void RollbackTo(int frameNumber)
         {
-            f.Verify();
+            CurrentFrame = _frames[frameNumber - 1];
         }
     }
 

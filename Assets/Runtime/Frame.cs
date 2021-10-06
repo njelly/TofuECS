@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tofunaut.TofuECS
 {
@@ -12,11 +8,15 @@ namespace Tofunaut.TofuECS
         public bool IsVerified { get; private set; }
 
         private readonly Simulation _sim;
+        private IComponentBuffer[] _componentBuffers;
+        private IEntityComponentIterator[] _iterators;
 
         public Frame(Simulation sim)
         {
             _sim = sim;
             Number = -1;
+            _componentBuffers = new IComponentBuffer[0];
+            _iterators = new IEntityComponentIterator[0];
         }
 
         public void DestroyEntity(Entity entity)
@@ -29,8 +29,9 @@ namespace Tofunaut.TofuECS
 
         public void AddComponent<TComponent>(Entity entity) where TComponent : unmanaged
         {
-            entity.AssignComponent(typeof(TComponent), Number, IsVerified, _sim.TypeToComponentBuffers[typeof(TComponent)].Request());
-            _sim.TypeToEntityComponentIterator[typeof(TComponent)].AddEntity(entity);
+            var typeIndex = _sim.GetIndexForType(typeof(TComponent));
+            entity.AssignComponent(typeof(TComponent), Number, IsVerified, _componentBuffers[typeIndex].Request());
+            _iterators[typeIndex].AddEntity(entity);
         }
 
         public void RemoveComponent<TComponent>(Entity entity) where TComponent : unmanaged => RemoveComponent(typeof(TComponent), entity);
@@ -40,21 +41,19 @@ namespace Tofunaut.TofuECS
             if (!entity.TryGetComponentIndex(type, out var index))
                 return;
 
-            var buffer = _sim.TypeToComponentBuffers[type];
-            buffer.Release(index);
-            var iterator = _sim.TypeToEntityComponentIterator[type];
-            iterator.RemoveEntity(entity);
+            var typeIndex = _sim.GetIndexForType(type);
+            _componentBuffers[typeIndex].Release(index);
+            _iterators[typeIndex].RemoveEntity(entity);
         }
 
         public TComponent GetComponent<TComponent>(Entity entity) where TComponent : unmanaged
         {
             if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
                 throw new EntityDoesNotContainComponentException<TComponent>(entity);
-            var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
-            unsafe
-            {
-                return buffer.Get(index);
-            }
+
+
+            var typeIndex = _sim.GetIndexForType(typeof(TComponent));
+            return ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).Get(index);
         }
 
         public unsafe TComponent* GetComponentUnsafe<TComponent>(Entity entity) where TComponent : unmanaged
@@ -62,8 +61,8 @@ namespace Tofunaut.TofuECS
             if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
                 throw new EntityDoesNotContainComponentException<TComponent>(entity);
 
-            var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
-            return buffer.GetUnsafe(index);
+            var typeIndex = _sim.GetIndexForType(typeof(TComponent));
+            return ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).GetUnsafe(index);
         }
 
         public bool TryGetComponent<TComponent>(Entity entity, out TComponent component) where TComponent : unmanaged
@@ -74,8 +73,8 @@ namespace Tofunaut.TofuECS
                 return false;
             }
 
-            var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
-            component = buffer.Get(index);
+            var typeIndex = _sim.GetIndexForType(typeof(TComponent));
+            component = ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).Get(index);
             return true;
         }
 
@@ -87,15 +86,17 @@ namespace Tofunaut.TofuECS
                 return false;
             }
 
-            var buffer = (ComponentBuffer<TComponent>)_sim.TypeToComponentBuffers[typeof(TComponent)];
-            component = buffer.GetUnsafe(index);
+            var typeIndex = _sim.GetIndexForType(typeof(TComponent));
+            component = ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).GetUnsafe(index);
             return true;
         }
 
         public EntityComponentIterator<TComponent> GetIterator<TComponent>() where TComponent : unmanaged
         {
-            var iterator = (EntityComponentIterator<TComponent>)_sim.TypeToEntityComponentIterator[typeof(TComponent)];
+            var typeIndex = _sim.GetIndexForType(typeof(TComponent));
+            var iterator = (EntityComponentIterator<TComponent>)_iterators[typeIndex];
             iterator.Reset();
+            iterator.buffer = (ComponentBuffer<TComponent>)_componentBuffers[typeIndex];
             return iterator;
         }
 
@@ -103,11 +104,31 @@ namespace Tofunaut.TofuECS
         {
             Number = prevFrame.Number + 1;
             IsVerified = false;
+
+            for (var i = 0; i < prevFrame._componentBuffers.Length; i++)
+            {
+                _componentBuffers[i].CopyFrom(prevFrame._componentBuffers[i]);
+                _iterators[i].CopyFrom(prevFrame._iterators[i]);
+            }
         }
 
         internal void Verify()
         {
             IsVerified = true;
+        }
+
+        internal void RegisterComponent<TComponent>() where TComponent : unmanaged
+        {
+            var newComponentBufferArray = new IComponentBuffer[_componentBuffers.Length + 1];
+            Array.Copy(_componentBuffers, newComponentBufferArray, _componentBuffers.Length);
+            _componentBuffers = newComponentBufferArray;
+            var newComponentBuffer = new ComponentBuffer<TComponent>();
+            _componentBuffers[_componentBuffers.Length - 1] = newComponentBuffer;
+
+            var newIteratorArray = new IEntityComponentIterator[_iterators.Length + 1];
+            Array.Copy(_iterators, newIteratorArray, _iterators.Length);
+            _iterators = newIteratorArray;
+            _iterators[_iterators.Length - 1] = new EntityComponentIterator<TComponent>();
         }
     }
 }
