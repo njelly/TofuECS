@@ -9,24 +9,30 @@ namespace Tofunaut.TofuECS
         public Frame CurrentFrame { get; private set; }
         public int LastVerifiedFrame { get; private set; }
 
+        private readonly ISystem[] _systems;
+        private readonly Frame[] _frames;
+        private readonly Dictionary<Type, int> _typeToIndex;
+        private readonly IInputProvider[] _inputProviders;
+        private readonly Input[] _currentInputs;
+
         private int _entityCounter;
-        private ISystem[] _systems;
-        private Frame[] _frames;
-        private Dictionary<Type, int> _typeToIndex;
         private int _typeIndexCounter;
 
-        public Simulation(ISimulationConfig config, ISystem[] systems)
+        public Simulation(ISimulationConfig config, IInputProvider[] inputProviders, ISystem[] systems)
         {
             Config = config;
             _systems = systems;
             _frames = new Frame[config.MaxRollback];
 
             for (var i = 0; i < _frames.Length; i++)
-                _frames[i] = new Frame(this);
+                _frames[i] = new Frame(this, inputProviders.Length);
 
             CurrentFrame = _frames[_frames.Length - 1];
 
             _typeToIndex = new Dictionary<Type, int>();
+
+            _inputProviders = inputProviders;
+            _currentInputs = new Input[_inputProviders.Length];
         }
 
         public Entity CreateEntity() => new Entity(_entityCounter++);
@@ -47,6 +53,11 @@ namespace Tofunaut.TofuECS
             var prevFrame = CurrentFrame;
             CurrentFrame = _frames[(prevFrame.Number + 1) % _frames.Length];
             CurrentFrame.Recycle(prevFrame);
+
+            for (var i = 0; i < _inputProviders.Length; i++)
+                _currentInputs[i] = _inputProviders[i].GetInput(i);
+
+            CurrentFrame.CopyInputs(_currentInputs);
 
             if (Config.Mode != SimulationMode.Client)
             {

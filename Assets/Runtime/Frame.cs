@@ -6,17 +6,21 @@ namespace Tofunaut.TofuECS
     {
         public int Number { get; private set; }
         public bool IsVerified { get; private set; }
+        public ISimulationConfig Config => _sim.Config;
+        public int NumInputs => _inputs.Length;
 
         private readonly Simulation _sim;
         private IComponentBuffer[] _componentBuffers;
         private IEntityComponentIterator[] _iterators;
+        private Input[] _inputs;
 
-        public Frame(Simulation sim)
+        public Frame(Simulation sim, int numInputs)
         {
             _sim = sim;
             Number = -1;
             _componentBuffers = new IComponentBuffer[0];
             _iterators = new IEntityComponentIterator[0];
+            _inputs = new Input[numInputs];
         }
 
         public void DestroyEntity(Entity entity)
@@ -97,6 +101,8 @@ namespace Tofunaut.TofuECS
             return iterator;
         }
 
+        public Input GetInput(int index) => _inputs[index];
+
         internal void Recycle(Frame prevFrame)
         {
             Number = prevFrame.Number + 1;
@@ -107,6 +113,8 @@ namespace Tofunaut.TofuECS
                 _componentBuffers[i].CopyFrom(prevFrame._componentBuffers[i]);
                 _iterators[i].CopyFrom(prevFrame._iterators[i]);
             }
+
+            Array.Copy(prevFrame._inputs, _inputs, _inputs.Length);
         }
 
         internal void Verify()
@@ -127,6 +135,8 @@ namespace Tofunaut.TofuECS
             _iterators = newIteratorArray;
             _iterators[_iterators.Length - 1] = new EntityComponentIterator<TComponent>();
         }
+
+        internal void CopyInputs(Input[] inputs) => Array.Copy(inputs, _inputs, _inputs.Length);
     }
 
     public class EntityDoesNotContainComponentException<TComponent> : Exception where TComponent : unmanaged

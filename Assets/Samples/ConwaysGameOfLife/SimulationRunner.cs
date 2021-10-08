@@ -39,10 +39,15 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             Seed = seed;
             var r = new System.Random(Seed);
 
-            _sim = new Simulation(new DummySimulationConfig(), new [] 
-            {
-                new BoardSystem(r)
-            });
+            _sim = new Simulation(new DummySimulationConfig(), 
+                new []
+                {
+                    new DummyInputProvider(),
+                },
+                new [] 
+                {
+                    new BoardSystem(r)
+                });
             _sim.RegisterComponent<Board>();
             _boardEntity = _sim.CreateEntity();
             _sim.CurrentFrame.AddComponent<Board>(_boardEntity);
@@ -109,6 +114,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public TAsset GetAsset<TAsset>(int id)
             {
                 return default;
+            }
+        }
+
+        private class DummyInputProvider : IInputProvider
+        {
+            public Input GetInput(int index)
+            {
+                return new Input();
             }
         }
 

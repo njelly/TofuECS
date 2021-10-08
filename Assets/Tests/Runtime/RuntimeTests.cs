@@ -8,10 +8,15 @@ public class RuntimeTests
     [Test]
     public void RuntimeTestsSimplePasses()
     {
-        var sim = new Simulation(new DummySimulationConfig(), new[]
-        {
-            new TestSystem(),
-        });
+        var sim = new Simulation(new DummySimulationConfig(),
+            new []
+            {
+                new DummyInputProvider(),
+            },
+            new[]
+            {
+                new TestSystem(),
+            });
 
         sim.RegisterComponent<TestComponent>();
 
@@ -53,6 +58,14 @@ public class RuntimeTests
         public TAsset GetAsset<TAsset>(int id)
         {
             return default;
+        }
+    }
+
+    private class DummyInputProvider : IInputProvider
+    {
+        public Tofunaut.TofuECS.Input GetInput(int index)
+        {
+            return new Tofunaut.TofuECS.Input();
         }
     }
 
