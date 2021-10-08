@@ -6,31 +6,23 @@ namespace Tofunaut.TofuECS
     public class Entity
     {
         public int Id { get; }
-        public bool IsDestroyed { get; private set; }
 
         private readonly Dictionary<Type, EntityComponentAssignment> _typeToComponentAssignments;
-        private int _verfiedDestroyedFrameNumber;
-        private int _unverifiedDestroyedFrameNumber;
+        private int _destroyedOnFrame;
 
         internal Entity(int id)
         {
             Id = id;
             _typeToComponentAssignments = new Dictionary<Type, EntityComponentAssignment>();
-            _verfiedDestroyedFrameNumber = -1;
-            _unverifiedDestroyedFrameNumber = -1;
+            _destroyedOnFrame = -1;
         }
 
-        internal void Destroy(int frameNumber, bool isVerified)
+        internal void Destroy(int frameNumber)
         {
-            IsDestroyed = true;
-
-            if (isVerified)
-                _verfiedDestroyedFrameNumber = frameNumber;
-
-            _unverifiedDestroyedFrameNumber = frameNumber;
+            _destroyedOnFrame = frameNumber;
         }
 
-        public bool IsVerifiedDestroyed(int frameNumber) => _verfiedDestroyedFrameNumber >= frameNumber;
+        public bool IsDestroyed(Frame f) => f.Number > _destroyedOnFrame && _destroyedOnFrame >= 0;
 
         internal void AssignComponent(Type type, int frameNumber, bool isVerified, int index)
         {
@@ -100,6 +92,9 @@ namespace Tofunaut.TofuECS
                     assignment.UnverifiedFrameNumber = frameNumber;
                 }
             }
+
+            if (frameNumber < _destroyedOnFrame)
+                _destroyedOnFrame = -1;
         }
 
         private class EntityComponentAssignment

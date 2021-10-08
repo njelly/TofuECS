@@ -21,10 +21,7 @@ namespace Tofunaut.TofuECS
 
         public void DestroyEntity(Entity entity)
         {
-            if (entity.IsDestroyed)
-                return;
-
-            entity.Destroy(Number, IsVerified);
+            entity.Destroy(Number);
         }
 
         public void AddComponent<TComponent>(Entity entity) where TComponent : unmanaged
@@ -130,5 +127,15 @@ namespace Tofunaut.TofuECS
             _iterators = newIteratorArray;
             _iterators[_iterators.Length - 1] = new EntityComponentIterator<TComponent>();
         }
+    }
+
+    public class EntityDoesNotContainComponentException<TComponent> : Exception where TComponent : unmanaged
+    {
+        private readonly Entity _entity;
+        public EntityDoesNotContainComponentException(Entity entity)
+        {
+            _entity = entity;
+        }
+        public override string Message => $"the entity {_entity.Id} does not contain the component {nameof(TComponent)}";
     }
 }

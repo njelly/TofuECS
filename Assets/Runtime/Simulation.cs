@@ -63,14 +63,4 @@ namespace Tofunaut.TofuECS
             CurrentFrame = _frames[frameNumber - 1];
         }
     }
-
-    public class EntityDoesNotContainComponentException<TComponent> : Exception where TComponent : unmanaged
-    {
-        private readonly Entity _entity;
-        public EntityDoesNotContainComponentException(Entity entity)
-        {
-            _entity = entity;
-        }
-        public override string Message => $"the entity {_entity.Id} does not contain the component {nameof(TComponent)}";
-    }
 }
