@@ -102,6 +102,7 @@ namespace Tofunaut.TofuECS
         }
 
         public Input GetInput(int index) => _inputs[index];
+        public TInput GetInput<TInput>(int index) where TInput : Input => GetInput(index) as TInput;
 
         internal void Recycle(Frame prevFrame)
         {

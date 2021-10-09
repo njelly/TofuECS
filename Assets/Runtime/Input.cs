@@ -3,7 +3,7 @@
 namespace Tofunaut.TofuECS
 {
     [Serializable]
-    public partial class Input
+    public abstract class Input
     {
     }
 }

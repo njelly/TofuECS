@@ -22,6 +22,11 @@ namespace Tofunaut.TofuECS
         /// The mode of the Simulation.
         /// </summary>
         SimulationMode Mode {get;}
+
+        /// <summary>
+        /// How many separate inputs are there for the simulation? (i.e., players)
+        /// </summary>
+        int NumInputs { get; }
     }
 
     public enum SimulationMode

@@ -17,7 +17,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         [SerializeField] private Button _resetButton;
 
         private float _tickTimer;
-        private float _tickInterval = 0.017f;
         private bool _isPaused;
 
         private void Start()
@@ -29,27 +28,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _tickNumberLabel.text = $"Tick: {_simulationRunner.FrameNumber}";
             });
 
-            void UpdateIntervalSliderText(float interval)
-            {
-                _tickIntervalSliderText.text = $"Tick Interval: {interval.ToString("F2")}";
-            }
-
-            _tickIntervalSlider.onValueChanged.RemoveAllListeners();
-            _tickIntervalSlider.onValueChanged.AddListener(x =>
-            {
-                _tickInterval = x;
-                UpdateIntervalSliderText(x);
-            });
-
-            _tickIntervalSlider.SetValueWithoutNotify(_tickInterval);
-            UpdateIntervalSliderText(_tickInterval);
-
             _pauseButton.onClick.RemoveAllListeners();
             _pauseButton.onClick.AddListener(() => 
             {
                 _isPaused = !_isPaused;
                 _pauseButtonLabel.text = _isPaused ? "Unpause" : "Pause";
             });
+
+            _tickIntervalSlider.SetValueWithoutNotify(0f);
 
             _seedInputField.text = _simulationRunner.Seed.ToString();
 
@@ -65,10 +51,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             if (_isPaused)
                 return;
 
+            _tickIntervalSliderText.text = $"Frame Interval: {_tickIntervalSlider.value.ToString("F2")}";
+
             _tickTimer -= Time.deltaTime;
             if(_tickTimer < 0)
             {
-                _tickTimer += _tickInterval;
+                _tickTimer += _tickIntervalSlider.value;
                 _simulationRunner.DoTick();
                 _tickNumberLabel.text = $"Frame: {_simulationRunner.FrameNumber}";
             }

@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 {
     public unsafe class SimulationRunner : MonoBehaviour
     {
         [SerializeField] private Vector2Int _worldSize;
+        [SerializeField] private Slider _staticScaleSlider;
 
         public int FrameNumber => _sim.CurrentFrame.Number;
         public int Seed { get; private set; }
@@ -16,6 +18,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         private Simulation _sim;
         private Entity _boardEntity;
         private Texture2D _tex2D;
+        private COGLInput _coglInput;
 
         private void Awake()
         {
@@ -25,6 +28,11 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _tex2D.filterMode = FilterMode.Point;
             var sprite = Sprite.Create(_tex2D, new Rect(0, 0, _worldSize.x, _worldSize.y), Vector2.zero, 16f);
             spriteRenderer.sprite = sprite;
+
+            _coglInput = new COGLInput
+            {
+                StaticScaler = 0f,
+            };
 
             Reset((int)DateTime.Now.Ticks);
         }
@@ -39,11 +47,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             Seed = seed;
             var r = new System.Random(Seed);
 
-            _sim = new Simulation(new DummySimulationConfig(), 
-                new []
-                {
-                    new DummyInputProvider(),
-                },
+            _sim = new Simulation(new DummySimulationConfig(),
+                new CGOLInputProvider(_coglInput),
                 new [] 
                 {
                     new BoardSystem(r)
@@ -52,24 +57,16 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _boardEntity = _sim.CreateEntity();
             _sim.CurrentFrame.AddComponent<Board>(_boardEntity);
 
-
             var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);
             board->StartStaticThreshold = 0.002f;
-            board->StaticDeteriotationRate = 0.9992f;
             board->Init(_worldSize.x, _worldSize.y);
             Board.OnSetCellValue += Board_OnSetCellValue;
-
-            //var perlinOffset = new Vector2((float)r.NextDouble() * 9999f, (float)r.NextDouble() * 9999f);
-            //var perlinScale = 0.01f;
 
             for (var x = 0; x < _worldSize.x; x++)
             {
                 for (var y = 0; y < _worldSize.y; y++)
                 {
                     SetCellValue(x, y, false);
-
-                    //var perlinCoord = new Vector2(x * perlinScale, y * perlinScale) + perlinOffset;
-                    //SetCellValue(x, y, r.NextDouble() * 0.5f > Mathf.PerlinNoise(perlinCoord.x, perlinCoord.y));
                 }
             }
 
@@ -95,6 +92,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         public void DoTick()
         {
+            _coglInput.StaticScaler = _staticScaleSlider.value;
+
             _sim.Tick();
             _tex2D.Apply();
         }
@@ -111,18 +110,32 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
             public SimulationMode Mode => SimulationMode.Offline;
 
+            public int NumInputs => 1;
+
             public TAsset GetAsset<TAsset>(int id)
             {
                 return default;
             }
         }
 
-        private class DummyInputProvider : IInputProvider
+        private class CGOLInputProvider : InputProvider
         {
-            public Input GetInput(int index)
+            private readonly COGLInput _coglInput;
+
+            public CGOLInputProvider(COGLInput coglInput)
             {
-                return new Input();
+                _coglInput = coglInput;
             }
+
+            public override Input GetInput(int index)
+            {
+                return _coglInput;
+            }
+        }
+
+        private class COGLInput : Input
+        {
+            public float StaticScaler;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -134,7 +147,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public int Height;
             public bool* State;
             public float StartStaticThreshold;
-            public float StaticDeteriotationRate;
 
             public void Init(int width, int height)
             {
@@ -172,9 +184,10 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public void Process(Frame f)
             {
                 var iter = f.GetIterator<Board>();
+                var input = f.GetInput<COGLInput>(0);
                 while(iter.NextUnsafe(out var e, out var board))
                 {
-                    board->StartStaticThreshold *= board->StaticDeteriotationRate;
+                    var staticThreshold = board->StartStaticThreshold * input.StaticScaler;
 
                     var toFlip = new List<Vector2Int>();
                     for(var x = 0; x < board->Width; x++)
@@ -209,7 +222,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                                 toFlip.Add(new Vector2Int(x, y));
 
                             // non-conway rules, just a test
-                            else if (_r.NextDouble() <= board->StartStaticThreshold)
+                            else if (_r.NextDouble() <= staticThreshold)
                                 toFlip.Add(new Vector2Int(x, y));
                         }
                     }

@@ -9,10 +9,7 @@ public class RuntimeTests
     public void RuntimeTestsSimplePasses()
     {
         var sim = new Simulation(new DummySimulationConfig(),
-            new []
-            {
-                new DummyInputProvider(),
-            },
+            new DummyInputProvider(),
             new[]
             {
                 new TestSystem(),
@@ -55,18 +52,25 @@ public class RuntimeTests
 
         public SimulationMode Mode => SimulationMode.Offline;
 
+        public int NumInputs => 1;
+
         public TAsset GetAsset<TAsset>(int id)
         {
             return default;
         }
     }
 
-    private class DummyInputProvider : IInputProvider
+    private class DummyInputProvider : InputProvider
     {
-        public Tofunaut.TofuECS.Input GetInput(int index)
+        public override Tofunaut.TofuECS.Input GetInput(int index)
         {
-            return new Tofunaut.TofuECS.Input();
+            return new DummyInput();
         }
+    }
+
+    private class DummyInput : Tofunaut.TofuECS.Input
+    {
+
     }
 
     private struct TestComponent
