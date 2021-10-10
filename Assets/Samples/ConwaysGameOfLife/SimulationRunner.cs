@@ -188,42 +188,42 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 while(iter.NextUnsafe(out var e, out var board))
                 {
                     var staticThreshold = board->StartStaticThreshold * input.StaticScaler;
-
                     var toFlip = new List<Vector2Int>();
-                    for(var x = 0; x < board->Width; x++)
+
+                    for(var x = board->Width; x < board->Width + board->Width; x++)
                     {
-                        for(var y = 0; y < board->Height; y++)
+                        for (var y = board->Height; y < board->Height + board->Height; y++)
                         {
-                            var currentValue = board->GetState(x, y);
+                            var currentValue = board->GetState(x - board->Width, y - board->Height);
                             var numAlive = 0;
 
-                            if (board->GetState(BetterMod(x - 1, board->Width), BetterMod(y + 1, board->Height)))
+                            if (board->GetState((x - 1) % board->Width, (y + 1) % board->Height))
                                 numAlive++;
-                            if (board->GetState(x, BetterMod(y + 1, board->Height)))
+                            if (board->GetState(x % board->Width, (y + 1) % board->Height))
                                 numAlive++;
-                            if (board->GetState(BetterMod(x + 1, board->Width), BetterMod(y + 1, board->Height)))
+                            if (board->GetState((x + 1) % board->Width, (y + 1) % board->Height))
                                 numAlive++;
-                            if (board->GetState(BetterMod(x - 1, board->Width), y))
+                            if (board->GetState((x - 1) % board->Width, y % board->Height))
                                 numAlive++;
-                            if (board->GetState(BetterMod(x + 1, board->Width), y))
+                            if (board->GetState((x + 1) % board->Width, y % board->Height))
                                 numAlive++;
-                            if (board->GetState(BetterMod(x - 1, board->Width), BetterMod(y - 1, board->Height)))
+                            if (board->GetState((x - 1) % board->Width, (y - 1) % board->Height))
                                 numAlive++;
-                            if (board->GetState(x, BetterMod(y - 1, board->Height)))
+                            if (board->GetState(x % board->Width, (y - 1) % board->Height))
                                 numAlive++;
-                            if (board->GetState(BetterMod(x + 1, board->Width), BetterMod(y - 1, board->Height)))
+                            if (board->GetState((x + 1) % board->Width, (y - 1) % board->Height))
                                 numAlive++;
 
                             if (currentValue && numAlive <= 1)
-                                toFlip.Add(new Vector2Int(x, y));
+                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
                             else if (!currentValue && numAlive == 3)
-                                toFlip.Add(new Vector2Int(x, y));
+                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
                             else if (currentValue && numAlive >= 4)
-                                toFlip.Add(new Vector2Int(x, y));
+                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
 
                             // non-conway rules, just a test
                             else if (_r.NextDouble() <= staticThreshold)
-                                toFlip.Add(new Vector2Int(x, y));
+                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
                         }
                     }
 
