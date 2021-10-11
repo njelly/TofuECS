@@ -1,3 +1,4 @@
+using Haus.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,7 +52,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 new CGOLInputProvider(_coglInput),
                 new [] 
                 {
-                    new BoardSystem(r)
+                    new BoardSystem(new XorShiftRandom((ulong)DateTime.Now.Ticks))
                 });
             _sim.RegisterComponent<Board>();
             _boardEntity = _sim.CreateEntity();
@@ -174,9 +175,9 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private class BoardSystem : ISystem
         {
-            private readonly System.Random _r;
+            private readonly XorShiftRandom _r;
 
-            public BoardSystem(System.Random r)
+            public BoardSystem(XorShiftRandom r)
             {
                 _r = r;
             }
@@ -233,12 +234,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                         board->SetCellValue(coord.x, coord.y, newValue);
                     }
                 }
-            }
-
-            public static int BetterMod(int x, int m)
-            {
-                var r = x % m;
-                return r < 0 ? r + m : r;
             }
         }
     }
