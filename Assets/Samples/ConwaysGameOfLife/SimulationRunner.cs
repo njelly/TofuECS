@@ -61,14 +61,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);
             board->StartStaticThreshold = 0.002f;
             board->Init(_worldSize.x, _worldSize.y);
-            Board.OnSetCellValue += Board_OnSetCellValue;
+            BoardSystem.OnSetCellValue += Board_OnSetCellValue;
 
-            for (var x = 0; x < _worldSize.x; x++)
+            for (var i = 0; i < _worldSize.x * _worldSize.y; i++)
             {
-                for (var y = 0; y < _worldSize.y; y++)
-                {
-                    SetCellValue(x, y, false);
-                }
+                board->State[i] = false;
+                _tex2D.SetPixel(i % board->Width, i / board->Width, Color.black);
             }
 
             _tex2D.Apply();
@@ -85,24 +83,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             board.Dispose();
         }
 
-        public void SetCellValue(int x, int y, bool v)
-        {
-            var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);
-            board->SetCellValue(x, y, v);
-        }
-
         public void DoTick()
         {
             _coglInput.StaticScaler = _staticScaleSlider.value;
 
             _sim.Tick();
             _tex2D.Apply();
-        }
-
-        public bool GetCellValue(int x, int y)
-        {
-            var board = _sim.CurrentFrame.GetComponent<Board>(_boardEntity);
-            return board.GetState(x, y);
         }
 
         private class DummySimulationConfig : ISimulationConfig
@@ -142,10 +128,9 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         [StructLayout(LayoutKind.Sequential)]
         private struct Board
         {
-            public static event EventHandler<(Vector2Int, bool)> OnSetCellValue;
-
             public int Width;
             public int Height;
+            public int Size;
             public bool* State;
             public float StartStaticThreshold;
 
@@ -153,9 +138,10 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             {
                 Dispose();
 
+                Size = width * height;
                 Width = width;
                 Height = height;
-                State = (bool*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)) * Width * Height);
+                State = (bool*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)) * Size);
             }
 
             public void Dispose()
@@ -163,18 +149,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 if(State != null)
                     Marshal.FreeHGlobal((IntPtr)State);
             }
-
-            public bool GetState(int x, int y) => State[y * Width + x];
-
-            public void SetCellValue(int x, int y, bool v)
-            {
-                State[y * Width + x] = v;
-                OnSetCellValue.Invoke(this, (new Vector2Int(x, y), v));
-            }
         }
 
         private class BoardSystem : ISystem
         {
+            public static event EventHandler<(Vector2Int, bool)> OnSetCellValue;
+            
             private readonly XorShiftRandom _r;
 
             public BoardSystem(XorShiftRandom r)
@@ -189,49 +169,63 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 while(iter.NextUnsafe(out var e, out var board))
                 {
                     var staticThreshold = board->StartStaticThreshold * input.StaticScaler;
-                    var toFlip = new List<Vector2Int>();
-
-                    for(var x = board->Width; x < board->Width + board->Width; x++)
+                    var toFlip = new List<int>();
+                    
+                    // need to shift i so modulo operator will work as intended
+                    for (var i = board->Size; i < board->Size * 2; i++)
                     {
-                        for (var y = board->Height; y < board->Height + board->Height; y++)
-                        {
-                            var currentValue = board->GetState(x - board->Width, y - board->Height);
-                            var numAlive = 0;
-
-                            if (board->GetState((x - 1) % board->Width, (y + 1) % board->Height))
-                                numAlive++;
-                            if (board->GetState(x % board->Width, (y + 1) % board->Height))
-                                numAlive++;
-                            if (board->GetState((x + 1) % board->Width, (y + 1) % board->Height))
-                                numAlive++;
-                            if (board->GetState((x - 1) % board->Width, y % board->Height))
-                                numAlive++;
-                            if (board->GetState((x + 1) % board->Width, y % board->Height))
-                                numAlive++;
-                            if (board->GetState((x - 1) % board->Width, (y - 1) % board->Height))
-                                numAlive++;
-                            if (board->GetState(x % board->Width, (y - 1) % board->Height))
-                                numAlive++;
-                            if (board->GetState((x + 1) % board->Width, (y - 1) % board->Height))
-                                numAlive++;
-
-                            if (currentValue && numAlive <= 1)
-                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
-                            else if (!currentValue && numAlive == 3)
-                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
-                            else if (currentValue && numAlive >= 4)
-                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
-
-                            // non-conway rules, just a test
-                            else if (_r.NextDouble() <= staticThreshold)
-                                toFlip.Add(new Vector2Int(x - board->Width, y - board->Height));
-                        }
+                        var numAlive = 0;
+                        var currentState = board->State[i % board->Size];
+                        
+                        // TOP-LEFT
+                        if (board->State[(i - 1 + board->Width) % board->Size])
+                            numAlive++;
+                        
+                        // TOP-CENTER
+                        if (board->State[(i + board->Width) % board->Size])
+                            numAlive++;
+                        
+                        // TOP-RIGHT
+                        if (board->State[(i + 1 + board->Width) % board->Size])
+                            numAlive++;
+                        
+                        // MIDDLE-LEFT
+                        if (board->State[(i - 1) % board->Size])
+                            numAlive++;
+                        
+                        // MIDDLE-RIGHT
+                        if (board->State[(i + 1) % board->Size])
+                            numAlive++;
+                        
+                        // BOTTOM-LEFT
+                        if (board->State[(i - 1 - board->Width) % board->Size])
+                            numAlive++;
+                        
+                        // BOTTOM-CENTER
+                        if (board->State[(i - board->Width) % board->Size])
+                            numAlive++;
+                        
+                        // BOTTOM-RIGHT
+                        if (board->State[(i + 1 - board->Width) % board->Size])
+                            numAlive++;
+                        
+                        if (currentState && numAlive <= 1)
+                            toFlip.Add(i);
+                        else if (!currentState && numAlive == 3)
+                            toFlip.Add(i);
+                        else if (currentState && numAlive >= 4)
+                            toFlip.Add(i);
+                        
+                        // non-conway rules, just a test
+                        else if (_r.NextDouble() <= staticThreshold)
+                            toFlip.Add(i);
                     }
 
-                    foreach (var coord in toFlip)
+                    foreach (var index in toFlip)
                     {
-                        var newValue = !board->GetState(coord.x, coord.y);
-                        board->SetCellValue(coord.x, coord.y, newValue);
+                        var i = index - board->Size;
+                        board->State[i] = !board->State[i];
+                        OnSetCellValue?.Invoke(this, (new Vector2Int(i % board->Width, i / board->Height), board->State[i]));
                     }
                 }
             }
