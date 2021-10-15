@@ -46,13 +46,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             }
 
             Seed = seed;
-            var r = new System.Random(Seed);
 
             _sim = new Simulation(new DummySimulationConfig(),
                 new CGOLInputProvider(_coglInput),
                 new [] 
                 {
-                    new BoardSystem(new XorShiftRandom((ulong)DateTime.Now.Ticks))
+                    new BoardSystem(new XorShiftRandom((ulong)seed))
                 });
             _sim.RegisterComponent<Board>();
             _boardEntity = _sim.CreateEntity();
