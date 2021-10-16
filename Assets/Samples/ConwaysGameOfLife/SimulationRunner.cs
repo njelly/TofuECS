@@ -54,7 +54,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                     new BoardSystem(new XorShiftRandom((ulong)seed))
                 });
             _sim.RegisterComponent<Board>();
-            _boardEntity = _sim.CreateEntity();
+            _boardEntity = _sim.CurrentFrame.CreateEntity();
             _sim.CurrentFrame.AddComponent<Board>(_boardEntity);
 
             var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);

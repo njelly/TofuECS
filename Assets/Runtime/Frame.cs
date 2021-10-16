@@ -12,21 +12,28 @@ namespace Tofunaut.TofuECS
         private readonly Simulation _sim;
         private IComponentBuffer[] _componentBuffers;
         private IEntityComponentIterator[] _iterators;
-        private Input[] _inputs;
+        private readonly Input[] _inputs;
+        private readonly EntityBuffer _entityBuffer;
 
         public Frame(Simulation sim, int numInputs)
         {
             _sim = sim;
             Number = -1;
-            _componentBuffers = new IComponentBuffer[0];
-            _iterators = new IEntityComponentIterator[0];
+            _componentBuffers = Array.Empty<IComponentBuffer>();
+            _iterators = Array.Empty<IEntityComponentIterator>();
             _inputs = new Input[numInputs];
+            _entityBuffer = new EntityBuffer();
         }
+
+        public Entity CreateEntity() => _entityBuffer.Request();
 
         public void DestroyEntity(Entity entity)
         {
             entity.Destroy(Number);
+            _entityBuffer.Release(entity);
         }
+
+        public Entity GetEntity(int id) => _entityBuffer.Get(id);
 
         public void AddComponent<TComponent>(Entity entity) where TComponent : unmanaged
         {

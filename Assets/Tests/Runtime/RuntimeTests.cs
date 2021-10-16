@@ -17,12 +17,12 @@ public class RuntimeTests
 
         sim.RegisterComponent<TestComponent>();
 
-        var entityA = sim.CreateEntity();
+        var entityA = sim.CurrentFrame.CreateEntity();
         sim.CurrentFrame.AddComponent<TestComponent>(entityA);
 
         for(var i = 0; i < 100; i++)
         {
-            var e = sim.CreateEntity();
+            var e = sim.CurrentFrame.CreateEntity();
             sim.CurrentFrame.AddComponent<TestComponent>(e);
         }
 

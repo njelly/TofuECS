@@ -15,7 +15,6 @@ namespace Tofunaut.TofuECS
         private readonly InputProvider _inputProvider;
         private readonly Input[] _currentInputs;
 
-        private int _entityCounter;
         private int _typeIndexCounter;
 
         public Simulation(ISimulationConfig config, InputProvider inputProvider, ISystem[] systems)
@@ -34,8 +33,6 @@ namespace Tofunaut.TofuECS
             _inputProvider = inputProvider;
             _currentInputs = new Input[Config.NumInputs];
         }
-
-        public Entity CreateEntity() => new Entity(_entityCounter++);
 
         public void RegisterComponent<TComponent>() where TComponent : unmanaged
         {

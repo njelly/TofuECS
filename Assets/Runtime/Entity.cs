@@ -5,16 +5,42 @@ namespace Tofunaut.TofuECS
 {
     public class Entity
     {
-        public int Id { get; }
+        public int Id { get; private set; }
 
         private readonly Dictionary<Type, EntityComponentAssignment> _typeToComponentAssignments;
         private int _destroyedOnFrame;
 
-        internal Entity(int id)
+        internal Entity()
         {
-            Id = id;
+            Id = -1;
             _typeToComponentAssignments = new Dictionary<Type, EntityComponentAssignment>();
             _destroyedOnFrame = -1;
+        }
+
+        internal Entity(Entity copyFrom)
+        {
+            Id = copyFrom.Id;
+            _typeToComponentAssignments =
+                new Dictionary<Type, EntityComponentAssignment>(copyFrom._typeToComponentAssignments);
+            _destroyedOnFrame = copyFrom._destroyedOnFrame;
+        }
+
+        internal void Recycle(int id)
+        {
+            Id = id;
+            _typeToComponentAssignments.Clear();
+            _destroyedOnFrame = -1;
+        }
+
+        internal void Recycle(Entity copyFrom)
+        {
+            Id = copyFrom.Id;
+            
+            _typeToComponentAssignments.Clear();
+            foreach (var kvp in copyFrom._typeToComponentAssignments)
+                _typeToComponentAssignments.Add(kvp.Key, kvp.Value);
+            
+            _destroyedOnFrame = copyFrom._destroyedOnFrame;
         }
 
         internal void Destroy(int frameNumber)
@@ -22,7 +48,7 @@ namespace Tofunaut.TofuECS
             _destroyedOnFrame = frameNumber;
         }
 
-        public bool IsDestroyed(Frame f) => f.Number > _destroyedOnFrame && _destroyedOnFrame >= 0;
+        public bool IsDestroyed(Frame f) => Id >= 0 && f.Number > _destroyedOnFrame && _destroyedOnFrame >= 0;
 
         internal void AssignComponent(Type type, int frameNumber, bool isVerified, int index)
         {
