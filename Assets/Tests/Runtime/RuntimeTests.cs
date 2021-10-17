@@ -24,12 +24,18 @@ public class RuntimeTests
         // ensure that we can create an entity (and store it's id in a var), and add a component to it
         var entityIdA = sim.CurrentFrame.CreateEntity();
         sim.CurrentFrame.AddComponent<TestComponent>(entityIdA);
+        
+        // an entity that was just created should always be valid
+        Assert.IsTrue(sim.CurrentFrame.IsValid(entityIdA));
 
         // create a bunch of entities and add components to them
         for(var i = 0; i < 100; i++)
         {
             var e = sim.CurrentFrame.CreateEntity();
             sim.CurrentFrame.AddComponent<TestComponent>(e);
+            
+            // an entity that was just created should always be valid
+            Assert.IsTrue(sim.CurrentFrame.IsValid(entityIdA));
         }
 
         // ensure that we can retrieve the component and that the value of the component is correct
