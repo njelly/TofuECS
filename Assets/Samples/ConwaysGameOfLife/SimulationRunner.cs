@@ -16,8 +16,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         public int FrameNumber => _sim.CurrentFrame.Number;
         public int Seed { get; private set; }
 
-        private Simulation _sim;
-        private int _boardEntityId;
+        private Simulation _sim; 
         private Texture2D _tex2D;
         private COGLInput _coglInput;
 
@@ -40,33 +39,20 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         public void Reset(int seed)
         {
-            if(_sim != null)
-            {
-                _sim.CurrentFrame.GetComponent<Board>(_boardEntityId).Dispose();
-            }
-
             Seed = seed;
-
+            
+            BoardSystem.OnSetCellValue += Board_OnSetCellValue;
+            
             _sim = new Simulation(new DummySimulationConfig(),
                 new CGOLInputProvider(_coglInput),
-                new [] 
+                new ISystem[] 
                 {
-                    new BoardSystem(new XorShiftRandom((ulong)seed))
+                    new BoardSystem((ulong)seed, _worldSize.x, _worldSize.y)
                 });
+            
+            // Register components BEFORE initializing the simulation!
             _sim.RegisterComponent<Board>();
-            _boardEntityId = _sim.CurrentFrame.CreateEntity();
-            _sim.CurrentFrame.AddComponent<Board>(_boardEntityId);
-
-            var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntityId);
-            board->StartStaticThreshold = 0.002f;
-            board->Init(_worldSize.x, _worldSize.y);
-            BoardSystem.OnSetCellValue += Board_OnSetCellValue;
-
-            for (var i = 0; i < _worldSize.x * _worldSize.y; i++)
-            {
-                board->State[i] = false;
-                _tex2D.SetPixel(i % board->Width, i / board->Width, Color.black);
-            }
+            _sim.Initialize();
 
             _tex2D.Apply();
         }
@@ -74,12 +60,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         private void Board_OnSetCellValue(object sender, (Vector2Int, bool) e)
         {
             _tex2D.SetPixel(e.Item1.x, e.Item1.y, e.Item2 ? Color.white : Color.black);
-        }
-
-        private void OnDestroy()
-        {
-            var board = _sim.CurrentFrame.GetComponent<Board>(_boardEntityId);
-            board.Dispose();
         }
 
         public void DoTick()
@@ -153,12 +133,31 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         private class BoardSystem : ISystem
         {
             public static event EventHandler<(Vector2Int, bool)> OnSetCellValue;
-            
-            private readonly XorShiftRandom _r;
 
-            public BoardSystem(XorShiftRandom r)
+            private readonly XorShiftRandom _r;
+            private readonly int _boardWidth, _boardHeight;
+
+            public BoardSystem(ulong seed, int boardWidth, int boardHeight)
             {
-                _r = r;
+                _r = new XorShiftRandom(seed);
+                _boardWidth = boardWidth;
+                _boardHeight = boardHeight;
+            }
+
+            public void Initialize(Frame f)
+            {
+                var boardEntityId = f.CreateEntity();
+                f.AddComponent<Board>(boardEntityId);
+                
+                var board = f.GetComponentUnsafe<Board>(boardEntityId);
+                board->StartStaticThreshold = 0.002f;
+                board->Init(_boardWidth, _boardHeight);
+
+                for (var i = 0; i < _boardWidth * _boardHeight; i++)
+                {
+                    board->State[i] = false;
+                    OnSetCellValue?.Invoke(this,  (new Vector2Int(i % _boardWidth, i / _boardHeight), false));
+                }
             }
 
             public void Process(Frame f)
@@ -170,7 +169,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                     var staticThreshold = board->StartStaticThreshold * input.StaticScaler;
                     var toFlip = new List<int>();
                     
-                    // need to shift i so modulo operator will work as intended
+                    // need to add the board->Size to i so modulo operator will work as intended
                     for (var i = board->Size; i < board->Size * 2; i++)
                     {
                         var numAlive = 0;
@@ -227,6 +226,13 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                         OnSetCellValue?.Invoke(this, (new Vector2Int(i % board->Width, i / board->Height), board->State[i]));
                     }
                 }
+            }
+
+            public void Dispose(Frame f)
+            {
+                var iter = f.GetIterator<Board>();
+                while(iter.NextUnsafe(out _, out var board))
+                    board->Dispose();
             }
         }
     }

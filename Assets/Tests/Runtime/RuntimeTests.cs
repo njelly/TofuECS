@@ -95,6 +95,10 @@ public class RuntimeTests
 
     private unsafe class TestSystem : ISystem
     {
+        public void Initialize(Frame f) { }
+        
+        public void Dispose(Frame f) { }
+
         public void Process(Frame f)
         {
             var iter = f.GetIterator<TestComponent>();

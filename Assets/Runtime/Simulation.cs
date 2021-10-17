@@ -8,6 +8,8 @@ namespace Tofunaut.TofuECS
         public ISimulationConfig Config { get; }
         public Frame CurrentFrame { get; private set; }
         public int LastVerifiedFrame { get; private set; }
+        
+        public bool IsInitialized { get; private set; }
 
         private readonly ISystem[] _systems;
         private readonly Frame[] _frames;
@@ -32,8 +34,30 @@ namespace Tofunaut.TofuECS
 
             _inputProvider = inputProvider;
             _currentInputs = new Input[Config.NumInputs];
+
+            IsInitialized = false;
         }
 
+        /// <summary>
+        /// Call Initialize() on every system in the Simulation. Allows RegisterComponent() to be called without exception.
+        /// </summary>
+        public void Initialize()
+        {
+            foreach (var system in _systems)
+                system.Initialize(CurrentFrame);
+            
+            IsInitialized = true;
+        }
+
+        ~Simulation()
+        {
+            foreach (var system in _systems)
+                system.Dispose(CurrentFrame);
+        }
+
+        /// <summary>
+        /// Register a component and allow it to be added to an Entity. Will throw SimulationIsNotInitializedException if Initialize() has not been called.
+        /// </summary>
         public void RegisterComponent<TComponent>() where TComponent : unmanaged
         {
             foreach (var f in _frames)
@@ -70,5 +94,10 @@ namespace Tofunaut.TofuECS
         {
             CurrentFrame = _frames[frameNumber % _frames.Length];
         }
+    }
+
+    public class SimulationIsNotInitializedException : InvalidOperationException
+    {
+        public override string Message => $"the simulation has not been initialized";
     }
 }
