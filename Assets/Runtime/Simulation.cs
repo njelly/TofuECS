@@ -26,7 +26,7 @@ namespace Tofunaut.TofuECS
             for (var i = 0; i < _frames.Length; i++)
                 _frames[i] = new Frame(this, Config.NumInputs);
 
-            CurrentFrame = _frames[_frames.Length - 1];
+            CurrentFrame = _frames[0];
 
             _typeToIndex = new Dictionary<Type, int>();
 
@@ -68,7 +68,7 @@ namespace Tofunaut.TofuECS
 
         public void RollbackTo(int frameNumber)
         {
-            CurrentFrame = _frames[frameNumber - 1];
+            CurrentFrame = _frames[frameNumber % _frames.Length];
         }
     }
 }

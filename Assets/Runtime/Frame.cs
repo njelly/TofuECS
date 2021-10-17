@@ -18,7 +18,7 @@ namespace Tofunaut.TofuECS
         public Frame(Simulation sim, int numInputs)
         {
             _sim = sim;
-            Number = -1;
+            Number = 0;
             _componentBuffers = Array.Empty<IComponentBuffer>();
             _iterators = Array.Empty<IEntityComponentIterator>();
             _inputs = new Input[numInputs];

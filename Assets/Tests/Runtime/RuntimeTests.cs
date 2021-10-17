@@ -15,47 +15,50 @@ public class RuntimeTests
                 new TestSystem(),
             });
 
+        // ensure we can register a component
         sim.RegisterComponent<TestComponent>();
+        
+        // negative entity values should never be valid
+        Assert.IsTrue(!sim.CurrentFrame.IsValid(-1));
 
+        // ensure that we can create an entity (and store it's id in a var), and add a component to it
         var entityIdA = sim.CurrentFrame.CreateEntity();
         sim.CurrentFrame.AddComponent<TestComponent>(entityIdA);
 
+        // create a bunch of entities and add components to them
         for(var i = 0; i < 100; i++)
         {
             var e = sim.CurrentFrame.CreateEntity();
             sim.CurrentFrame.AddComponent<TestComponent>(e);
         }
 
+        // ensure that we can retrieve the component and that the value of the component is correct
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 0);
 
+        // ensure Tick() works, and that we are now on frame 1
         sim.Tick();
+        Assert.IsTrue(sim.CurrentFrame.Number == 1);
 
+        // TestSystem should have incremented the value by 1
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 1);
 
+        // Tick twice and ensure the value is incremented by 2 (to 3)
         sim.Tick();
         sim.Tick();
-
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 3);
 
+        // roll back and ensure the value is the same as on frame 1
         sim.RollbackTo(1);
-
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 1);
-
-        sim.Tick();
-
-        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 2);
         
+        // destroy entity and ensure it is no longer valid
+        sim.Tick();
         sim.CurrentFrame.DestroyEntity(entityIdA);
-        
         Assert.IsTrue(!sim.CurrentFrame.IsValid(entityIdA));
-
-        sim.Tick();
         
-        Assert.IsTrue(!sim.CurrentFrame.IsValid(entityIdA));
-
-        var entityB = sim.CurrentFrame.CreateEntity();
-        
-        Assert.IsTrue(sim.CurrentFrame.IsValid(entityB));
+        // the entity should now exist again
+        sim.RollbackTo(1);
+        Assert.IsTrue(sim.CurrentFrame.IsValid(entityIdA));
     }
 
     private class DummySimulationConfig : ISimulationConfig
