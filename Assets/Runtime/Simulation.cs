@@ -92,12 +92,10 @@ namespace Tofunaut.TofuECS
 
         public void RollbackTo(int frameNumber)
         {
-            CurrentFrame = _frames[frameNumber % _frames.Length];
+            var prevFrameIndex = (frameNumber - 1) % _frames.Length;
+            var frameIndex = frameNumber % _frames.Length;
+            CurrentFrame = _frames[frameIndex];
+            CurrentFrame.Recycle(_frames[prevFrameIndex]);
         }
-    }
-
-    public class SimulationIsNotInitializedException : InvalidOperationException
-    {
-        public override string Message => $"the simulation has not been initialized";
     }
 }

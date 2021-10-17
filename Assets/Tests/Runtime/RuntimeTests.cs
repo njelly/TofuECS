@@ -8,9 +8,10 @@ public class RuntimeTests
     [Test]
     public void RuntimeTestsSimplePasses()
     {
-        var sim = new Simulation(new DummySimulationConfig(),
+        var seed = (ulong)1993;
+        var sim = new Simulation(new DummySimulationConfig(seed),
             new DummyInputProvider(),
-            new[]
+            new ISystem[]
             {
                 new TestSystem(),
             });
@@ -53,8 +54,8 @@ public class RuntimeTests
         sim.Tick();
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 3);
 
-        // roll back and ensure the value is the same as on frame 1
-        sim.RollbackTo(1);
+        // roll back and ensure the value is the same as at the start of frame 2
+        sim.RollbackTo(2);
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 1);
         
         // destroy entity and ensure it is no longer valid
@@ -63,8 +64,21 @@ public class RuntimeTests
         Assert.IsTrue(!sim.CurrentFrame.IsValid(entityIdA));
         
         // the entity should now exist again
-        sim.RollbackTo(1);
+        sim.RollbackTo(2);
         Assert.IsTrue(sim.CurrentFrame.IsValid(entityIdA));
+        
+        // verify rollback is working for RNG
+        sim.Tick();
+        var rollbackToFrame = sim.CurrentFrame.Number;
+        var randNum = sim.CurrentFrame.RNG.NextUInt64();
+        for (var i = 0; i < 10; i++)
+        {
+            sim.Tick();
+            sim.CurrentFrame.RNG.NextUInt64();
+        }
+        sim.RollbackTo(rollbackToFrame);
+        Assert.IsTrue(randNum == sim.CurrentFrame.RNG.NextUInt64());
+        
     }
 
     private class DummySimulationConfig : ISimulationConfig
@@ -74,10 +88,17 @@ public class RuntimeTests
         public SimulationMode Mode => SimulationMode.Offline;
 
         public int NumInputs => 1;
+        
+        public ulong Seed { get; }
 
         public TAsset GetAsset<TAsset>(int id)
         {
             return default;
+        }
+
+        public DummySimulationConfig(ulong seed)
+        {
+            Seed = seed;
         }
     }
 

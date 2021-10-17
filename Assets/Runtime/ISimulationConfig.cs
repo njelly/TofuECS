@@ -27,6 +27,11 @@ namespace Tofunaut.TofuECS
         /// How many separate inputs are there for the simulation? (i.e., players)
         /// </summary>
         int NumInputs { get; }
+        
+        /// <summary>
+        /// The seed for deterministic RNG.
+        /// </summary>
+        ulong Seed { get; }
     }
 
     public enum SimulationMode

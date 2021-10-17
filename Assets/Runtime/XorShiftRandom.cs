@@ -2,9 +2,13 @@
   ==-------------[ (c) 2018 R. Wildenhaus - Licensed under MIT ]-------------==
   ============================================================================= */
 
+/*
+ * Additional modifications for use in TofuECS
+ */
+
 using System;
 
-namespace Haus.Math
+namespace Tofunaut.TofuECS
 {
 
     /// <summary>
@@ -16,6 +20,9 @@ namespace Haus.Math
 
         #region Data Members
 
+        public ulong StateX => x_;
+        public ulong StateY => y_;
+        
         // Constants
         private const double DOUBLE_UNIT = 1.0 / (int.MaxValue + 1.0);
 
@@ -54,6 +61,18 @@ namespace Haus.Math
             y_ = seed >> 3;
         }
 
+        #endregion
+        
+        #region TofuECS Modifications
+
+        internal void CopyState(XorShiftRandom other)
+        {
+            x_ = other.x_;
+            y_ = other.y_;
+            buffer_ = other.buffer_;
+            bufferMask_ = other.bufferMask_;
+        }
+        
         #endregion
 
         #region Public Methods

@@ -1,7 +1,5 @@
-using Haus.Math;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,7 +12,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         [SerializeField] private Slider _staticScaleSlider;
 
         public int FrameNumber => _sim.CurrentFrame.Number;
-        public int Seed { get; private set; }
+        public ulong Seed { get; private set; }
 
         private Simulation _sim; 
         private Texture2D _tex2D;
@@ -34,16 +32,16 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 StaticScaler = 0f,
             };
 
-            Reset((int)DateTime.Now.Ticks);
+            Reset((ulong)DateTime.Now.Ticks);
         }
 
-        public void Reset(int seed)
+        public void Reset(ulong seed)
         {
             Seed = seed;
             
             BoardSystem.OnSetCellValue += Board_OnSetCellValue;
             
-            _sim = new Simulation(new DummySimulationConfig(),
+            _sim = new Simulation(new DummySimulationConfig(Seed),
                 new CGOLInputProvider(_coglInput),
                 new ISystem[] 
                 {
@@ -77,6 +75,13 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public SimulationMode Mode => SimulationMode.Offline;
 
             public int NumInputs => 1;
+            
+            public ulong Seed { get; }
+
+            public DummySimulationConfig(ulong seed)
+            {
+                Seed = seed;
+            }
 
             public TAsset GetAsset<TAsset>(int id)
             {

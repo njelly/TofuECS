@@ -9,6 +9,8 @@ namespace Tofunaut.TofuECS
         public ISimulationConfig Config => _sim.Config;
         public int NumInputs => _inputs.Length;
 
+        public XorShiftRandom RNG { get; }
+
         private readonly Simulation _sim;
         private IComponentBuffer[] _componentBuffers;
         private IEntityComponentIterator[] _iterators;
@@ -19,6 +21,7 @@ namespace Tofunaut.TofuECS
         {
             _sim = sim;
             Number = 0;
+            RNG = new XorShiftRandom(_sim.Config.Seed);
             _componentBuffers = Array.Empty<IComponentBuffer>();
             _iterators = Array.Empty<IEntityComponentIterator>();
             _inputs = new Input[numInputs];
@@ -137,6 +140,7 @@ namespace Tofunaut.TofuECS
             }
             
             _entityBuffer.CopyFrom(prevFrame._entityBuffer);
+            RNG.CopyState(prevFrame.RNG);
 
             Array.Copy(prevFrame._inputs, _inputs, _inputs.Length);
         }

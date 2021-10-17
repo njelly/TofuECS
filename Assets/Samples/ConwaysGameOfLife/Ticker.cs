@@ -42,7 +42,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _resetButton.onClick.RemoveAllListeners();
             _resetButton.onClick.AddListener(() =>
             {
-                _simulationRunner.Reset(_seedInputField.text.GetHashCode());
+                _simulationRunner.Reset(System.Convert.ToUInt64(_seedInputField.text.GetHashCode()));
             });
         }
 
