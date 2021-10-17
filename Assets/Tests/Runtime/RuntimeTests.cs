@@ -54,8 +54,8 @@ public class RuntimeTests
         sim.Tick();
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 3);
 
-        // roll back and ensure the value is the same as at the start of frame 2
-        sim.RollbackTo(2);
+        // roll back and ensure the value is the same as at the start of frame 1
+        sim.RollbackTo(1);
         Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 1);
         
         // destroy entity and ensure it is no longer valid
@@ -64,7 +64,7 @@ public class RuntimeTests
         Assert.IsTrue(!sim.CurrentFrame.IsValid(entityIdA));
         
         // the entity should now exist again
-        sim.RollbackTo(2);
+        sim.RollbackTo(1);
         Assert.IsTrue(sim.CurrentFrame.IsValid(entityIdA));
         
         // verify rollback is working for RNG

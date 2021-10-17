@@ -69,25 +69,29 @@ namespace Tofunaut.TofuECS
 
         internal int GetIndexForType(Type type) => _typeToIndex[type];
 
+        /// <summary>
+        /// Process the current frame and go to the next.
+        /// </summary>
         public void Tick()
         {
-            var prevFrame = CurrentFrame;
-            CurrentFrame = _frames[(prevFrame.Number + 1) % _frames.Length];
-            CurrentFrame.Recycle(prevFrame);
-
-            for (var i = 0; i < Config.NumInputs; i++)
-                _currentInputs[i] = _inputProvider.GetInput(i);
-
-            CurrentFrame.CopyInputs(_currentInputs);
-
             if (Config.Mode != SimulationMode.Client)
             {
                 CurrentFrame.Verify();
                 LastVerifiedFrame = CurrentFrame.Number;
             }
 
+            for (var i = 0; i < Config.NumInputs; i++)
+                _currentInputs[i] = _inputProvider.GetInput(i);
+
+            CurrentFrame.CopyInputs(_currentInputs);
+
             foreach (var system in _systems)
                 system.Process(CurrentFrame);
+            
+            // now proceed to the next frame
+            var prevFrame = CurrentFrame;
+            CurrentFrame = _frames[(prevFrame.Number + 1) % _frames.Length];
+            CurrentFrame.Recycle(prevFrame);
         }
 
         public void RollbackTo(int frameNumber)
