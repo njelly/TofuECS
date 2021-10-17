@@ -2,8 +2,9 @@ namespace Tofunaut.TofuECS
 {
     public interface IEntityComponentIterator
     {
-        void AddEntity(Entity entity);
-        void RemoveEntity(Entity entity);
+        void AddEntity(int entityId);
+        void RemoveEntity(int entityId);
+        void Reset(Frame f);
         void Reset();
         void CopyFrom(IEntityComponentIterator other);
     }

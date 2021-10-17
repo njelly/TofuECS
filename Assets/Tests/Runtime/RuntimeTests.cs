@@ -17,8 +17,8 @@ public class RuntimeTests
 
         sim.RegisterComponent<TestComponent>();
 
-        var entityA = sim.CurrentFrame.CreateEntity();
-        sim.CurrentFrame.AddComponent<TestComponent>(entityA);
+        var entityIdA = sim.CurrentFrame.CreateEntity();
+        sim.CurrentFrame.AddComponent<TestComponent>(entityIdA);
 
         for(var i = 0; i < 100; i++)
         {
@@ -26,24 +26,36 @@ public class RuntimeTests
             sim.CurrentFrame.AddComponent<TestComponent>(e);
         }
 
-        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 0);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 0);
 
         sim.Tick();
 
-        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 1);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 1);
 
         sim.Tick();
         sim.Tick();
 
-        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 3);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 3);
 
         sim.RollbackTo(1);
 
-        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 1);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 1);
 
         sim.Tick();
 
-        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityA).Value == 2);
+        Assert.IsTrue(sim.CurrentFrame.GetComponent<TestComponent>(entityIdA).Value == 2);
+        
+        sim.CurrentFrame.DestroyEntity(entityIdA);
+        
+        Assert.IsTrue(!sim.CurrentFrame.IsValid(entityIdA));
+
+        sim.Tick();
+        
+        Assert.IsTrue(!sim.CurrentFrame.IsValid(entityIdA));
+
+        var entityB = sim.CurrentFrame.CreateEntity();
+        
+        Assert.IsTrue(sim.CurrentFrame.IsValid(entityB));
     }
 
     private class DummySimulationConfig : ISimulationConfig

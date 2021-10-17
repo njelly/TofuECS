@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    public class Entity
+    internal class Entity
     {
         public int Id { get; private set; }
 
@@ -15,14 +15,6 @@ namespace Tofunaut.TofuECS
             Id = -1;
             _typeToComponentAssignments = new Dictionary<Type, EntityComponentAssignment>();
             _destroyedOnFrame = -1;
-        }
-
-        internal Entity(Entity copyFrom)
-        {
-            Id = copyFrom.Id;
-            _typeToComponentAssignments =
-                new Dictionary<Type, EntityComponentAssignment>(copyFrom._typeToComponentAssignments);
-            _destroyedOnFrame = copyFrom._destroyedOnFrame;
         }
 
         internal void Recycle(int id)
@@ -48,7 +40,7 @@ namespace Tofunaut.TofuECS
             _destroyedOnFrame = frameNumber;
         }
 
-        public bool IsDestroyed(Frame f) => Id >= 0 && f.Number > _destroyedOnFrame && _destroyedOnFrame >= 0;
+        public bool IsDestroyed(Frame f) => Id >= 0 && f.Number >= _destroyedOnFrame && _destroyedOnFrame >= 0;
 
         internal void AssignComponent(Type type, int frameNumber, bool isVerified, int index)
         {

@@ -25,56 +25,67 @@ namespace Tofunaut.TofuECS
             _entityBuffer = new EntityBuffer();
         }
 
-        public Entity CreateEntity() => _entityBuffer.Request();
+        public int CreateEntity() => _entityBuffer.Request();
 
-        public void DestroyEntity(Entity entity)
+        public void DestroyEntity(int entityId)
         {
+            var entity = _entityBuffer.Get(entityId);
             entity.Destroy(Number);
             _entityBuffer.Release(entity);
         }
 
-        public Entity GetEntity(int id) => _entityBuffer.Get(id);
+        /// <summary>
+        /// Returns true if the entity with the id has been created and has NOT been destroyed.
+        /// </summary>
+        public bool IsValid(int entityId) =>
+            _entityBuffer.TryGet(entityId, out var entity) && !entity.IsDestroyed(this);
 
-        public void AddComponent<TComponent>(Entity entity) where TComponent : unmanaged
+        public void AddComponent<TComponent>(int entityId) where TComponent : unmanaged
         {
+            var entity = _entityBuffer.Get(entityId);
             var typeIndex = _sim.GetIndexForType(typeof(TComponent));
             entity.AssignComponent(typeof(TComponent), Number, IsVerified, _componentBuffers[typeIndex].Request());
-            _iterators[typeIndex].AddEntity(entity);
+            _iterators[typeIndex].AddEntity(entityId);
         }
 
-        public void RemoveComponent<TComponent>(Entity entity) where TComponent : unmanaged => RemoveComponent(typeof(TComponent), entity);
+        public void RemoveComponent<TComponent>(int entityId) where TComponent : unmanaged =>
+            RemoveComponent(typeof(TComponent), entityId);
 
-        private void RemoveComponent(Type type, Entity entity)
+        private void RemoveComponent(Type type, int entityId)
         {
+            var entity = _entityBuffer.Get(entityId);
+            
             if (!entity.TryGetComponentIndex(type, out var index))
                 return;
 
             var typeIndex = _sim.GetIndexForType(type);
             _componentBuffers[typeIndex].Release(index);
-            _iterators[typeIndex].RemoveEntity(entity);
+            _iterators[typeIndex].RemoveEntity(entityId);
         }
 
-        public TComponent GetComponent<TComponent>(Entity entity) where TComponent : unmanaged
+        public TComponent GetComponent<TComponent>(int entityId) where TComponent : unmanaged
         {
+            var entity = _entityBuffer.Get(entityId);
             if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
-                throw new EntityDoesNotContainComponentException<TComponent>(entity);
-
-
+                throw new EntityDoesNotContainComponentException<TComponent>(entityId);
+            
             var typeIndex = _sim.GetIndexForType(typeof(TComponent));
             return ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).Get(index);
         }
 
-        public unsafe TComponent* GetComponentUnsafe<TComponent>(Entity entity) where TComponent : unmanaged
+        public unsafe TComponent* GetComponentUnsafe<TComponent>(int entityId) where TComponent : unmanaged
         {
+            var entity = _entityBuffer.Get(entityId);
             if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
-                throw new EntityDoesNotContainComponentException<TComponent>(entity);
+                throw new EntityDoesNotContainComponentException<TComponent>(entityId);
 
             var typeIndex = _sim.GetIndexForType(typeof(TComponent));
             return ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).GetUnsafe(index);
         }
 
-        public bool TryGetComponent<TComponent>(Entity entity, out TComponent component) where TComponent : unmanaged
+        public bool TryGetComponent<TComponent>(int entityId, out TComponent component) where TComponent : unmanaged
         {
+            var entity = _entityBuffer.Get(entityId);
             if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
             {
                 component = default;
@@ -86,8 +97,9 @@ namespace Tofunaut.TofuECS
             return true;
         }
 
-        public unsafe bool TryGetComponentUnsafe<TComponent>(Entity entity, out TComponent* component) where TComponent : unmanaged
+        public unsafe bool TryGetComponentUnsafe<TComponent>(int entityId, out TComponent* component) where TComponent : unmanaged
         {
+            var entity = _entityBuffer.Get(entityId);
             if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
             {
                 component = default;
@@ -103,13 +115,15 @@ namespace Tofunaut.TofuECS
         {
             var typeIndex = _sim.GetIndexForType(typeof(TComponent));
             var iterator = (EntityComponentIterator<TComponent>)_iterators[typeIndex];
-            iterator.Reset();
+            iterator.Reset(this);
             iterator.buffer = (ComponentBuffer<TComponent>)_componentBuffers[typeIndex];
             return iterator;
         }
 
         public Input GetInput(int index) => _inputs[index];
         public TInput GetInput<TInput>(int index) where TInput : Input => GetInput(index) as TInput;
+
+        internal Entity GetEntity(int entityId) => _entityBuffer.Get(entityId);
 
         internal void Recycle(Frame prevFrame)
         {
@@ -121,6 +135,8 @@ namespace Tofunaut.TofuECS
                 _componentBuffers[i].CopyFrom(prevFrame._componentBuffers[i]);
                 _iterators[i].CopyFrom(prevFrame._iterators[i]);
             }
+            
+            _entityBuffer.CopyFrom(prevFrame._entityBuffer);
 
             Array.Copy(prevFrame._inputs, _inputs, _inputs.Length);
         }
@@ -149,11 +165,11 @@ namespace Tofunaut.TofuECS
 
     public class EntityDoesNotContainComponentException<TComponent> : Exception where TComponent : unmanaged
     {
-        private readonly Entity _entity;
-        public EntityDoesNotContainComponentException(Entity entity)
+        private readonly int _entityId;
+        public EntityDoesNotContainComponentException(int entityId)
         {
-            _entity = entity;
+            _entityId = entityId;
         }
-        public override string Message => $"the entity {_entity.Id} does not contain the component {nameof(TComponent)}";
+        public override string Message => $"the entity {_entityId} does not contain the component {nameof(TComponent)}";
     }
 }

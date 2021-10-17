@@ -24,14 +24,14 @@ namespace Tofunaut.TofuECS
             }
         }
 
-        public Entity Request()
+        public int Request()
         {
-            Entity UseNextFreeIndex()
+            int UseNextFreeIndex()
             {
                 var freeIndex = _freeIndexes.Dequeue();
                 _entities[freeIndex].Recycle(_entityIdCounter++);
                 _idToIndex[_entities[freeIndex].Id] = freeIndex;
-                return _entities[freeIndex];
+                return freeIndex;
             }
 
             if (_freeIndexes.Count > 0)
@@ -56,6 +56,16 @@ namespace Tofunaut.TofuECS
         public void Release(Entity entity) => _freeIndexes.Enqueue(_idToIndex[entity.Id]);
 
         public Entity Get(int id) => _entities[_idToIndex[id]];
+
+        public bool TryGet(int id, out Entity entity)
+        {
+            entity = default;
+            if (!_idToIndex.TryGetValue(id, out var index))
+                return false;
+
+            entity = _entities[index];
+            return true;
+        }
 
         public void CopyFrom(EntityBuffer other)
         {

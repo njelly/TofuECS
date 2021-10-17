@@ -17,7 +17,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         public int Seed { get; private set; }
 
         private Simulation _sim;
-        private Entity _boardEntity;
+        private int _boardEntityId;
         private Texture2D _tex2D;
         private COGLInput _coglInput;
 
@@ -42,7 +42,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         {
             if(_sim != null)
             {
-                _sim.CurrentFrame.GetComponent<Board>(_boardEntity).Dispose();
+                _sim.CurrentFrame.GetComponent<Board>(_boardEntityId).Dispose();
             }
 
             Seed = seed;
@@ -54,10 +54,10 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                     new BoardSystem(new XorShiftRandom((ulong)seed))
                 });
             _sim.RegisterComponent<Board>();
-            _boardEntity = _sim.CurrentFrame.CreateEntity();
-            _sim.CurrentFrame.AddComponent<Board>(_boardEntity);
+            _boardEntityId = _sim.CurrentFrame.CreateEntity();
+            _sim.CurrentFrame.AddComponent<Board>(_boardEntityId);
 
-            var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntity);
+            var board = _sim.CurrentFrame.GetComponentUnsafe<Board>(_boardEntityId);
             board->StartStaticThreshold = 0.002f;
             board->Init(_worldSize.x, _worldSize.y);
             BoardSystem.OnSetCellValue += Board_OnSetCellValue;
@@ -78,7 +78,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private void OnDestroy()
         {
-            var board = _sim.CurrentFrame.GetComponent<Board>(_boardEntity);
+            var board = _sim.CurrentFrame.GetComponent<Board>(_boardEntityId);
             board.Dispose();
         }
 
@@ -165,7 +165,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             {
                 var iter = f.GetIterator<Board>();
                 var input = f.GetInput<COGLInput>(0);
-                while(iter.NextUnsafe(out var e, out var board))
+                while(iter.NextUnsafe(out _, out var board))
                 {
                     var staticThreshold = board->StartStaticThreshold * input.StaticScaler;
                     var toFlip = new List<int>();

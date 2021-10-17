@@ -4,59 +4,64 @@ namespace Tofunaut.TofuECS
 {
     public class EntityComponentIterator<TComponent> : IEntityComponentIterator where TComponent : unmanaged
     {
-        private readonly List<Entity> _entities;
-        private readonly List<Entity> _entitiesToRemove;
+        private readonly List<int> _entityIds;
+        private readonly List<int> _entitiesToRemove;
         private int _currentIndex;
         internal ComponentBuffer<TComponent> buffer;
+        private Frame _currentFrame;
 
         internal EntityComponentIterator()
         {
-            _entities = new List<Entity>();
-            _entitiesToRemove = new List<Entity>();
+            _entityIds = new List<int>();
+            _entitiesToRemove = new List<int>();
         }
 
+        public void Reset(Frame f)
+        {
+            _currentFrame = f;
+            Reset();
+        }
+        
         public void Reset()
-        { 
+        {
             _currentIndex = 0;
             foreach (var entity in _entitiesToRemove)
-                _entities.Remove(entity);
+                _entityIds.Remove(entity);
             
             _entitiesToRemove.Clear();
         }
 
-        public void AddEntity(Entity entity) => _entities.Add(entity);
-        public void RemoveEntity(Entity entity) => _entitiesToRemove.Add(entity);
+        public void AddEntity(int entityId) => _entityIds.Add(entityId);
+        public void RemoveEntity(int entityId) => _entitiesToRemove.Add(entityId);
 
-        public bool Next(out Entity entity, out TComponent component)
+        public bool Next(out int entityId, out TComponent component)
         {
-            if (_currentIndex == _entities.Count)
+            if (_currentIndex == _entityIds.Count)
             {
-                entity = default;
+                entityId = -1;
                 component = default;
                 return false;
             }
 
-            entity = _entities[_currentIndex];
+            entityId = _entityIds[_currentIndex];
+            var entity = _currentFrame.GetEntity(entityId);
             entity.TryGetComponentIndex(typeof(TComponent), out var index);
-
-            unsafe
-            {
-                component = buffer.Get(index);
-            }
+            component = buffer.Get(index);
             _currentIndex++;
             return true;
         }
         
-        public unsafe bool NextUnsafe(out Entity entity, out TComponent* component)
+        public unsafe bool NextUnsafe(out int entityId, out TComponent* component)
         {
-            if (_currentIndex == _entities.Count)
+            if (_currentIndex == _entityIds.Count)
             {
-                entity = default;
+                entityId = -1;
                 component = default;
                 return false;
             }
 
-            entity = _entities[_currentIndex];
+            entityId = _entityIds[_currentIndex];
+            var entity = _currentFrame.GetEntity(entityId);
             entity.TryGetComponentIndex(typeof(TComponent), out var index);
             component = buffer.GetUnsafe(index);
             _currentIndex++;
@@ -68,9 +73,9 @@ namespace Tofunaut.TofuECS
             var otherIterator = (EntityComponentIterator<TComponent>)other;
             otherIterator.Reset();
             Reset();
-            _entities.Clear();
-            foreach (var otherEntity in otherIterator._entities)
-                _entities.Add(otherEntity);
+            _entityIds.Clear();
+            foreach (var otherEntity in otherIterator._entityIds)
+                _entityIds.Add(otherEntity);
         }
     }
 }
