@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Tofunaut.TofuECS.Math;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -77,6 +78,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public int NumInputs => 1;
             
             public ulong Seed { get; }
+            public Fix64 DeltaTime => new Fix64(1) / new Fix64(30);
 
             public DummySimulationConfig(ulong seed)
             {

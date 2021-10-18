@@ -1,10 +1,10 @@
 using NUnit.Framework;
 using Tofunaut.TofuECS;
+using Tofunaut.TofuECS.Math;
 using UnityEngine;
 
 public class RuntimeTests
 {
-    // A Test behaves as an ordinary method
     [Test]
     public void RuntimeTestsSimplePasses()
     {
@@ -78,7 +78,31 @@ public class RuntimeTests
         }
         sim.RollbackTo(rollbackToFrame);
         Assert.IsTrue(randNum == sim.CurrentFrame.RNG.NextUInt64());
+    }
+
+    [Test]
+    public void MathTests()
+    {
+        var a = new FixVector2(Fix64.One, Fix64.One);
+        var b = new FixVector2(new Fix64(2), new Fix64(2));
         
+        Assert.IsTrue(a + b == new FixVector2(new Fix64(3), new Fix64(3)));
+        Assert.IsTrue(a - b == new FixVector2(new Fix64(-1), new Fix64(-1)));
+        Assert.IsTrue(a * new Fix64(2) == b);
+        Assert.IsTrue(a / new Fix64(2) == new FixVector2(new Fix64(1) / new Fix64(2), new Fix64(1) / new Fix64(2)));
+        
+        Assert.IsTrue(a.Magnitude == Fix64.Sqrt(new Fix64(2)));
+        Assert.IsTrue(a.SqrMagnitude == new Fix64(2));
+        Assert.IsTrue(a.ManhattanDistance == new Fix64(2));
+        
+        Assert.IsTrue(b.Magnitude == Fix64.Sqrt(new Fix64(8)));
+        Assert.IsTrue(b.SqrMagnitude == new Fix64(8));
+        Assert.IsTrue(b.ManhattanDistance == new Fix64(4));
+        
+        Assert.IsTrue(FixVector2.Right.Rotate(Fix64.PiOver2) == FixVector2.Up);
+        Assert.IsTrue(FixVector2.Right.Rotate(Fix64.Pi) == FixVector2.Left);
+        Assert.IsTrue(FixVector2.Right.Rotate(Fix64.Pi + Fix64.PiOver2) == FixVector2.Down);
+        Assert.IsTrue(FixVector2.Right.Rotate(Fix64.PiTimes2) == FixVector2.Right);
     }
 
     private class DummySimulationConfig : ISimulationConfig
@@ -90,6 +114,7 @@ public class RuntimeTests
         public int NumInputs => 1;
         
         public ulong Seed { get; }
+        public Fix64 DeltaTime => new Fix64(1) / new Fix64(30);
 
         public TAsset GetAsset<TAsset>(int id)
         {

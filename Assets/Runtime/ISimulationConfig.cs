@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tofunaut.TofuECS.Math;
 
 namespace Tofunaut.TofuECS
 {
@@ -32,6 +33,11 @@ namespace Tofunaut.TofuECS
         /// The seed for deterministic RNG.
         /// </summary>
         ulong Seed { get; }
+        
+        /// <summary>
+        /// The amount of time that passes between each tick. Should be constant for deterministic simulations.
+        /// </summary>
+        public Fix64 DeltaTime { get; }
     }
 
     public enum SimulationMode

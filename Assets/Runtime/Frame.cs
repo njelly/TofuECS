@@ -1,4 +1,5 @@
 ﻿using System;
+using Tofunaut.TofuECS.Math;
 
 namespace Tofunaut.TofuECS
 {
@@ -8,6 +9,7 @@ namespace Tofunaut.TofuECS
         public bool IsVerified { get; private set; }
         public ISimulationConfig Config => _sim.Config;
         public int NumInputs => _inputs.Length;
+        public Fix64 DeltaTime => Config.DeltaTime;
 
         public XorShiftRandom RNG { get; }
 

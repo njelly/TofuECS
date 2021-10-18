@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Tofunaut.TofuECS.Physics;
 
 namespace Tofunaut.TofuECS
 {
@@ -22,7 +23,16 @@ namespace Tofunaut.TofuECS
         public Simulation(ISimulationConfig config, InputProvider inputProvider, ISystem[] systems)
         {
             Config = config;
-            _systems = systems;
+
+            var coreSystems = new ISystem[]
+            {
+                new PhysicsSystem(),
+            };
+            
+            _systems = new ISystem[coreSystems.Length + systems.Length];
+            Array.Copy(coreSystems, 0, _systems, 0, coreSystems.Length);
+            Array.Copy(systems, 0, _systems, coreSystems.Length, systems.Length);
+            
             _frames = new Frame[config.MaxRollback];
 
             for (var i = 0; i < _frames.Length; i++)
