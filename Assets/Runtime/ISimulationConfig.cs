@@ -22,7 +22,12 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// The mode of the Simulation.
         /// </summary>
-        SimulationMode Mode {get;}
+        SimulationMode SimulationMode {get;}
+        
+        /// <summary>
+        /// The type of physics simulation that will run as part of the ECS (if any).
+        /// </summary>
+        PhysicsMode PhysicsMode { get; }
 
         /// <summary>
         /// How many separate inputs are there for the simulation? (i.e., players)
@@ -56,5 +61,18 @@ namespace Tofunaut.TofuECS
         /// The simulation is not networked, all frames are automatically verified.
         /// </summary>
         Offline,
+    }
+
+    public enum PhysicsMode
+    {
+        /// <summary>
+        /// No physics simulation will run as part of the ECS.
+        /// </summary>
+        None,
+        
+        /// <summary>
+        /// A 2D physics simulation will run. Transform2D and DynamicBody2D components will automatically be registered.
+        /// </summary>
+        Physics2D,
     }
 }

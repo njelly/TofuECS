@@ -72,13 +72,11 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         private class DummySimulationConfig : ISimulationConfig
         {
             public int MaxRollback => 60;
-
-            public SimulationMode Mode => SimulationMode.Offline;
-
+            public SimulationMode SimulationMode => SimulationMode.Offline;
             public int NumInputs => 1;
-            
             public ulong Seed { get; }
             public Fix64 DeltaTime => new Fix64(1) / new Fix64(30);
+            public PhysicsMode PhysicsMode => PhysicsMode.None;
 
             public DummySimulationConfig(ulong seed)
             {

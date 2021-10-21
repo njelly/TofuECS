@@ -83,6 +83,8 @@ public class RuntimeTests
     [Test]
     public void MathTests()
     {
+        // FixVector2
+        
         var a = new FixVector2(Fix64.One, Fix64.One);
         var b = new FixVector2(new Fix64(2), new Fix64(2));
         
@@ -103,18 +105,30 @@ public class RuntimeTests
         Assert.IsTrue(FixVector2.Right.Rotate(Fix64.Pi) == FixVector2.Left);
         Assert.IsTrue(FixVector2.Right.Rotate(Fix64.Pi + Fix64.PiOver2) == FixVector2.Down);
         Assert.IsTrue(FixVector2.Right.Rotate(Fix64.PiTimes2) == FixVector2.Right);
+        
+        
+        
+        // FixAABB
+        
+        var aAABB = new FixAABB(FixVector2.Zero, Fix64.One, Fix64.One);
+        var bAABB = new FixAABB(new FixVector2(new Fix64(1) / new Fix64(2), new Fix64(1) / new Fix64(2)), Fix64.One,
+            Fix64.One);
+        var cAABB = new FixAABB(new FixVector2(new Fix64(3) / new Fix64(2), new Fix64(3) / new Fix64(2)), Fix64.One,
+            Fix64.One);
+        
+        Assert.IsTrue(aAABB.Intersects(bAABB));
+        Assert.IsTrue(bAABB.Intersects(aAABB));
+        Assert.IsFalse(aAABB.Intersects(cAABB));
     }
 
     private class DummySimulationConfig : ISimulationConfig
     {
         public int MaxRollback => 60;
-
-        public SimulationMode Mode => SimulationMode.Offline;
-
+        public SimulationMode SimulationMode => SimulationMode.Offline;
         public int NumInputs => 1;
-        
         public ulong Seed { get; }
         public Fix64 DeltaTime => new Fix64(1) / new Fix64(30);
+        public PhysicsMode PhysicsMode => PhysicsMode.None;
 
         public TAsset GetAsset<TAsset>(int id)
         {

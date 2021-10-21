@@ -6,6 +6,8 @@
         public static FixVector2 Down => new FixVector2(Fix64.Zero, -Fix64.One);
         public static FixVector2 Left => new FixVector2(-Fix64.One, Fix64.Zero);
         public static FixVector2 Up => new FixVector2(Fix64.Zero, Fix64.One);
+        public static FixVector2 Zero => new FixVector2(Fix64.Zero, Fix64.Zero);
+        public static FixVector2 One => new FixVector2(Fix64.One, Fix64.One);
         
         public Fix64 X;
         public Fix64 Y;

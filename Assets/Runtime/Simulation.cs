@@ -23,21 +23,12 @@ namespace Tofunaut.TofuECS
         public Simulation(ISimulationConfig config, InputProvider inputProvider, ISystem[] systems)
         {
             Config = config;
-
-            var coreSystems = new ISystem[]
-            {
-                new PhysicsSystem(),
-            };
-            
-            _systems = new ISystem[coreSystems.Length + systems.Length];
-            Array.Copy(coreSystems, 0, _systems, 0, coreSystems.Length);
-            Array.Copy(systems, 0, _systems, coreSystems.Length, systems.Length);
             
             _frames = new Frame[config.MaxRollback];
 
             for (var i = 0; i < _frames.Length; i++)
                 _frames[i] = new Frame(this, Config.NumInputs);
-
+            
             CurrentFrame = _frames[0];
 
             _typeToIndex = new Dictionary<Type, int>();
@@ -46,6 +37,24 @@ namespace Tofunaut.TofuECS
             _currentInputs = new Input[Config.NumInputs];
 
             IsInitialized = false;
+
+            switch (config.PhysicsMode)
+            {
+                case PhysicsMode.None:
+                    _systems = systems;
+                    break;
+                case PhysicsMode.Physics2D:
+                    var coreSystems = new ISystem[]
+                    {
+                        new Physics2DSystem(),
+                    };
+                    _systems = new ISystem[coreSystems.Length + systems.Length];
+                    Array.Copy(coreSystems, 0, _systems, 0, coreSystems.Length);
+                    Array.Copy(systems, 0, _systems, coreSystems.Length, systems.Length);
+                    RegisterComponent<Transform2D>();
+                    RegisterComponent<DynamicBody2D>();
+                    break;
+            }
         }
 
         /// <summary>
@@ -84,7 +93,7 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public void Tick()
         {
-            if (Config.Mode != SimulationMode.Client)
+            if (Config.SimulationMode != SimulationMode.Client)
             {
                 CurrentFrame.Verify();
                 LastVerifiedFrame = CurrentFrame.Number;
