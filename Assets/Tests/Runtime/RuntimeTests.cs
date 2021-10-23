@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Tofunaut.TofuECS;
 using Tofunaut.TofuECS.Math;
@@ -82,7 +83,7 @@ public class RuntimeTests
 
     [Test]
     public void MathTests()
-    {
+    { 
         // FixVector2
         
         var a = new FixVector2(Fix64.One, Fix64.One);
@@ -119,6 +120,26 @@ public class RuntimeTests
         Assert.IsTrue(aAABB.Intersects(bAABB));
         Assert.IsTrue(bAABB.Intersects(aAABB));
         Assert.IsFalse(aAABB.Intersects(cAABB));
+
+
+
+        // RNG
+        
+        var r = new XorShiftRandom((ulong)DateTime.Now.Ticks);
+        const int numIter = 100;
+        var max = new Fix64(numIter);
+        for (var i = numIter/-2; i < numIter/2; i++)
+        {
+            var min = new Fix64(i);
+            var n = r.NextFix64ZeroOne() * (max - min) + min;
+            Assert.IsTrue(n >= min && n < max);
+        }
+
+        for (var i = 0; i < numIter; i++)
+        {
+            var n = r.NextFix64ZeroOne();
+            Assert.IsTrue(n >= Fix64.Zero && n < Fix64.One);
+        }
     }
 
     private class DummySimulationConfig : ISimulationConfig

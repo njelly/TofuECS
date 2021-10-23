@@ -30,7 +30,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
             _coglInput = new COGLInput
             {
-                StaticScaler = 0f,
+                StaticScaler = Fix64.Zero,
             };
 
             Reset((ulong)DateTime.Now.Ticks);
@@ -63,7 +63,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         public void DoTick()
         {
-            _coglInput.StaticScaler = _staticScaleSlider.value;
+            _coglInput.StaticScaler = Fix64.FROM_FLOAT_UNSAFE(_staticScaleSlider.value);
 
             _sim.Tick();
             _tex2D.Apply();
@@ -106,7 +106,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private class COGLInput : Input
         {
-            public float StaticScaler;
+            public Fix64 StaticScaler;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -116,7 +116,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public int Height;
             public int Size;
             public bool* State;
-            public float StartStaticThreshold;
+            public Fix64 StartStaticThreshold;
 
             public void Init(int width, int height)
             {
@@ -155,7 +155,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 f.AddComponent<Board>(boardEntityId);
                 
                 var board = f.GetComponentUnsafe<Board>(boardEntityId);
-                board->StartStaticThreshold = 0.002f;
+                board->StartStaticThreshold = Fix64.FROM_FLOAT_UNSAFE(0.002f);
                 board->Init(_boardWidth, _boardHeight);
 
                 for (var i = 0; i < _boardWidth * _boardHeight; i++)
@@ -220,7 +220,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                             toFlip.Add(i);
                         
                         // non-conway rules, just a test
-                        else if (_r.NextDouble() <= staticThreshold)
+                        else if (_r.NextFix64ZeroOne() <= staticThreshold)
                             toFlip.Add(i);
                     }
 

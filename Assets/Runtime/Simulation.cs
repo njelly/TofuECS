@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Tofunaut.TofuECS.Physics;
 
 namespace Tofunaut.TofuECS
@@ -44,13 +45,17 @@ namespace Tofunaut.TofuECS
                     _systems = systems;
                     break;
                 case PhysicsMode.Physics2D:
-                    var coreSystems = new ISystem[]
+                    var preSystems = new ISystem[]
+                    {
+                    };
+                    var postSystems = new ISystem[]
                     {
                         new Physics2DSystem(),
                     };
-                    _systems = new ISystem[coreSystems.Length + systems.Length];
-                    Array.Copy(coreSystems, 0, _systems, 0, coreSystems.Length);
-                    Array.Copy(systems, 0, _systems, coreSystems.Length, systems.Length);
+                    _systems = new ISystem[preSystems.Length + systems.Length + postSystems.Length];
+                    Array.Copy(preSystems, 0, _systems, 0, preSystems.Length);
+                    Array.Copy(systems, 0, _systems, preSystems.Length, systems.Length);
+                    Array.Copy(postSystems, 0, _systems, preSystems.Length + systems.Length, postSystems.Length);
                     RegisterComponent<Transform2D>();
                     RegisterComponent<DynamicBody2D>();
                     break;

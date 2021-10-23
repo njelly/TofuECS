@@ -17,14 +17,20 @@ namespace Tofunaut.TofuECS.Physics
                 if (dynamicBody2d->ForcesNextIndex <= 0)
                     continue;
 
-                var sumForces = FixVector2.Zero;
-                for (var i = 0; i < dynamicBody2d->ForcesNextIndex; i++)
-                    sumForces += dynamicBody2d->Forces[i];
-
-                dynamicBody2d->Velocity += sumForces / new Fix64(dynamicBody2d->ForcesNextIndex) * f.DeltaTime;
+                // integrate the forces
+                dynamicBody2d->Velocity += dynamicBody2d->SumForces() / new Fix64(dynamicBody2d->ForcesNextIndex) * f.DeltaTime;
+                dynamicBody2d->ClearForces();
+                
+                // move the transform
+                transform2d->Position += dynamicBody2d->Velocity * f.DeltaTime;
             }
         }
 
-        public void Dispose(Frame f) { }
+        public void Dispose(Frame f)
+        {
+            var dynamicBody2dIterator = f.GetIterator<DynamicBody2D>();
+            while (dynamicBody2dIterator.NextUnsafe(out _, out var dynamicBody2D))
+                dynamicBody2D->Dispose();
+        }
     }
 }

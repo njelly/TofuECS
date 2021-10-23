@@ -34,7 +34,7 @@ namespace Tofunaut.TofuECS.Math
         const long MIN_VALUE = long.MinValue;
         const int NUM_BITS = 64;
         const int FRACTIONAL_PLACES = 32;
-        const long ONE = 1L << FRACTIONAL_PLACES;
+        internal const long ONE = 1L << FRACTIONAL_PLACES;
         const long PI_TIMES_2 = 0x6487ED511;
         const long PI = 0x3243F6A88;
         const long PI_OVER_2 = 0x1921FB544;
@@ -981,16 +981,6 @@ namespace Tofunaut.TofuECS.Math
             return new Fix64(rawValue);
         }
 
-        internal static void GenerateSinLut()
-        {
-
-        }
-
-        internal static void GenerateTanLut()
-        {
-
-        }
-
         // turn into a Console Application and use this to generate the look-up tables
         //static void Main(string[] args)
         //{
@@ -1016,5 +1006,7 @@ namespace Tofunaut.TofuECS.Math
         {
             m_rawValue = value * ONE;
         }
+
+        public static Fix64 FROM_FLOAT_UNSAFE(float f) => new Fix64((long)(ONE * f));
     }
 }
