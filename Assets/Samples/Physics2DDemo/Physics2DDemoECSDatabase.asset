@@ -18,9 +18,17 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
+  - m_AssetGUID: 82cfb426635943847afb32ab3a0de677
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   - m_AssetGUID: 30d4ec69cde970e4992d00bda2e59ca0
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
+  - m_AssetGUID: 38dffed24eef0ee43bac1e928349b629
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   _prevECSAssetsLength: 0
-  _prevEntityViewsLength: 2
+  _prevEntityViewsLength: 4

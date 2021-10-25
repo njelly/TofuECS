@@ -29,6 +29,14 @@ MonoBehaviour:
     m_Address: Assets/Samples/Physics2DDemo/Circle.png
     m_ReadOnly: 0
     m_SerializedLabels: []
+  - m_GUID: 82cfb426635943847afb32ab3a0de677
+    m_Address: Assets/Samples/Physics2DDemo/BlueBallView.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 38dffed24eef0ee43bac1e928349b629
+    m_Address: Assets/Samples/Physics2DDemo/GreenBallView.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0529c409176f53647b68d522e681301e, type: 2}
   m_SchemaSet:

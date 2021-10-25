@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 namespace Tofunaut.TofuECS.Unity
 {
-    public class EntityView : MonoBehaviour
+    public sealed class EntityView : MonoBehaviour
     {
         public int EntityId { get; private set; }
         public int PrefabId
@@ -14,7 +14,7 @@ namespace Tofunaut.TofuECS.Unity
         
         public UnityEvent OnInitialize;
         
-        [ SerializeField ] private int _prefabId;
+        [SerializeField, HideInInspector] private int _prefabId;
         
         internal void Initialize(int entityId)
         {

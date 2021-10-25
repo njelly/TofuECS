@@ -212,6 +212,7 @@ namespace Tofunaut.TofuECS.Unity
                     toRemove.Add(assetReference);
                     continue;
                 }
+                
                 if (entityViewObj == null)
                     continue;
 
@@ -226,6 +227,12 @@ namespace Tofunaut.TofuECS.Unity
                 {
                     toRemove.Add(assetReference);
                     continue;
+                }
+
+                if (validEntityViews.Any(x => x.PrefabId == entityView.PrefabId))
+                {
+                    entityView.PrefabId = 0;
+                    Debug.LogError($"detected EntityView {entityView.name} with duplicate prefab id, resetting it");
                 }
                 
                 validEntityViews.Add(entityView);
@@ -258,7 +265,7 @@ namespace Tofunaut.TofuECS.Unity
             foreach (var entityView in unassignedArray)
             {
                 entityView.PrefabId = nextId++;
-                Debug.Log("registered ECSDatabase EntityView: " + entityView.PrefabId);
+                Debug.Log($"registered ECSDatabase EntityView {entityView.name}: {entityView.PrefabId}");
                 EditorUtility.SetDirty(entityView.gameObject);
             }
 
