@@ -197,17 +197,32 @@ namespace Tofunaut.TofuECS.Unity
 
         private bool ValidateEntityViews()
         {
-            Debug.Log("0");
             var toRemove = new List<AssetReference>();
             var validEntityViews = new List<EntityView>();
             foreach (var assetReference in _entityViews)
             {
-                var entityViewObj = (GameObject)assetReference.editorAsset;
+                GameObject entityViewObj;
+                try
+                {
+                    entityViewObj = (GameObject)assetReference.editorAsset;
+                }
+                catch (InvalidCastException e)
+                {
+                    Debug.LogError("ECSDatabase EntityViews must be a prefab");
+                    toRemove.Add(assetReference);
+                    continue;
+                }
                 if (entityViewObj == null)
                     continue;
 
                 var entityView = entityViewObj.GetComponent<EntityView>();
                 if (entityView == null)
+                {
+                    toRemove.Add(assetReference);
+                    continue;
+                }
+
+                if (validEntityViews.Contains(entityView))
                 {
                     toRemove.Add(assetReference);
                     continue;
@@ -218,35 +233,32 @@ namespace Tofunaut.TofuECS.Unity
 
             if (toRemove.Count > 0)
             {
-                Debug.LogError("must have an entity view component");
                 var validList = _entityViews.ToList();
-                validList.RemoveAll(x => toRemove.Contains(x));
-                _entityViews = validList.ToArray();
+                var numInvalid = validList.RemoveAll(x => toRemove.Contains(x));
+                var invalidList = new AssetReference[numInvalid];
+                _entityViews = validList.Concat(invalidList).ToArray();
             }
             
             if (validEntityViews.Count == _prevEntityViewsLength)
                 return false;
 
-            Debug.Log("1");
             _prevEntityViewsLength = validEntityViews.Count;
             
             if (validEntityViews.Count <= 0) 
                 return false;
-            
-            Debug.Log("2");
-            
+
             var unassignedArray = validEntityViews.Where(x => x != null && x.PrefabId == 0).ToArray();
             if (unassignedArray.Length <= 0) 
                 return false;
-            
-            Debug.Log("3");
-            
-            var nextId = unassignedArray.Max(x => x.PrefabId) + 1;
+
+            var nextId = 1;
+            if(validEntityViews.Count > 0)
+                nextId = validEntityViews.Max(x => x.PrefabId) + 1;
             
             foreach (var entityView in unassignedArray)
             {
                 entityView.PrefabId = nextId++;
-                Debug.Log("set prefab id: " + entityView.PrefabId);
+                Debug.Log("registered ECSDatabase EntityView: " + entityView.PrefabId);
                 EditorUtility.SetDirty(entityView.gameObject);
             }
 

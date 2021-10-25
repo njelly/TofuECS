@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4044057303284461909}
   - component: {fileID: -4129047481185060056}
   m_Layer: 0
-  m_Name: BallView 1
+  m_Name: RedBallView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47,7 +47,7 @@ MonoBehaviour:
   OnInitialize:
     m_PersistentCalls:
       m_Calls: []
-  _prefabId: 1
+  _prefabId: 2
 --- !u!1 &4044057303565917565
 GameObject:
   m_ObjectHideFlags: 0
@@ -120,7 +120,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: -2413806693520163455, guid: e355c1c25016d8a4f98f95640c5c3db3, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

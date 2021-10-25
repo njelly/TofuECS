@@ -13,6 +13,14 @@ MonoBehaviour:
   m_Name: Physics2DDemoECSDatabase
   m_EditorClassIdentifier: 
   _eCSAssets: []
-  _entityViews: []
+  _entityViews:
+  - m_AssetGUID: 74e4450443bfc7545823b0daf6a7f687
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  - m_AssetGUID: 30d4ec69cde970e4992d00bda2e59ca0
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   _prevECSAssetsLength: 0
-  _prevEntityViewsLength: 0
+  _prevEntityViewsLength: 2

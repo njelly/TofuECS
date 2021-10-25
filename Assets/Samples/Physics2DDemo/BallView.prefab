@@ -47,7 +47,7 @@ MonoBehaviour:
   OnInitialize:
     m_PersistentCalls:
       m_Calls: []
-  _prefabId: 0
+  _prefabId: 1
 --- !u!1 &4044057303565917565
 GameObject:
   m_ObjectHideFlags: 0
