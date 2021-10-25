@@ -8,11 +8,11 @@ namespace Tofunaut.TofuECS.Physics
 
         public void Process(Frame f)
         {
-            var transform2dIterator = f.GetIterator<Transform2D>();
-            while (transform2dIterator.NextUnsafe(out var entityId, out var transform2d))
+            var dynamicBody2dIterator = f.GetIterator<DynamicBody2D>();
+            while (dynamicBody2dIterator.NextUnsafe(out var entityId, out var dynamicBody2d))
             {
-                if (!f.TryGetComponentUnsafe<DynamicBody2D>(entityId, out var dynamicBody2d))
-                    continue;
+                if(f.TryGetComponentUnsafe<Transform2D>(entityId, out var transform2d))
+                    transform2d->PrevPosition = transform2d->Position;
 
                 if (dynamicBody2d->ForcesNextIndex <= 0)
                     continue;
@@ -20,9 +20,10 @@ namespace Tofunaut.TofuECS.Physics
                 // integrate the forces
                 dynamicBody2d->Velocity += dynamicBody2d->SumForces() / new Fix64(dynamicBody2d->ForcesNextIndex) * f.DeltaTime;
                 dynamicBody2d->ClearForces();
-                
+
                 // move the transform
-                transform2d->Position += dynamicBody2d->Velocity * f.DeltaTime;
+                if (transform2d != null)
+                    transform2d->Position += dynamicBody2d->Velocity * f.DeltaTime;
             }
         }
 

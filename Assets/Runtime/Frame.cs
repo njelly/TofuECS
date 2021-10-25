@@ -107,7 +107,7 @@ namespace Tofunaut.TofuECS
             var entity = _entityBuffer.Get(entityId);
             if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
             {
-                component = default;
+                component = null;
                 return false;
             }
 

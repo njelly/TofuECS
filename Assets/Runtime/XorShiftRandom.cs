@@ -395,23 +395,22 @@ namespace Tofunaut.TofuECS
         }
 
         public Fix64 NextFix64ZeroOne()
-        {            
-            Fix64 _;
-            ulong temp_x, temp_y, temp_z;
-
-            temp_x = y_;
+        {
+            var temp_x = y_;
             x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            var temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
 
-            temp_z = temp_y + y_;
+            var temp_z = temp_y + y_;
             var lValue = (long)(DOUBLE_UNIT * (0x7FFFFFFF & temp_z) * Fix64.ONE);
-            _ = Fix64.FromRaw(lValue);
+            var _ = Fix64.FromRaw(lValue);
 
             x_ = temp_x;
             y_ = temp_y;
 
             return _;
         }
+
+        public Fix64 NextFix64(Fix64 min, Fix64 max) => NextFix64ZeroOne() * (max - min) + min;
 
         #endregion
 

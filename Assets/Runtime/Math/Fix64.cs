@@ -1007,6 +1007,9 @@ namespace Tofunaut.TofuECS.Math
             m_rawValue = value * ONE;
         }
 
+        /// <summary>
+        /// Should only be used when serializing config files, i.e, before the sim starts.
+        /// </summary>
         public static Fix64 FROM_FLOAT_UNSAFE(float f) => new Fix64((long)(ONE * f));
     }
 }

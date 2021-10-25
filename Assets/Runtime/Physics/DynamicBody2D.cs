@@ -30,6 +30,8 @@ namespace Tofunaut.TofuECS.Physics
             Forces[ForcesNextIndex++] = force;
         }
 
+        public void AddImpulse(FixVector2 impulse) => Velocity += impulse;
+
         internal void Init()
         {
             ForcesLength = 1;
