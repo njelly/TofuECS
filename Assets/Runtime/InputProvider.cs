@@ -5,6 +5,6 @@
         /// <summary>
         /// Called once per tick and before systems are processed.
         /// </summary>
-        public abstract Input GetInput(int index);
+        public abstract Input Poll(int index);
     }
 }

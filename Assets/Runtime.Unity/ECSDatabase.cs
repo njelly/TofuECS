@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,28 +18,37 @@ namespace Tofunaut.TofuECS.Unity
     {
         [SerializeField] private AssetReference[] _eCSAssets = Array.Empty<AssetReference>();
         [SerializeField] private AssetReference[] _entityViews = Array.Empty<AssetReference>();
+        [SerializeField, HideInInspector] private int[] _eCSAssetIds;
+        [SerializeField, HideInInspector] private int[] _entityViewIds;
         [SerializeField, HideInInspector] private int _prevECSAssetsLength;
         [SerializeField, HideInInspector] private int _prevEntityViewsLength;
 
-        public bool IsBuilt { get; private set; }
-
         private Dictionary<int, AssetReference> _ecsAssetsAssetRefsDict;
         private Dictionary<int, AssetReference> _entityViewsAssetRefsDict;
-        private Dictionary<int, ECSAsset> _idToPreloadedEcsAsset;
+        private Dictionary<int, IECSAsset> _idToPreloadedEcsAsset;
         private Dictionary<int, GameObject> _idToPreloadedEntityView;
 
         private bool _isInitialized;
 
         private void OnEnable()
         {
+            _isInitialized = false;
             _prevECSAssetsLength = _eCSAssets.Length;
             _prevEntityViewsLength = _entityViews.Length;
         }
 
-        public async Task Preload(IEnumerable<int> assetIds, IEnumerable<int> prefabIds)
+        public async Task PreloadAll()
         {
             if(!_isInitialized)
                 Initialize();
+            
+            var assetIds = _ecsAssetsAssetRefsDict.Keys;
+            var prefabIds = _entityViewsAssetRefsDict.Keys;
+            await Preload(assetIds, prefabIds);
+        }
+
+        public async Task Preload(IEnumerable<int> assetIds, IEnumerable<int> prefabIds)
+        {
             
             if(assetIds != null)
                 await PreloadAssets(assetIds);
@@ -52,21 +62,21 @@ namespace Tofunaut.TofuECS.Unity
             _ecsAssetsAssetRefsDict ??= new Dictionary<int, AssetReference>();
             _ecsAssetsAssetRefsDict.Clear();
 
-            foreach (var assetReference in _eCSAssets)
-                _ecsAssetsAssetRefsDict.Add(((ECSAsset)assetReference.Asset).AssetId, assetReference);
+            for (var i = 0; i < _eCSAssetIds.Length; i++)
+                _ecsAssetsAssetRefsDict.Add(_eCSAssetIds[i], _eCSAssets[i]);
 
             _entityViewsAssetRefsDict ??= new Dictionary<int, AssetReference>();
             _entityViewsAssetRefsDict.Clear();
 
-            foreach (var assetReference in _entityViews)
-                _entityViewsAssetRefsDict.Add(((EntityView)assetReference.Asset).PrefabId, assetReference);
+            for (var i = 0; i < _entityViewIds.Length; i++)
+                _entityViewsAssetRefsDict.Add(_entityViewIds[i], _entityViews[i]);
 
             _isInitialized = true;
         }
 
         private async Task PreloadAssets(IEnumerable<int> assetIds)
         {
-            _idToPreloadedEcsAsset ??= new Dictionary<int, ECSAsset>();
+            _idToPreloadedEcsAsset ??= new Dictionary<int, IECSAsset>();
 
             foreach (var assetId in assetIds)
             {
@@ -75,8 +85,8 @@ namespace Tofunaut.TofuECS.Unity
 
                 // I'm not sure if using the plural version of this API here (LoadAssetsAsync) while maintaining an
                 // association with our custom key (the integer assetId) is currently possible.
-                var asset = await Addressables.LoadAssetAsync<ECSAsset>(assetReference).Task;
-                _idToPreloadedEcsAsset.Add(assetId, asset);
+                var asset = await Addressables.LoadAssetAsync<Object>(assetReference).Task;
+                _idToPreloadedEcsAsset.Add(assetId, (IECSAsset)asset);
             }
         }
         
@@ -99,26 +109,18 @@ namespace Tofunaut.TofuECS.Unity
         /// <summary>
         /// Returns the asset with the given id. Fails if the asset has not been not been loaded before.
         /// </summary>
-        public TAsset GetAsset<TAsset>(int assetId) where TAsset : ECSAsset
+        public TData GetECSData<TData>(int assetId) where TData : unmanaged
         {
             if (!_idToPreloadedEcsAsset.TryGetValue(assetId, out var asset))
-                throw new ECSAssetNotLoadedException<TAsset>(assetId);
+                throw new ECSAssetNotLoadedException(assetId);
 
-            return (TAsset)asset;
-        }
-
-        /// <summary>
-        /// Returns the asset with the given id. Awaits Addressable.LoadAssetAsync if the asset has not been loaded before.
-        /// </summary>
-        public async Task<TAsset> GetAssetAsync<TAsset>(int assetId) where TAsset : ECSAsset
-        {
-            if (_idToPreloadedEcsAsset.TryGetValue(assetId, out var asset)) 
-                return (TAsset)asset;
+            if (asset.DataType == typeof(TData)) 
+                return (TData)asset.GetECSData();
             
-            asset = await Addressables.LoadAssetAsync<TAsset>(_ecsAssetsAssetRefsDict[assetId]).Task;
-            _idToPreloadedEcsAsset[assetId] = asset;
-
-            return (TAsset)asset;
+            Debug.LogError(
+                $"The asset with id {assetId} contains data of type {asset.DataType}, not the requested {typeof(TData)}.");
+            
+            return default;
         } 
         
         /// <summary>
@@ -155,41 +157,82 @@ namespace Tofunaut.TofuECS.Unity
             didSetDirty |= ValidateEntityViews();
 
             if (didSetDirty)
-                IsBuilt = false;
-        }
-
-        public void Build()
-        {
-            ValidateECSAssets();
-            ValidateEntityViews();
-            
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-            
-            IsBuilt = true;
+            {
+                EditorUtility.SetDirty(this);
+                AssetDatabase.SaveAssets();
+            }
         }
 
         private bool ValidateECSAssets()
         {
-            var nonNullECSAssets = _eCSAssets.Where(x => x.editorAsset != null).ToArray();
-            
-            if (nonNullECSAssets.Length == _prevECSAssetsLength)
-                return false;
-
-            _prevECSAssetsLength = nonNullECSAssets.Length;
-            
-            if (nonNullECSAssets.Length <= 0) 
-                return false;
-
-            var unassignedList = nonNullECSAssets.Where(x => x != null && x.editorAsset is ECSAsset ecsAsset && ecsAsset.AssetId == 0).ToList();
-            if (unassignedList.Count <= 0) 
-                return false;
-
-            var nextId = nonNullECSAssets.Max(x => ((ECSAsset)x.editorAsset).AssetId) + 1;
-            foreach (var assetRef in unassignedList)
+            var toRemove = new List<AssetReference>();
+            var validECSAssets = new List<IECSAsset>();
+            foreach (var assetReference in _eCSAssets)
             {
-                ((ECSAsset)assetRef.Asset).AssetId = nextId++;
-                EditorUtility.SetDirty(assetRef.Asset);
+                if (assetReference.editorAsset == null)
+                    continue;
+                
+                IECSAsset ecsAsset;
+                try
+                {
+                    ecsAsset = (IECSAsset)assetReference.editorAsset;
+                }
+                catch (InvalidCastException e)
+                {
+                    Debug.LogError("ECSDatabase ECSAssets must be be a scriptable object derived from ECSAsset");
+                    toRemove.Add(assetReference);
+                    continue;
+                }
+                
+                if (ecsAsset == null)
+                    continue;
+
+                if (validECSAssets.Contains(ecsAsset))
+                {
+                    toRemove.Add(assetReference);
+                    continue;
+                }
+
+                if (validECSAssets.Any(x => x.AssetId == ecsAsset.AssetId))
+                {
+                    ecsAsset.AssetId = 0;
+                    Debug.LogWarning($"detected ECSAsset {ecsAsset.AssetName} with duplicate asset id, resetting it");
+                }
+                
+                validECSAssets.Add(ecsAsset);
+            }
+
+            if (toRemove.Count > 0)
+            {
+                var validList = _eCSAssets.ToList();
+                var numInvalid = validList.RemoveAll(x => toRemove.Contains(x));
+                var invalidList = new AssetReference[numInvalid];
+                _eCSAssets = validList.Concat(invalidList).ToArray();
+            }
+
+            _eCSAssetIds = validECSAssets.Select(x => x.AssetId).ToArray();
+            
+            if (validECSAssets.Count == _prevECSAssetsLength)
+                return false;
+
+            _prevECSAssetsLength = validECSAssets.Count;
+            
+            if (validECSAssets.Count <= 0) 
+                return false;
+
+            var unassignedArray = validECSAssets.Where(x => x != null && x.AssetId == 0).ToArray();
+            if (unassignedArray.Length <= 0) 
+                return false;
+
+            var nextId = 1;
+            if(validECSAssets.Count > 0)
+                nextId = validECSAssets.Max(x => x.AssetId) + 1;
+            
+            foreach (var ecsAsset in unassignedArray)
+            {
+                ecsAsset.AssetId = nextId++;
+                Debug.Log($"registered ECSDatabase EntityView {ecsAsset.AssetName}: {ecsAsset.AssetId}");
+                EditorUtility.SetDirty((Object)ecsAsset);
             }
 
             return true;
@@ -232,7 +275,7 @@ namespace Tofunaut.TofuECS.Unity
                 if (validEntityViews.Any(x => x.PrefabId == entityView.PrefabId))
                 {
                     entityView.PrefabId = 0;
-                    Debug.LogError($"detected EntityView {entityView.name} with duplicate prefab id, resetting it");
+                    Debug.LogWarning($"detected EntityView {entityView.name} with duplicate prefab id, resetting it");
                 }
                 
                 validEntityViews.Add(entityView);
@@ -245,6 +288,8 @@ namespace Tofunaut.TofuECS.Unity
                 var invalidList = new AssetReference[numInvalid];
                 _entityViews = validList.Concat(invalidList).ToArray();
             }
+            
+            _entityViewIds = validEntityViews.Select(x => x.PrefabId).ToArray();
             
             if (validEntityViews.Count == _prevEntityViewsLength)
                 return false;
@@ -277,19 +322,7 @@ namespace Tofunaut.TofuECS.Unity
     public class ECSDatabaseNotInitializedException : Exception
     {
         public override string Message => "The ECS Database has not been initialized.";
-    }
-
-    public class ECSAssetNotRegisteredException<TAsset> : Exception where TAsset : ECSAsset
-    {
-        private readonly int _id;
-
-        public override string Message => $"The asset of type {nameof(TAsset)} with id {_id} has not been registered.";
-
-        public ECSAssetNotRegisteredException(int id)
-        {
-            _id = id;
-        }
-    }    
+    }  
     
     public class ECSAssetNotRegisteredException : Exception
     {
@@ -303,7 +336,7 @@ namespace Tofunaut.TofuECS.Unity
         }
     }    
     
-    public class ECSAssetNotLoadedException<TAsset>: Exception where TAsset : ECSAsset
+    public class ECSAssetNotLoadedException : Exception
     {
         private readonly int _id;
 

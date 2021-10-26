@@ -73,5 +73,6 @@ namespace Tofunaut.TofuECS.Physics
         public Fix64 CircleRadius;
         public FixVector2 BoxExtents;
         public FixAABB BoundingBox;
+        public bool IsTrigger;
     }
 }

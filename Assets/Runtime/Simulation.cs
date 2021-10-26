@@ -105,7 +105,7 @@ namespace Tofunaut.TofuECS
             }
 
             for (var i = 0; i < Config.NumInputs; i++)
-                _currentInputs[i] = _inputProvider.GetInput(i);
+                _currentInputs[i] = _inputProvider.Poll(i);
 
             CurrentFrame.CopyInputs(_currentInputs);
 

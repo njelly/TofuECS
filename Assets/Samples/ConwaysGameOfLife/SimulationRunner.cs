@@ -72,6 +72,11 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         private class DummySimulationConfig : ISimulationConfig
         {
             public int MaxRollback => 60;
+            public TData GetECSData<TData>(int id) where TData : unmanaged
+            {
+                return default;
+            }
+
             public SimulationMode SimulationMode => SimulationMode.Offline;
             public int NumInputs => 1;
             public ulong Seed { get; }
@@ -81,11 +86,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             public DummySimulationConfig(ulong seed)
             {
                 Seed = seed;
-            }
-
-            public TAsset GetAsset<TAsset>(int id)
-            {
-                return default;
             }
         }
 
@@ -98,7 +98,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _coglInput = coglInput;
             }
 
-            public override Input GetInput(int index)
+            public override Input Poll(int index)
             {
                 return _coglInput;
             }

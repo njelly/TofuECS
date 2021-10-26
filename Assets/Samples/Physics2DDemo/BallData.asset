@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e54ee1df87ef0b447b158dd74c7fbe37, type: 3}
+  m_Name: BallData
+  m_EditorClassIdentifier: 
+  _assetId: 1
+  _mass:
+    RawValue: 4294967296
+  _radius:
+    RawValue: 2147483648
+  _prefab: {fileID: -4129047481185060056, guid: 74e4450443bfc7545823b0daf6a7f687, type: 3}

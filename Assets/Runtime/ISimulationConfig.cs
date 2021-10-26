@@ -15,9 +15,9 @@ namespace Tofunaut.TofuECS
         int MaxRollback { get; }
 
         /// <summary>
-        /// Retrieve some asset for use in the simulation with an Id. The Id can be stored on a component, for example.
+        /// Retrieve some data from an asset for use in the simulation with an Id. The Id can be stored on a component, for example.
         /// </summary>
-        TAsset GetAsset<TAsset>(int id);
+        TData GetECSData<TData>(int id) where TData : unmanaged;
 
         /// <summary>
         /// The mode of the Simulation.

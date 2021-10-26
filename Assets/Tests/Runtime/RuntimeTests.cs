@@ -145,6 +145,11 @@ public class RuntimeTests
     private class DummySimulationConfig : ISimulationConfig
     {
         public int MaxRollback => 60;
+        public TData GetECSData<TData>(int id) where TData : unmanaged
+        {
+            return default;
+        }
+
         public SimulationMode SimulationMode => SimulationMode.Offline;
         public int NumInputs => 1;
         public ulong Seed { get; }
@@ -164,7 +169,7 @@ public class RuntimeTests
 
     private class DummyInputProvider : InputProvider
     {
-        public override Tofunaut.TofuECS.Input GetInput(int index)
+        public override Tofunaut.TofuECS.Input Poll(int index)
         {
             return new DummyInput();
         }

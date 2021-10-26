@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d71892801be4000b771757393018dea, type: 3}
   m_Name: Physics2DDemoECSDatabase
   m_EditorClassIdentifier: 
-  _eCSAssets: []
+  _eCSAssets:
+  - m_AssetGUID: f87d07ca02ad7e840b65d8cfe609d968
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
   _entityViews:
   - m_AssetGUID: 74e4450443bfc7545823b0daf6a7f687
     m_SubObjectName: 
@@ -30,5 +34,7 @@ MonoBehaviour:
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
-  _prevECSAssetsLength: 0
+  _eCSAssetIds: 01000000
+  _entityViewIds: 01000000030000000200000004000000
+  _prevECSAssetsLength: 1
   _prevEntityViewsLength: 4
