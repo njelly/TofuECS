@@ -5,6 +5,6 @@ namespace Tofunaut.TofuECS
         int NumInUse { get; }
         int Request();
         void Release(int index);
-        void CopyFrom(IComponentBuffer other);
+        void Recycle(IComponentBuffer other);
     }
 }

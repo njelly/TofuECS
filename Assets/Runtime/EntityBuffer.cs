@@ -67,7 +67,7 @@ namespace Tofunaut.TofuECS
             return true;
         }
 
-        public void CopyFrom(EntityBuffer other)
+        public void Recycle(EntityBuffer other)
         {
             _entityIdCounter = other._entityIdCounter;
             

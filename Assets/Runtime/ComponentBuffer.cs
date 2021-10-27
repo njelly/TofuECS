@@ -54,7 +54,7 @@ namespace Tofunaut.TofuECS
             }
         }
 
-        public void CopyFrom(IComponentBuffer other)
+        public void Recycle(IComponentBuffer other)
         {
             var otherBuffer = (ComponentBuffer<TComponent>)other;
 

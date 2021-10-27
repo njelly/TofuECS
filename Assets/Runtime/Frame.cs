@@ -127,6 +127,9 @@ namespace Tofunaut.TofuECS
 
         public Input GetInput(int index) => _inputs[index];
         public TInput GetInput<TInput>(int index) where TInput : Input => GetInput(index) as TInput;
+        
+        public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged, IDisposable =>
+            _sim.EventDispatcher.Invoke<TEventData>(this, data);
 
         internal Entity GetEntity(int entityId) => _entityBuffer.Get(entityId);
 
@@ -137,11 +140,11 @@ namespace Tofunaut.TofuECS
 
             for (var i = 0; i < prevFrame._componentBuffers.Length; i++)
             {
-                _componentBuffers[i].CopyFrom(prevFrame._componentBuffers[i]);
-                _iterators[i].CopyFrom(prevFrame._iterators[i]);
+                _componentBuffers[i].Recycle(prevFrame._componentBuffers[i]);
+                _iterators[i].Recycle(prevFrame._iterators[i]);
             }
             
-            _entityBuffer.CopyFrom(prevFrame._entityBuffer);
+            _entityBuffer.Recycle(prevFrame._entityBuffer);
             RNG.CopyState(prevFrame.RNG);
 
             Array.Copy(prevFrame._inputs, _inputs, _inputs.Length);

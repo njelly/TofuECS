@@ -12,6 +12,8 @@ namespace Tofunaut.TofuECS
         public int LastVerifiedFrame { get; private set; }
         
         public bool IsInitialized { get; private set; }
+        
+        internal EventDispatcher EventDispatcher { get; }
 
         private readonly ISystem[] _systems;
         private readonly Frame[] _frames;
@@ -24,6 +26,7 @@ namespace Tofunaut.TofuECS
         public Simulation(ISimulationConfig config, InputProvider inputProvider, ISystem[] systems)
         {
             Config = config;
+            EventDispatcher = new EventDispatcher();
             
             _frames = new Frame[config.MaxRollback];
 
@@ -61,6 +64,11 @@ namespace Tofunaut.TofuECS
                     break;
             }
         }
+
+        public void Subscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged, IDisposable =>
+            EventDispatcher.Subscribe(callback);
+        public void Unsubscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged, IDisposable =>
+            EventDispatcher.Unsubscribe(callback);
 
         /// <summary>
         /// Call Initialize() on every system in the Simulation. Allows RegisterComponent() to be called without exception.

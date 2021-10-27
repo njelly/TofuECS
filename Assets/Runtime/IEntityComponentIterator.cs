@@ -6,6 +6,6 @@ namespace Tofunaut.TofuECS
         void RemoveEntity(int entityId);
         void Reset(Frame f);
         void Reset();
-        void CopyFrom(IEntityComponentIterator other);
+        void Recycle(IEntityComponentIterator other);
     }
 }

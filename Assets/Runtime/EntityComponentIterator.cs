@@ -68,7 +68,7 @@ namespace Tofunaut.TofuECS
             return true;
         }
 
-        public void CopyFrom(IEntityComponentIterator other)
+        public void Recycle(IEntityComponentIterator other)
         {
             var otherIterator = (EntityComponentIterator<TComponent>)other;
             otherIterator.Reset();
