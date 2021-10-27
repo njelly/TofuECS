@@ -1,4 +1,4 @@
-![tofuecs_logo](https://user-images.githubusercontent.com/8916588/138935335-b886c2c1-06c1-4043-a546-73b213b4ce55.png)
+![tofuecs_logo](https://user-images.githubusercontent.com/8916588/139094266-3e2db942-4842-4f0d-b1da-8e694ee3578c.png)
 
 An entity component system framework for Unity. MIT license.
 
