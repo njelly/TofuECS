@@ -39,9 +39,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         public void Reset(ulong seed)
         {
             Seed = seed;
-            
-            BoardSystem.OnSetCellValue += Board_OnSetCellValue;
-            
+
             _sim = new Simulation(new DummySimulationConfig(Seed),
                 new CGOLInputProvider(_coglInput),
                 new ISystem[] 
@@ -51,14 +49,47 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             
             // Register components BEFORE initializing the simulation!
             _sim.RegisterComponent<Board>();
+            _sim.Subscribe<StateChangeEvent>(OnStateChange);
             _sim.Initialize();
+            
+            // initialize the texture
+            for(var x = 0; x < _worldSize.x; x++)
+            {
+                for (var y = 0; y < _worldSize.y; y++)
+                {
+                    _tex2D.SetPixel(x, y, Color.black);
+                }
+            }
 
             _tex2D.Apply();
         }
 
-        private void Board_OnSetCellValue(object sender, (Vector2Int, bool) e)
+        private void OnStateChange(Frame f, StateChangeEvent evt)
         {
-            _tex2D.SetPixel(e.Item1.x, e.Item1.y, e.Item2 ? Color.white : Color.black);
+            for (var i = 0; i < evt.Length; i++)
+                _tex2D.SetPixel(evt.XPos[i], evt.YPos[i], evt.Value[i] ? Color.white : Color.black);
+
+            _tex2D.Apply();
+        }
+
+        private struct StateChangeEvent : IDisposable
+        {
+            public int Length;
+            public int* XPos;
+            public int* YPos;
+            public bool* Value;
+
+            public void Dispose()
+            {
+                if(XPos != null)
+                    Marshal.FreeHGlobal((IntPtr)XPos);
+                
+                if(YPos != null)
+                    Marshal.FreeHGlobal((IntPtr)YPos);
+                
+                if(Value != null)
+                    Marshal.FreeHGlobal((IntPtr)Value);
+            }
         }
 
         public void DoTick()
@@ -141,12 +172,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
             private readonly XorShiftRandom _r;
             private readonly int _boardWidth, _boardHeight;
+            private int* _flippedIndexes;
 
             public BoardSystem(ulong seed, int boardWidth, int boardHeight)
             {
                 _r = new XorShiftRandom(seed);
                 _boardWidth = boardWidth;
                 _boardHeight = boardHeight;
+                _flippedIndexes = (int*)Marshal.AllocHGlobal(Marshal.SizeOf<int>() * _boardWidth * _boardHeight);
             }
 
             public void Initialize(Frame f)
@@ -161,7 +194,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 for (var i = 0; i < _boardWidth * _boardHeight; i++)
                 {
                     board->State[i] = false;
-                    OnSetCellValue?.Invoke(this,  (new Vector2Int(i % _boardWidth, i / _boardHeight), false));
                 }
             }
 
@@ -172,7 +204,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 while(iter.NextUnsafe(out _, out var board))
                 {
                     var staticThreshold = board->StartStaticThreshold * input.StaticScaler;
-                    var toFlip = new List<int>();
+                    var numFlipped = 0;
                     
                     // need to add the board->Size to i so modulo operator will work as intended
                     for (var i = board->Size; i < board->Size * 2; i++)
@@ -211,25 +243,40 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                         // BOTTOM-RIGHT
                         if (board->State[(i + 1 - board->Width) % board->Size])
                             numAlive++;
-                        
-                        if (currentState && numAlive <= 1)
-                            toFlip.Add(i);
-                        else if (!currentState && numAlive == 3)
-                            toFlip.Add(i);
-                        else if (currentState && numAlive >= 4)
-                            toFlip.Add(i);
-                        
-                        // non-conway rules, just a test
+
+                        var didFlip = false;
+                        if (currentState)
+                        {
+                            if (numAlive <= 1 || numAlive >= 4)
+                                didFlip = true;
+                        }
+                        else if (numAlive == 3)
+                        {
+                            didFlip = true;
+                        }
                         else if (_r.NextFix64ZeroOne() <= staticThreshold)
-                            toFlip.Add(i);
+                            didFlip = true;
+
+                        if (didFlip)
+                            _flippedIndexes[numFlipped++] = i - board->Size;
                     }
 
-                    foreach (var index in toFlip)
+                    var evt = new StateChangeEvent();
+                    evt.Length = numFlipped;
+                    evt.XPos = (int*)Marshal.AllocHGlobal(Marshal.SizeOf<int>() * numFlipped);
+                    evt.YPos = (int*)Marshal.AllocHGlobal(Marshal.SizeOf<int>() * numFlipped);
+                    evt.Value = (bool*)Marshal.AllocHGlobal(Marshal.SizeOf<bool>() * numFlipped);
+                    
+                    for (var i = 0; i < numFlipped; i++)
                     {
-                        var i = index - board->Size;
-                        board->State[i] = !board->State[i];
-                        OnSetCellValue?.Invoke(this, (new Vector2Int(i % board->Width, i / board->Height), board->State[i]));
+                        var index = _flippedIndexes[i];
+                        evt.XPos[i] = index % board->Width;
+                        evt.YPos[i] = index / board->Height;
+                        evt.Value[i] = !board->State[index];
+                        board->State[index] = evt.Value[i];
                     }
+                    
+                    f.RaiseEvent(evt);
                 }
             }
 
