@@ -37,6 +37,10 @@ namespace Tofunaut.TofuECS
             var entity = _entityBuffer.Get(entityId);
             entity.Destroy(Number);
             _entityBuffer.Release(entity);
+            RaiseEvent(new OnEntityDestroyedEvent
+            {
+                EntityId = entityId,
+            });
         }
 
         /// <summary>
@@ -180,5 +184,11 @@ namespace Tofunaut.TofuECS
             _entityId = entityId;
         }
         public override string Message => $"the entity {_entityId} does not contain the component {nameof(TComponent)}";
+    }
+
+    public struct OnEntityDestroyedEvent : IDisposable
+    {
+        public int EntityId;
+        public void Dispose() { }
     }
 }

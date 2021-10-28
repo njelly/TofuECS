@@ -18,3 +18,5 @@ MonoBehaviour:
   _gravityForce:
     RawValueX: 0
     RawValueY: -42090680320
+  _deltaTime:
+    RawValue: 4294967

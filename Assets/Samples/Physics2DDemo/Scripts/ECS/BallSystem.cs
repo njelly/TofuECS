@@ -36,18 +36,6 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo.ECS
                 IsTrigger = false,
             };
             dynamicBody2d->Mass = ballData.Mass;
-            
-            f.RaiseEvent(new OnBallCreated
-            {
-                EntityId = ballEntity,
-            });
         }
-    }
-
-    public struct OnBallCreated : IDisposable
-    {
-        public int EntityId;
-
-        public void Dispose() { }
     }
 }

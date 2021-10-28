@@ -14,22 +14,26 @@ namespace Tofunaut.TofuECS.Utilities
                 if (viewId->Id == viewId->PrevId)
                     continue;
 
-                viewId->Id = viewId->PrevId;
-                
-                f.RaiseEvent(new OnViewIdChanged
+                var onViewIdChangedEvent = new OnViewIdChangedEvent
                 {
-                    NewId = viewId->Id,
+                    ViewId = viewId->Id,
+                    PrevId = viewId->PrevId,
                     EntityId = entityId,
-                });
+                };
+
+                viewId->PrevId = viewId->Id;
+                
+                f.RaiseEvent(onViewIdChangedEvent);
             }
         }
 
         public void Dispose(Frame f) { }
     }
 
-    public struct OnViewIdChanged : IDisposable
+    public struct OnViewIdChangedEvent : IDisposable
     {
-        public int NewId;
+        public int ViewId;
+        public int PrevId;
         public int EntityId;
 
         public void Dispose() { }

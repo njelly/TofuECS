@@ -12,7 +12,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
         public SimulationMode SimulationMode => SimulationMode.Offline;
         public PhysicsMode PhysicsMode => PhysicsMode.Physics2D;
         public int NumInputs => 1;
-        public Fix64 DeltaTime => Fix64.One / new Fix64(60);
+        public Fix64 DeltaTime => _deltaTime.Value;
         public ulong Seed => _seed;
 
         public BallData BallData => GetECSData<BallData>(_ballDataAsset.AssetId);
@@ -24,6 +24,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
         [SerializeField] private ECSDatabase _database;
         [SerializeField] private BallDataAsset _ballDataAsset;
         [SerializeField] private SerializableFixVector2 _gravityForce;
+        [SerializeField] private SerializableFix64 _deltaTime;
         
         public TData GetECSData<TData>(int id) where TData : unmanaged
         {
