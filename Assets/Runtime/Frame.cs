@@ -129,7 +129,7 @@ namespace Tofunaut.TofuECS
         public TInput GetInput<TInput>(int index) where TInput : Input => GetInput(index) as TInput;
         
         public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged, IDisposable =>
-            _sim.EventDispatcher.Invoke<TEventData>(this, data);
+            _sim.EventDispatcher.Invoke(this, data);
 
         internal Entity GetEntity(int entityId) => _entityBuffer.Get(entityId);
 

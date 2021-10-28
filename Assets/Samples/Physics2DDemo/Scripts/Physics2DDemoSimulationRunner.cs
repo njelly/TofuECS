@@ -1,5 +1,5 @@
-﻿using System;
-using Tofunaut.TofuECS.Samples.Physics2DDemo.ECS;
+﻿using Tofunaut.TofuECS.Samples.Physics2DDemo.ECS;
+using Tofunaut.TofuECS.Utilities;
 using UnityEngine;
 
 namespace Tofunaut.TofuECS.Samples.Physics2DDemo
@@ -18,16 +18,25 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
             _demoInputProvider = new Physics2DDemoInputProvider();
             _sim = new Simulation(_config, _demoInputProvider, new ISystem[]
             {
+                new ViewIdSystem(),
                 new BallSystem(),
                 new GravitySystem(),
             });
             
+            _sim.RegisterComponent<ViewId>();
+            
+            _sim.Subscribe<OnBallCreated>(OnBallCreated);
             _sim.Initialize();
         }
 
         private void Update()
         {
             _sim?.Tick();
+        }
+
+        private void OnBallCreated(Frame f, OnBallCreated evt)
+        {
+            Debug.Log($"ball created {evt.EntityId}");
         }
     }
 }

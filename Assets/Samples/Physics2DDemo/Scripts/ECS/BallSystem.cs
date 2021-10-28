@@ -1,5 +1,7 @@
-﻿using Tofunaut.TofuECS.Math;
+﻿using System;
+using Tofunaut.TofuECS.Math;
 using Tofunaut.TofuECS.Physics;
+using Tofunaut.TofuECS.Utilities;
 
 namespace Tofunaut.TofuECS.Samples.Physics2DDemo.ECS
 {
@@ -19,8 +21,13 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo.ECS
             var ballEntity = f.CreateEntity();
             f.AddComponent<Transform2D>(ballEntity);
             f.AddComponent<DynamicBody2D>(ballEntity);
+            f.AddComponent<ViewId>(ballEntity);
             
             var ballData = ((IPhysics2DSimulationConfig)f.Config).BallData;
+
+            f.GetComponentUnsafe<Transform2D>(ballEntity)->Position = position;
+            f.GetComponentUnsafe<ViewId>(ballEntity)->Id = ballData.PrefabId;
+
             var dynamicBody2d = f.GetComponentUnsafe<DynamicBody2D>(ballEntity);
             dynamicBody2d->Collider = new Collider
             {
@@ -29,8 +36,18 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo.ECS
                 IsTrigger = false,
             };
             dynamicBody2d->Mass = ballData.Mass;
-
-            f.GetComponentUnsafe<Transform2D>(ballEntity)->Position = position;
+            
+            f.RaiseEvent(new OnBallCreated
+            {
+                EntityId = ballEntity,
+            });
         }
+    }
+
+    public struct OnBallCreated : IDisposable
+    {
+        public int EntityId;
+
+        public void Dispose() { }
     }
 }
