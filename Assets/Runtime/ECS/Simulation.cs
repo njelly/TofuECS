@@ -14,6 +14,7 @@ namespace Tofunaut.TofuECS
         public bool IsInitialized { get; private set; }
         
         internal EventDispatcher EventDispatcher { get; }
+        internal ILogService Log { get; }
 
         private readonly ISystem[] _systems;
         private readonly Frame[] _frames;
@@ -23,10 +24,11 @@ namespace Tofunaut.TofuECS
 
         private int _typeIndexCounter;
 
-        public Simulation(ISimulationConfig config, InputProvider inputProvider, ISystem[] systems)
+        public Simulation(ISimulationConfig config, ILogService log, InputProvider inputProvider, ISystem[] systems)
         {
             Config = config;
             EventDispatcher = new EventDispatcher();
+            Log = log;
             
             _frames = new Frame[config.MaxRollback];
 

@@ -1,0 +1,16 @@
+{
+    "name": "Tofunaut.TofuECS.Network",
+    "rootNamespace": "",
+    "references": [
+        "GUID:6988a48b0e6c362459a6035aaaf7c503"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

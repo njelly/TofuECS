@@ -20,7 +20,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
             _demoInputProvider = new Physics2DDemoInputProvider();
             _entityViewManager = new EntityViewManager(_config.Database);
             
-            _sim = new Simulation(_config, _demoInputProvider, new ISystem[]
+            _sim = new Simulation(_config, new UnityLogService(), _demoInputProvider, new ISystem[]
             {
                 new ViewIdSystem(),
                 new BallSystem(),

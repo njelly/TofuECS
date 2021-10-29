@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Tofunaut.TofuECS.Math;
+using Tofunaut.TofuECS.Unity;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,7 +41,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         {
             Seed = seed;
 
-            _sim = new Simulation(new DummySimulationConfig(Seed),
+            _sim = new Simulation(new DummySimulationConfig(Seed), new UnityLogService(),
                 new CGOLInputProvider(_coglInput),
                 new ISystem[] 
                 {

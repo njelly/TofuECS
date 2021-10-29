@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using Tofunaut.TofuECS;
 using Tofunaut.TofuECS.Math;
+using Tofunaut.TofuECS.Unity;
 using UnityEngine;
 
 public class RuntimeTests
@@ -10,7 +11,7 @@ public class RuntimeTests
     public void RuntimeTestsSimplePasses()
     {
         var seed = (ulong)1993;
-        var sim = new Simulation(new DummySimulationConfig(seed),
+        var sim = new Simulation(new DummySimulationConfig(seed), new UnityLogService(),
             new DummyInputProvider(),
             new ISystem[]
             {

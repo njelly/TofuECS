@@ -135,6 +135,11 @@ namespace Tofunaut.TofuECS
         public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged, IDisposable =>
             _sim.EventDispatcher.Invoke(this, data);
 
+        public void LogInfo(string s) => _sim.Log.Info(s);
+        public void LogWarn(string s) => _sim.Log.Warn(s);
+        public void LogError(string s) => _sim.Log.Error(s);
+        public void LogException(Exception e) => _sim.Log.Exception(e);
+
         internal Entity GetEntity(int entityId) => _entityBuffer.Get(entityId);
 
         internal void Recycle(Frame prevFrame)
