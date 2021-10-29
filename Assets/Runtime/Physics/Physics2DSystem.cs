@@ -4,7 +4,9 @@ namespace Tofunaut.TofuECS.Physics
 {
     internal unsafe class Physics2DSystem : ISystem
     {
-        public void Initialize(Frame f) { }
+        public void Initialize(Frame f)
+        {
+        }
 
         public void Process(Frame f)
         {

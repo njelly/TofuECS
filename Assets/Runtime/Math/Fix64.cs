@@ -1011,5 +1011,7 @@ namespace Tofunaut.TofuECS.Math
         /// Should only be used when serializing config files, i.e, before the sim starts.
         /// </summary>
         public static Fix64 FROM_FLOAT_UNSAFE(float f) => new Fix64((long)(ONE * f));
+
+        public static Fix64 Clamp(Fix64 value, Fix64 min, Fix64 max) => max < value ? max : min > value ? min : value;
     }
 }
