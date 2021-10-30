@@ -56,15 +56,11 @@ namespace Tofunaut.TofuECS
                 case PhysicsMode.Physics2D:
                     var preSystems = new ISystem[]
                     {
-                    };
-                    var postSystems = new ISystem[]
-                    {
                         new Physics2DSystem(),
                     };
-                    _systems = new ISystem[preSystems.Length + systems.Length + postSystems.Length];
+                    _systems = new ISystem[preSystems.Length + systems.Length];
                     Array.Copy(preSystems, 0, _systems, 0, preSystems.Length);
                     Array.Copy(systems, 0, _systems, preSystems.Length, systems.Length);
-                    Array.Copy(postSystems, 0, _systems, preSystems.Length + systems.Length, postSystems.Length);
                     RegisterComponent<Transform2D>();
                     RegisterComponent<DynamicBody2D>();
                     break;
@@ -122,6 +118,7 @@ namespace Tofunaut.TofuECS
                 _currentInputs[i] = _inputProvider.Poll(i);
 
             CurrentFrame.CopyInputs(_currentInputs);
+            CurrentFrame.DeltaTime = Fix64.One / new Fix64(Config.TicksPerSecond);
 
             foreach (var system in _systems)
                 system.Process(CurrentFrame);

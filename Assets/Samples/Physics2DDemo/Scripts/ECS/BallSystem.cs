@@ -26,7 +26,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo.ECS
             var ballData = ((IPhysics2DSimulationConfig)f.Config).BallData;
 
             f.GetComponentUnsafe<Transform2D>(ballEntity)->Position = position;
-            f.GetComponentUnsafe<ViewId>(ballEntity)->Id = ballData.GetRandomBallViewId(f);
+            f.GetComponentUnsafe<ViewId>(ballEntity)->Id = ballData.ViewId;
 
             var dynamicBody2d = f.GetComponentUnsafe<DynamicBody2D>(ballEntity);
             dynamicBody2d->Collider = new Collider

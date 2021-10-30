@@ -17,8 +17,4 @@ MonoBehaviour:
     RawValue: 4294967296
   _radius:
     RawValue: 2147483648
-  _prefabs:
-  - {fileID: -4129047481185060056, guid: 74e4450443bfc7545823b0daf6a7f687, type: 3}
-  - {fileID: -4129047481185060056, guid: 82cfb426635943847afb32ab3a0de677, type: 3}
-  - {fileID: -4129047481185060056, guid: 38dffed24eef0ee43bac1e928349b629, type: 3}
-  - {fileID: -4129047481185060056, guid: 30d4ec69cde970e4992d00bda2e59ca0, type: 3}
+  _entityView: {fileID: -4129047481185060056, guid: 82cfb426635943847afb32ab3a0de677, type: 3}
