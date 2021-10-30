@@ -1,18 +1,42 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
+using System.Text;
+using Tofunaut.TofuECS.Network;
 using UnityEngine;
 
-public class NetworkDemoTest : MonoBehaviour
+namespace Tofunaut.TofuECS.Samples.NetworkDemo
 {
-    // Start is called before the first frame update
-    void Start()
+    public class NetworkDemoTest : MonoBehaviour
     {
-        
-    }
+        private const int Port = 9050;
+        private NetworkMember _networkMember;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+
+        private IEnumerator Start()
+        {
+#if UNITY_SERVER
+            _networkMember = new Server(Port, 1);
+#else
+            _networkMember = new Client(Port);
+#endif
+            _networkMember.Start();
+
+            while (true)
+            {
+                yield return new WaitForSeconds(1);
+                _networkMember.SendNextMessage(Encoding.UTF8.GetBytes("hello world"));
+
+                var nextMessage = _networkMember.GetNextMessage();
+                if (nextMessage.Length > 0)
+                {
+                    Debug.Log($"received message: {Encoding.UTF8.GetString(nextMessage)}");
+                }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            _networkMember.Stop();
+        }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using Tofunaut.TofuECS.Math;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Tofunaut.TofuECS.Unity.Editor
 {

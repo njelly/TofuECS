@@ -1,10 +1,6 @@
 {
-    "name": "Tofunaut.TofuECS.Network",
-    "rootNamespace": "",
-    "references": [
-        "GUID:6988a48b0e6c362459a6035aaaf7c503",
-        "GUID:92bf51f491794e141a0bc7449f94045e"
-    ],
+    "name": "LiteNetLib",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
@@ -13,5 +9,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": true
+    "noEngineReferences": false
 }
