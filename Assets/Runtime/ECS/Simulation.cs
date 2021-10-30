@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Tofunaut.TofuECS.Math;
 using Tofunaut.TofuECS.Physics;
 
 namespace Tofunaut.TofuECS
@@ -15,6 +16,7 @@ namespace Tofunaut.TofuECS
         
         internal EventDispatcher EventDispatcher { get; }
         internal ILogService Log { get; }
+        internal Fix64 DeltaTime { get; }
 
         private readonly ISystem[] _systems;
         private readonly Frame[] _frames;
@@ -43,6 +45,8 @@ namespace Tofunaut.TofuECS
             _currentInputs = new Input[Config.NumInputs];
 
             IsInitialized = false;
+
+            DeltaTime = Fix64.One / new Fix64(config.TicksPerSecond);
 
             switch (config.PhysicsMode)
             {

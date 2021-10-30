@@ -9,7 +9,7 @@ namespace Tofunaut.TofuECS
         public bool IsVerified { get; private set; }
         public ISimulationConfig Config => _sim.Config;
         public int NumInputs => _inputs.Length;
-        public Fix64 DeltaTime => Config.DeltaTime;
+        public Fix64 DeltaTime { get; internal set; }
 
         public XorShiftRandom RNG { get; }
 

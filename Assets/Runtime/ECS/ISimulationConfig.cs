@@ -40,9 +40,9 @@ namespace Tofunaut.TofuECS
         ulong Seed { get; }
         
         /// <summary>
-        /// The amount of time that passes between each tick. Should be constant for deterministic simulations.
+        /// How many ticks per second (i.e., FPS) should the simulation run at?
         /// </summary>
-        public Fix64 DeltaTime { get; }
+        public int TicksPerSecond { get; }
     }
 
     public enum SimulationMode

@@ -154,7 +154,7 @@ public class RuntimeTests
         public SimulationMode SimulationMode => SimulationMode.Offline;
         public int NumInputs => 1;
         public ulong Seed { get; }
-        public Fix64 DeltaTime => new Fix64(1) / new Fix64(30);
+        public int TicksPerSecond => 30;
         public PhysicsMode PhysicsMode => PhysicsMode.None;
 
         public TAsset GetAsset<TAsset>(int id)

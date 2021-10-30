@@ -12,7 +12,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
         public SimulationMode SimulationMode => SimulationMode.Offline;
         public PhysicsMode PhysicsMode => PhysicsMode.Physics2D;
         public int NumInputs => 1;
-        public Fix64 DeltaTime => _deltaTime.Value;
+        public int TicksPerSecond => 60;
         public ulong Seed => _seed;
 
         public BallData BallData => GetECSData<BallData>(_ballDataAsset.AssetId);

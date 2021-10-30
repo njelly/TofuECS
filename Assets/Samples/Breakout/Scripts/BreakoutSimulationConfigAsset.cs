@@ -11,7 +11,7 @@ namespace Tofunaut.TofuECS.Samples.Breakout
         public PhysicsMode PhysicsMode => PhysicsMode.None;
         public int NumInputs => 1;
         public ulong Seed => _seed;
-        public Fix64 DeltaTime => Fix64.FROM_FLOAT_UNSAFE(Time.deltaTime);
+        public int TicksPerSecond => 60;
 
         [SerializeField] private ulong _seed;
         
