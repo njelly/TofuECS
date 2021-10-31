@@ -10,7 +10,7 @@ namespace Tofunaut.TofuECS.Physics
         public Fix64 AngularVelocity;
         public Fix64 Mass;
         public bool IsAsleep;
-        public Collider2D ColliderInfo;
+        public ColliderInfo ColliderInfo;
         internal FixVector2* Forces;
         internal int ForcesNextIndex;
         internal int ForcesLength;
@@ -73,7 +73,7 @@ namespace Tofunaut.TofuECS.Physics
         }
     }
 
-    public struct Collider2D
+    public struct ColliderInfo
     {
         public ShapeType ShapeType;
         public Fix64 CircleRadius;

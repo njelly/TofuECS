@@ -41,10 +41,10 @@ namespace Tofunaut.TofuECS.Physics
         private readonly struct BodyInfo
         {
             public readonly int Entity;
-            public readonly DynamicBody2D Body;
-            public readonly Transform2D Transform;
+            public readonly DynamicBody2D* Body;
+            public readonly Transform2D* Transform;
 
-            public BodyInfo(int entity, DynamicBody2D body, Transform2D transform)
+            public BodyInfo(int entity, DynamicBody2D* body, Transform2D* transform)
             {
                 Entity = entity;
                 Body = body;
@@ -61,60 +61,70 @@ namespace Tofunaut.TofuECS.Physics
 
         public void Process(Frame f)
         {
-            Broadphase(f);
-            NarrowPhase(f);
-
-            var dynamicBody2dIterator = f.GetIterator<DynamicBody2D>();
-            while (dynamicBody2dIterator.NextUnsafe(out var entityId, out var dynamicBody2d))
-            {
-                if(f.TryGetComponentUnsafe<Transform2D>(entityId, out var transform2d))
-                    transform2d->PrevPosition = transform2d->Position;
-
-                if (dynamicBody2d->ForcesNextIndex <= 0)
-                    continue;
-
-                // integrate the forces
-                dynamicBody2d->Velocity += dynamicBody2d->SumForces() / new Fix64(dynamicBody2d->ForcesNextIndex) * f.DeltaTime;
-                dynamicBody2d->ClearForces();
-
-                // move the transform
-                if (transform2d != null)
-                    transform2d->Position += dynamicBody2d->Velocity * f.DeltaTime;
-            }
+            Integrate(f);
+            Broadphase();
+            NarrowPhase();
+            ResolveCollisions();
         }
 
-        private void Broadphase(Frame f)
+        private void Integrate(Frame f)
         {
             var dynamicBody2dIterator = f.GetIterator<DynamicBody2D>();
             var bodies = stackalloc BodyInfo[dynamicBody2dIterator.Count];
             var bodiesIndex = 0;
-            var collisionPairs = stackalloc CollisionPair[dynamicBody2dIterator.Count * dynamicBody2dIterator.Count - dynamicBody2dIterator.Count];
+            while (dynamicBody2dIterator.NextUnsafe(out var entityId, out var dynamicBody2d))
+            {
+                // integrate the forces
+                if (dynamicBody2d->ForcesNextIndex > 0)
+                {
+                    dynamicBody2d->Velocity += dynamicBody2d->SumForces() / new Fix64(dynamicBody2d->ForcesNextIndex) * f.DeltaTime;
+                    dynamicBody2d->ClearForces();
+                }
+
+                if (!f.TryGetComponentUnsafe<Transform2D>(entityId, out var transform2d))
+                    continue;
+                
+                bodies[bodiesIndex++] = new BodyInfo(entityId, dynamicBody2d, transform2d);
+
+                // move the transform
+                transform2d->PrevPosition = transform2d->Position;
+                if (transform2d != null)
+                    transform2d->Position += dynamicBody2d->Velocity * f.DeltaTime;
+            }
+            
+            // store the bodies in memory
+            if (_bodiesLength < bodiesIndex && _bodies != null)
+                Marshal.FreeHGlobal((IntPtr)_bodies);
+
+            var size = Marshal.SizeOf<BodyInfo>() * bodiesIndex;
+            _bodies = (BodyInfo*)Marshal.AllocHGlobal(size);
+            Buffer.MemoryCopy(bodies, _bodies, size, size);
+            _bodiesLength = bodiesIndex;
+        }
+
+        private void Broadphase()
+        {
+            // sort based on x position, so we don't double check bounding box collisions
+            UnmanagedQuickSort.Sort(_bodies, 0, _bodiesLength,
+                (a, b) => a.Transform->Position.X < b.Transform->Position.X);
+            
+            var collisionPairs = stackalloc CollisionPair[_bodiesLength * _bodiesLength - _bodiesLength];
             var collisionPairsIndex = 0;
 
-            while (dynamicBody2dIterator.Next(out var entityId, out var dynamicBody2D))
-            {
-                if (f.TryGetComponent<Transform2D>(entityId, out var transform2D))
-                    bodies[bodiesIndex++] = new BodyInfo(entityId, dynamicBody2D, transform2D);
-            }
-
-            // sort based on x position, so we don't double check bounding box collisions
-            UnmanagedQuickSort.Sort(bodies, 0, bodiesIndex,
-                (a, b) => a.Transform.Position.X < b.Transform.Position.X);
-
             // find all unique *POTENTIAL* collisions
-            for (var i = 0; i < bodiesIndex; i++)
+            for (var i = 0; i < _bodiesLength; i++)
             {
-                var boundingBoxA = bodies[i].Body.GetColliderShape(bodies[i].Transform).BoundingBox;
-                for (var j = 0; j < bodiesIndex; j++)
+                var boundingBoxA = _bodies[i].Body->GetColliderShape(*_bodies[i].Transform).BoundingBox;
+                for (var j = 0; j < _bodiesLength; j++)
                 {
                     if (i == j)
                         continue;
 
                     // skip B vs. A check when A vs. B check has already occured
-                    if (bodies[j].Transform.Position.X < bodies[i].Transform.Position.X)
+                    if (_bodies[j].Transform->Position.X < _bodies[i].Transform->Position.X)
                         continue;
 
-                    var boundingBoxB = bodies[j].Body.GetColliderShape(bodies[j].Transform).BoundingBox;
+                    var boundingBoxB = _bodies[j].Body->GetColliderShape(*_bodies[j].Transform).BoundingBox;
                     if (!boundingBoxA.IntersectsAABB(boundingBoxB))
                         continue;
 
@@ -122,30 +132,22 @@ namespace Tofunaut.TofuECS.Physics
                 }
             }
 
-            // no collisions are possible
-            if (collisionPairsIndex == 0)
-                return;
-            
-            // store the bodies in memory
-            if (_bodiesLength < bodiesIndex && _bodies != null)
-                Marshal.FreeHGlobal((IntPtr)_bodies);
-
-            var size = Marshal.SizeOf<BodyInfo>() * collisionPairsIndex;
-            _bodies = (BodyInfo*)Marshal.AllocHGlobal(size);
-            Buffer.MemoryCopy(bodies, _bodies, size, size);
-            _bodiesLength = bodiesIndex;
-
             // store the potential collisions in memory
             if (_collisionsLength < collisionPairsIndex && _collisions != null)
                 Marshal.FreeHGlobal((IntPtr)_collisions);
+            
+            _collisionsLength = collisionPairsIndex;
 
-            size = Marshal.SizeOf<CollisionPair>() * collisionPairsIndex;
+            // no collisions are possible
+            if (_collisionsLength == 0)
+                return;
+
+            var size = Marshal.SizeOf<CollisionPair>() * collisionPairsIndex;
             _collisions = (CollisionPair*)Marshal.AllocHGlobal(size);
             Buffer.MemoryCopy(collisionPairs, _collisions, size, size);
-            _collisionsLength = collisionPairsIndex;
         }
 
-        private void NarrowPhase(Frame f)
+        private void NarrowPhase()
         {
             var confirmedCollisions = stackalloc CollisionPair[_collisionsLength];
             var confirmedCollisionsLength = 0;
@@ -154,7 +156,7 @@ namespace Tofunaut.TofuECS.Physics
                 var bodyA = _bodies[_collisions[i].BodyA];
                 var bodyB = _bodies[_collisions[i].BodyB];
                 
-                if(!bodyA.Body.GetColliderShape(bodyA.Transform).Intersects(bodyB.Body.GetColliderShape(bodyB.Transform)))
+                if(!bodyA.Body->GetColliderShape(*bodyA.Transform).Intersects(bodyB.Body->GetColliderShape(*bodyB.Transform)))
                     continue;
 
                 confirmedCollisions[confirmedCollisionsLength++] = _collisions[i];
@@ -163,6 +165,11 @@ namespace Tofunaut.TofuECS.Physics
             var size = Marshal.SizeOf<CollisionPair>() * confirmedCollisionsLength;
             Buffer.MemoryCopy(confirmedCollisions, _collisions, size, size);
             _collisionsLength = confirmedCollisionsLength;
+        }
+        
+        private void ResolveCollisions()
+        {
+            
         }
 
         public void Dispose(Frame f)

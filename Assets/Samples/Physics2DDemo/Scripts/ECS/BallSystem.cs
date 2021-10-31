@@ -29,11 +29,10 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo.ECS
             f.GetComponentUnsafe<ViewId>(ballEntity)->Id = ballData.ViewId;
 
             var dynamicBody2d = f.GetComponentUnsafe<DynamicBody2D>(ballEntity);
-            dynamicBody2d->ColliderInfo = new Collider
+            dynamicBody2d->ColliderInfo = new ColliderInfo
             {
                 ShapeType = ShapeType.Circle,
                 CircleRadius = ballData.Radius,
-                IsTrigger = false,
             };
             dynamicBody2d->Mass = ballData.Mass;
         }

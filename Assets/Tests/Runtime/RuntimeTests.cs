@@ -1,8 +1,10 @@
 using System;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Tofunaut.TofuECS;
 using Tofunaut.TofuECS.Math;
 using Tofunaut.TofuECS.Unity;
+using Tofunaut.TofuECS.Utilities;
 using UnityEngine;
 
 public class RuntimeTests
@@ -141,6 +143,20 @@ public class RuntimeTests
             var n = r.NextFix64ZeroOne();
             Assert.IsTrue(n >= Fix64.Zero && n < Fix64.One);
         }
+    }
+
+    [Test]
+    public unsafe void UtilitiesTests()
+    {
+        const int length = 10;
+        var intArray = stackalloc int[length];
+        for (var i = 0; i < length; i++)
+            intArray[i] = length - 1 - i;
+        
+        UnmanagedQuickSort.Sort(intArray, 0, length, (a, b) => a > b);
+        
+        for(var i = 0; i < length - 1; i++)
+            Assert.IsTrue(intArray[i] < intArray[i + 1]);
     }
 
     private class DummySimulationConfig : ISimulationConfig
