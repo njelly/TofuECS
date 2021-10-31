@@ -11,13 +11,13 @@ namespace Tofunaut.TofuECS.Physics
     {
         private readonly struct CollisionPair
         {
-            public readonly int EntityA;
-            public readonly int EntityB;
+            public readonly int BodyA;
+            public readonly int BodyB;
 
-            public CollisionPair(int entityA, int entityB)
+            public CollisionPair(int bodyA, int bodyB)
             {
-                EntityA = entityA;
-                EntityB = entityB;
+                BodyA = bodyA;
+                BodyB = bodyB;
             }
 
             public override bool Equals(object obj)
@@ -26,14 +26,14 @@ namespace Tofunaut.TofuECS.Physics
                     return false;
                 
                 var otherPair = (CollisionPair)obj;
-                return otherPair.EntityA == EntityA && otherPair.EntityB == EntityB;
+                return otherPair.BodyA == BodyA && otherPair.BodyB == BodyB;
             }
 
             public override int GetHashCode()
             {
                 unchecked
                 {
-                    return (EntityA * 397) ^ EntityB;
+                    return (BodyA * 397) ^ BodyB;
                 }
             }
         }
@@ -52,10 +52,10 @@ namespace Tofunaut.TofuECS.Physics
             }
         }
 
-        private CollisionPair* _potentialCollisions;
-        private CollisionPair* _confirmedCollisions;
-        private int _potentialCollisionsLength;
-        private int _confirmedCollisionsLength;
+        private BodyInfo* _bodies;
+        private CollisionPair* _collisions;
+        private int _bodiesLength;
+        private int _collisionsLength;
         
         public void Initialize(Frame f) { }
 
@@ -118,26 +118,51 @@ namespace Tofunaut.TofuECS.Physics
                     if (!boundingBoxA.IntersectsAABB(boundingBoxB))
                         continue;
 
-                    collisionPairs[collisionPairsIndex++] = new CollisionPair(bodies[i].Entity, bodies[j].Entity);
+                    collisionPairs[collisionPairsIndex++] = new CollisionPair(i, j);
                 }
             }
 
             // no collisions are possible
             if (collisionPairsIndex == 0)
                 return;
+            
+            // store the bodies in memory
+            if (_bodiesLength < bodiesIndex && _bodies != null)
+                Marshal.FreeHGlobal((IntPtr)_bodies);
 
-            if (_potentialCollisionsLength < collisionPairsIndex && _potentialCollisions != null)
-                Marshal.FreeHGlobal((IntPtr)_potentialCollisions);
+            var size = Marshal.SizeOf<BodyInfo>() * collisionPairsIndex;
+            _bodies = (BodyInfo*)Marshal.AllocHGlobal(size);
+            Buffer.MemoryCopy(bodies, _bodies, size, size);
+            _bodiesLength = bodiesIndex;
 
-            var size = Marshal.SizeOf<CollisionPair>() * collisionPairsIndex;
-            _potentialCollisions = (CollisionPair*)Marshal.AllocHGlobal(size);
-            Buffer.MemoryCopy(collisionPairs, _potentialCollisions, size, size);
-            _confirmedCollisionsLength = collisionPairsIndex;
+            // store the potential collisions in memory
+            if (_collisionsLength < collisionPairsIndex && _collisions != null)
+                Marshal.FreeHGlobal((IntPtr)_collisions);
+
+            size = Marshal.SizeOf<CollisionPair>() * collisionPairsIndex;
+            _collisions = (CollisionPair*)Marshal.AllocHGlobal(size);
+            Buffer.MemoryCopy(collisionPairs, _collisions, size, size);
+            _collisionsLength = collisionPairsIndex;
         }
 
         private void NarrowPhase(Frame f)
         {
+            var confirmedCollisions = stackalloc CollisionPair[_collisionsLength];
+            var confirmedCollisionsLength = 0;
+            for (var i = 0; i < _collisionsLength; i++)
+            {
+                var bodyA = _bodies[_collisions[i].BodyA];
+                var bodyB = _bodies[_collisions[i].BodyB];
+                
+                if(!bodyA.Body.GetColliderShape(bodyA.Transform).Intersects(bodyB.Body.GetColliderShape(bodyB.Transform)))
+                    continue;
+
+                confirmedCollisions[confirmedCollisionsLength++] = _collisions[i];
+            }
             
+            var size = Marshal.SizeOf<CollisionPair>() * confirmedCollisionsLength;
+            Buffer.MemoryCopy(confirmedCollisions, _collisions, size, size);
+            _collisionsLength = confirmedCollisionsLength;
         }
 
         public void Dispose(Frame f)
