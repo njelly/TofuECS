@@ -1,18 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Tofunaut.TofuECS
 {
     internal unsafe class ComponentBuffer<TComponent> : IComponentBuffer where TComponent : unmanaged
     {
-        public int NumInUse => _components.Length - _freeIndexes.Count;
+        public int NumInUse => _length - _freeIndexes.Count;
 
-        private TComponent[] _components;
+        private TComponent* _buffer;
         private readonly Queue<int> _freeIndexes;
+        private int _length;
 
         public ComponentBuffer()
         {
-            _components = new TComponent[1];
+            _length = 1;
+            _buffer = (TComponent*)Marshal.AllocHGlobal(Marshal.SizeOf<TComponent>());
             _freeIndexes = new Queue<int>();
             _freeIndexes.Enqueue(0);
         }
@@ -22,7 +25,7 @@ namespace Tofunaut.TofuECS
             int UseNextFreeIndex()
             {
                 var freeIndex = _freeIndexes.Dequeue();
-                _components[freeIndex] = new TComponent();
+                _buffer[freeIndex] = new TComponent();
                 return freeIndex;
             }
 
@@ -30,13 +33,16 @@ namespace Tofunaut.TofuECS
                 return UseNextFreeIndex();
 
             // expand the buffer - there are no free indexes
-            var prevLength = _components.Length;
-            var newBuffer = new TComponent[prevLength * 2];
-            Array.Copy(_components, 0, newBuffer, 0, prevLength);
-            _components = newBuffer;
+            var prevLength = _length;
+            var prevByteCount = Marshal.SizeOf<TComponent>() * prevLength;
+            _length *= 2;
+            var newBuffer = (TComponent*)Marshal.AllocHGlobal(Marshal.SizeOf<TComponent>() * _length);
+            Buffer.MemoryCopy(_buffer, newBuffer, prevByteCount, prevByteCount);
+            Marshal.FreeHGlobal((IntPtr)_buffer);
+            _buffer = newBuffer;
 
             // fill the next free index queue with all the newly created indexes
-            for (var i = prevLength; i < _components.Length; i++)
+            for (var i = prevLength; i < _length; i++)
                 _freeIndexes.Enqueue(i);
 
             return UseNextFreeIndex();
@@ -44,24 +50,23 @@ namespace Tofunaut.TofuECS
 
         public void Release(int index) => _freeIndexes.Enqueue(index);
 
-        public TComponent Get(int index) => _components[index];
+        public TComponent Get(int index) => _buffer[index];
 
-        public TComponent* GetUnsafe(int index)
-        {
-            fixed (TComponent* ptr = &_components[index])
-            {
-                return ptr;
-            }
-        }
+        public TComponent* GetUnsafe(int index) => &_buffer[index];
 
         public void Recycle(IComponentBuffer other)
         {
             var otherBuffer = (ComponentBuffer<TComponent>)other;
 
-            if (_components.Length < otherBuffer._components.Length)
-                _components = new TComponent[otherBuffer._components.Length];
+            if (_length < otherBuffer._length)
+            {
+                Marshal.FreeHGlobal((IntPtr)_buffer);
+                _buffer = (TComponent*)Marshal.AllocHGlobal(Marshal.SizeOf<TComponent>() * otherBuffer._length);
+                _length = otherBuffer._length;
+            }
 
-            Array.Copy(otherBuffer._components, _components, otherBuffer._components.Length);
+            var byteLength = Marshal.SizeOf<TComponent>() * _length;
+            Buffer.MemoryCopy(otherBuffer._buffer, _buffer, byteLength, byteLength);
 
             _freeIndexes.Clear();
 
