@@ -24,7 +24,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _tickButton.onClick.RemoveAllListeners();
             _tickButton.onClick.AddListener(() => 
             {
-                _simulationRunner.DoTick();
                 _tickNumberLabel.text = $"Tick: {_simulationRunner.FrameNumber}";
             });
 
@@ -46,20 +45,19 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             });
         }
 
-        private void Update()
-        {
-            if (_isPaused)
-                return;
-
-            _tickIntervalSliderText.text = $"Frame Interval: {_tickIntervalSlider.value.ToString("F2")}";
-
-            _tickTimer -= Time.deltaTime;
-            if(_tickTimer < 0)
-            {
-                _tickTimer += _tickIntervalSlider.value;
-                _simulationRunner.DoTick();
-                _tickNumberLabel.text = $"Frame: {_simulationRunner.FrameNumber}";
-            }
-        }
+        //private void Update()
+        //{
+        //    if (_isPaused)
+        //        return;
+//
+        //    _tickIntervalSliderText.text = $"Frame Interval: {_tickIntervalSlider.value.ToString("F2")}";
+//
+        //    _tickTimer -= Time.deltaTime;
+        //    if(_tickTimer < 0)
+        //    {
+        //        _tickTimer += _tickIntervalSlider.value;
+        //        _tickNumberLabel.text = $"Frame: {_simulationRunner.FrameNumber}";
+        //    }
+        //}
     }
 }

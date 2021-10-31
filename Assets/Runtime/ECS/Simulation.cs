@@ -11,12 +11,10 @@ namespace Tofunaut.TofuECS
         public ISimulationConfig Config { get; }
         public Frame CurrentFrame { get; private set; }
         public int LastVerifiedFrame { get; private set; }
-        
         public bool IsInitialized { get; private set; }
-        
-        internal EventDispatcher EventDispatcher { get; }
         internal ILogService Log { get; }
         internal Fix64 DeltaTime { get; }
+        internal EventDispatcher EventDispatcher { get; }
 
         private readonly ISystem[] _systems;
         private readonly Frame[] _frames;
@@ -29,8 +27,8 @@ namespace Tofunaut.TofuECS
         public Simulation(ISimulationConfig config, ILogService log, InputProvider inputProvider, ISystem[] systems)
         {
             Config = config;
-            EventDispatcher = new EventDispatcher();
             Log = log;
+            EventDispatcher = new EventDispatcher();
             
             _frames = new Frame[config.MaxRollback];
 
@@ -67,11 +65,6 @@ namespace Tofunaut.TofuECS
             }
         }
 
-        public void Subscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged, IDisposable =>
-            EventDispatcher.Subscribe(callback);
-        public void Unsubscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged, IDisposable =>
-            EventDispatcher.Unsubscribe(callback);
-
         /// <summary>
         /// Call Initialize() on every system in the Simulation. Allows RegisterComponent() to be called without exception.
         /// </summary>
@@ -88,6 +81,14 @@ namespace Tofunaut.TofuECS
             foreach (var system in _systems)
                 system.Dispose(CurrentFrame);
         }
+
+        public void Subscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged =>
+            EventDispatcher.Subscribe(callback);
+
+        public void Unsubscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged =>
+            EventDispatcher.Unsubscribe(callback);
+
+        public void PollEvents() => EventDispatcher.Dispatch();
 
         /// <summary>
         /// Register a component and allow it to be added to an Entity. Will throw SimulationIsNotInitializedException if Initialize() has not been called.
@@ -122,6 +123,8 @@ namespace Tofunaut.TofuECS
 
             foreach (var system in _systems)
                 system.Process(CurrentFrame);
+            
+            EventDispatcher.Dispatch();
             
             // now proceed to the next frame
             var prevFrame = CurrentFrame;

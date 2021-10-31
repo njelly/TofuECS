@@ -131,9 +131,9 @@ namespace Tofunaut.TofuECS
 
         public Input GetInput(int index) => _inputs[index];
         public TInput GetInput<TInput>(int index) where TInput : Input => GetInput(index) as TInput;
-        
-        public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged, IDisposable =>
-            _sim.EventDispatcher.Invoke(this, data);
+
+        public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged =>
+            _sim.EventDispatcher.Enqueue(this, data);
 
         public void LogInfo(string s) => _sim.Log.Info(s);
         public void LogWarn(string s) => _sim.Log.Warn(s);

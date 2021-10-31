@@ -29,7 +29,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
             
             _sim.RegisterComponent<ViewId>();
             
-            _sim.Subscribe<OnViewIdChangedEvent>(OnViewIdChanged);
+            _sim.Subscribe<OnViewIdChangedEventData>(OnViewIdChanged);
             _sim.Subscribe<OnEntityDestroyedEvent>(OnEntityDestroyed);
             
             _sim.Initialize();
@@ -44,7 +44,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
             _entityViewManager.UpdateTransforms(_sim.CurrentFrame);
         }
 
-        private void OnViewIdChanged(Frame f, OnViewIdChangedEvent evt)
+        private void OnViewIdChanged(Frame f, OnViewIdChangedEventData evt)
         {
             _entityViewManager.ReleaseView(evt.EntityId);
             _entityViewManager.RequestView(evt.EntityId, evt.ViewId);

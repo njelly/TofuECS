@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Tofunaut.TofuECS.Math;
 using Tofunaut.TofuECS.Unity;
@@ -37,6 +39,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             Reset((ulong)DateTime.Now.Ticks);
         }
 
+        private void Update()
+        {
+            _coglInput.StaticScaler = Fix64.FROM_FLOAT_UNSAFE(_staticScaleSlider.value);
+            _sim.Tick();
+            _sim.PollEvents();
+            _tex2D.Apply();
+        }
+
         public void Reset(ulong seed)
         {
             Seed = seed;
@@ -61,16 +71,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                     _tex2D.SetPixel(x, y, Color.black);
                 }
             }
-
-            _tex2D.Apply();
         }
 
         private void OnStateChange(Frame f, StateChangeEvent evt)
         {
             for (var i = 0; i < evt.Length; i++)
                 _tex2D.SetPixel(evt.XPos[i], evt.YPos[i], evt.Value[i] ? Color.white : Color.black);
-
-            _tex2D.Apply();
         }
 
         private struct StateChangeEvent : IDisposable
@@ -91,14 +97,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 if(Value != null)
                     Marshal.FreeHGlobal((IntPtr)Value);
             }
-        }
-
-        public void DoTick()
-        {
-            _coglInput.StaticScaler = Fix64.FROM_FLOAT_UNSAFE(_staticScaleSlider.value);
-
-            _sim.Tick();
-            _tex2D.Apply();
         }
 
         private class DummySimulationConfig : ISimulationConfig
@@ -169,7 +167,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private class BoardSystem : ISystem
         {
-            public static event EventHandler<(Vector2Int, bool)> OnSetCellValue;
 
             private readonly XorShiftRandom _r;
             private readonly int _boardWidth, _boardHeight;
