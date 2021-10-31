@@ -44,13 +44,13 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
             _entityViewManager.UpdateTransforms(_sim.CurrentFrame);
         }
 
-        private void OnViewIdChanged(Frame f, OnViewIdChangedEventData evt)
+        private void OnViewIdChanged(OnViewIdChangedEventData evt)
         {
             _entityViewManager.ReleaseView(evt.EntityId);
             _entityViewManager.RequestView(evt.EntityId, evt.ViewId);
         }
 
-        private void OnEntityDestroyed(Frame f, OnEntityDestroyedEvent evt)
+        private void OnEntityDestroyed(OnEntityDestroyedEvent evt)
         {
             _entityViewManager.ReleaseView(evt.EntityId);
         }

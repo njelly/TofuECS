@@ -13,22 +13,22 @@ namespace Tofunaut.TofuECS
     /// </summary>
     internal class EventDispatcher
     {
-        private readonly ConcurrentDictionary<Type, List<(object callbackTarget, Action<Frame, object> callBack)>> _typeToEvent;
-        private readonly ConcurrentQueue<(Type type, Frame f, object data)> _eventQueue;
+        private readonly ConcurrentDictionary<Type, List<(object callbackTarget, Action<object> callBack)>> _typeToEvent;
+        private readonly ConcurrentQueue<(Type type, object data)> _eventQueue;
 
         public EventDispatcher()
         {
-            _typeToEvent = new ConcurrentDictionary<Type, List<(object, Action<Frame, object>)>>();
-            _eventQueue = new ConcurrentQueue<(Type type, Frame f, object data)>();
+            _typeToEvent = new ConcurrentDictionary<Type, List<(object, Action<object>)>>();
+            _eventQueue = new ConcurrentQueue<(Type type, object data)>();
         }
 
-        public void Subscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged
+        public void Subscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged
         {
-            var callbackList = _typeToEvent.GetOrAdd(typeof(TEventData), new List<(object, Action<Frame, object>)>());
-            callbackList.Add((callback.Target, (f, data) => callback.Invoke(f, (TEventData)data)));
+            var callbackList = _typeToEvent.GetOrAdd(typeof(TEventData), new List<(object, Action<object>)>());
+            callbackList.Add((callback.Target, data => callback.Invoke((TEventData)data)));
         }
 
-        public void Unsubscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged
+        public void Unsubscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged
         {
             if (!_typeToEvent.TryGetValue(typeof(TEventData), out var eventList)) 
                 return;
@@ -36,8 +36,8 @@ namespace Tofunaut.TofuECS
             eventList.RemoveAll(x => x.callbackTarget == callback.Target);
         }
 
-        public void Enqueue<TEventData>(Frame f, TEventData data) where TEventData : unmanaged =>
-            _eventQueue.Enqueue((typeof(TEventData), f, data));
+        public void Enqueue<TEventData>(TEventData data) where TEventData : unmanaged =>
+            _eventQueue.Enqueue((typeof(TEventData), data));
 
         public void Dispatch()
         {
@@ -46,7 +46,7 @@ namespace Tofunaut.TofuECS
                 if (_typeToEvent.TryGetValue(eventData.type, out var eventList))
                 {
                     foreach (var callbackTuple in eventList)
-                        callbackTuple.callBack.Invoke(eventData.f, eventData.data);
+                        callbackTuple.callBack.Invoke(eventData.data);
                 }
             }
         }

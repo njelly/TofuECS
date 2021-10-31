@@ -82,10 +82,10 @@ namespace Tofunaut.TofuECS
                 system.Dispose(CurrentFrame);
         }
 
-        public void Subscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged =>
+        public void Subscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged =>
             EventDispatcher.Subscribe(callback);
 
-        public void Unsubscribe<TEventData>(Action<Frame, TEventData> callback) where TEventData : unmanaged =>
+        public void Unsubscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged =>
             EventDispatcher.Unsubscribe(callback);
 
         public void PollEvents() => EventDispatcher.Dispatch();

@@ -73,7 +73,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             }
         }
 
-        private void OnStateChange(Frame f, StateChangeEvent evt)
+        private void OnStateChange(StateChangeEvent evt)
         {
             for (var i = 0; i < evt.Length; i++)
                 _tex2D.SetPixel(evt.XPos[i], evt.YPos[i], evt.Value[i] ? Color.white : Color.black);

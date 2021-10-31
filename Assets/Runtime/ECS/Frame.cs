@@ -133,7 +133,7 @@ namespace Tofunaut.TofuECS
         public TInput GetInput<TInput>(int index) where TInput : Input => GetInput(index) as TInput;
 
         public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged =>
-            _sim.EventDispatcher.Enqueue(this, data);
+            _sim.EventDispatcher.Enqueue(data);
 
         public void LogInfo(string s) => _sim.Log.Info(s);
         public void LogWarn(string s) => _sim.Log.Warn(s);
