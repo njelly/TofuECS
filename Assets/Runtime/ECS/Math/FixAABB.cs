@@ -1,6 +1,8 @@
-﻿namespace Tofunaut.TofuECS.Math
+﻿using System;
+
+namespace Tofunaut.TofuECS.Math
 {
-    public struct FixAABB
+    public struct FixAABB : IShape
     {
         public FixVector2 Min;
         public FixVector2 Max;
@@ -30,21 +32,17 @@
             Max = Min + new FixVector2(width, height);
         }
 
-        public FixCircle OuterBoundingCircle => Width > Height ? new FixCircle(Center, Width) : new FixCircle(Center, Height);
-
-        public FixCircle InnerBoundingCircle => Width > Height ? new FixCircle(Center, Height) : new FixCircle(Center, Width);
+        public bool Contains(FixVector2 point) =>
+            point.X <= Max.X && point.X >= Min.Y && point.Y <= Max.Y && point.Y >= Min.Y;
         
-        public bool Intersects(FixAABB other)
+        public bool IntersectsAABB(FixAABB other)
         {
             if (Max.X < other.Min.X || Min.X > other.Max.X) return false;
             if (Max.Y < other.Min.Y || Min.Y > other.Max.Y) return false;
             return true;
         }
 
-        public bool Contains(FixVector2 point) =>
-            point.X <= Max.X && point.X >= Min.Y && point.Y <= Max.Y && point.Y >= Min.Y;
-
-        public bool Intersects(FixCircle circle)
+        public bool IntersectsCircle(FixCircle circle)
         {
             // based on Jack Ding's solution: https://gamedev.stackexchange.com/questions/96337/collision-between-aabb-and-circle
             
@@ -69,5 +67,19 @@
 
             return false;
         }
+
+        public bool Intersects(IShape other)
+        {
+            return other switch
+            {
+                FixCircle otherCircle => IntersectsCircle(otherCircle),
+                FixAABB otherAABB => IntersectsAABB(otherAABB),
+                FixPoint otherPoint => Contains(otherPoint.Position),
+                _ => throw new NotImplementedException(
+                    "FixAABB.Intersects(IShape other) is not implemented for that IShape implementation")
+            };
+        }
+
+        public FixAABB BoundingBox => this;
     }
 }

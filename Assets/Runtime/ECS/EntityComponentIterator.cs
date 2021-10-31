@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Tofunaut.TofuECS
 {
     public class EntityComponentIterator<TComponent> : IEntityComponentIterator where TComponent : unmanaged
     {
+        public int Count => _entityIds.Count;
         private readonly List<int> _entityIds;
         private readonly List<int> _entitiesToRemove;
         private int _currentIndex;
@@ -14,6 +16,12 @@ namespace Tofunaut.TofuECS
         {
             _entityIds = new List<int>();
             _entitiesToRemove = new List<int>();
+        }
+
+        internal EntityComponentIterator(EntityComponentIterator<TComponent> copyFrom)
+        {
+            _entityIds = copyFrom._entityIds;
+            _entitiesToRemove = copyFrom._entitiesToRemove;
         }
 
         public void Reset(Frame f)

@@ -9,8 +9,8 @@ namespace Tofunaut.TofuECS.Physics
         public FixVector2 Velocity;
         public Fix64 AngularVelocity;
         public Fix64 Mass;
-        public Collider Collider;
         public bool IsAsleep;
+        public Collider2D ColliderInfo;
         internal FixVector2* Forces;
         internal int ForcesNextIndex;
         internal int ForcesLength;
@@ -31,6 +31,19 @@ namespace Tofunaut.TofuECS.Physics
         }
 
         public void AddImpulse(FixVector2 impulse) => Velocity += impulse;
+
+        public readonly IShape GetColliderShape(Transform2D transform2D)
+        {
+            return ColliderInfo.ShapeType switch
+            {
+                ShapeType.Point => new FixPoint(transform2D.Position),
+                ShapeType.Circle => new FixCircle(transform2D.Position, ColliderInfo.CircleRadius),
+                ShapeType.AABB => new FixAABB(transform2D.Position - ColliderInfo.BoxExtents,
+                    transform2D.Position + ColliderInfo.BoxExtents),
+                _ => throw new NotImplementedException(
+                    $"GetColliderShape is not implemented for {ColliderInfo.ShapeType}")
+            };
+        }
 
         internal void Init()
         {
@@ -60,19 +73,10 @@ namespace Tofunaut.TofuECS.Physics
         }
     }
 
-    public enum ShapeType
-    {
-        None,
-        AABB,
-        Circle,
-    }
-
-    public struct Collider
+    public struct Collider2D
     {
         public ShapeType ShapeType;
         public Fix64 CircleRadius;
         public FixVector2 BoxExtents;
-        public FixAABB BoundingBox;
-        public bool IsTrigger;
     }
 }

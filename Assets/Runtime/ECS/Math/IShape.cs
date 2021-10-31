@@ -2,8 +2,10 @@
 
 namespace Tofunaut.TofuECS.Math
 {
-    internal interface IShape
+    public interface IShape
     {
         FixAABB BoundingBox { get; }
+        bool Contains(FixVector2 point);
+        bool Intersects(IShape other);
     }
 }

@@ -167,7 +167,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private class BoardSystem : ISystem
         {
-
             private readonly XorShiftRandom _r;
             private readonly int _boardWidth, _boardHeight;
             private int* _flippedIndexes;
