@@ -105,7 +105,7 @@ namespace Tofunaut.TofuECS.Physics
         private void Broadphase()
         {
             // sort based on x position, so we don't double check bounding box collisions
-            UnmanagedQuickSort.Sort(_bodies, 0, _bodiesLength,
+            UnmanagedQuickSort.Sort(_bodies, _bodiesLength,
                 (a, b) => a.Transform->Position.X < b.Transform->Position.X);
             
             var collisionPairs = stackalloc CollisionPair[_bodiesLength * _bodiesLength - _bodiesLength];

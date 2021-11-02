@@ -3,38 +3,39 @@
     public static unsafe class UnmanagedQuickSort
     {
         public delegate bool Comparison<T>(T a, T b) where T : unmanaged;
-        public static void Sort<T>(T* arr, int start, int end, Comparison<T> comp) where T : unmanaged
+
+        public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged =>
+            SortInternal(arr, 0, length - 1, comp);
+
+        private static void SortInternal<T>(T* arr, int left, int right, Comparison<T> comp) where T : unmanaged 
         {
-            if (start >= end) 
+            if(left >= right)
                 return;
-            
-            var i = Partition(arr, start, end, comp);
- 
-            Sort(arr, start, i - 1, comp);
-            Sort(arr, i + 1, end, comp);
+
+            var pivot = Partition(arr, left, right, comp);
+            SortInternal(arr, left, pivot - 1, comp);
+            SortInternal(arr, pivot + 1, right, comp);
         }
- 
-        private static int Partition<T>(T* arr, int start, int end, Comparison<T> comp) where T : unmanaged
+
+        private static void Swap<T>(T* arr, int a, int b) where T : unmanaged
         {
-            T temp;
-            var p = arr[end];
-            var i = start;
- 
-            for (int j = start; j <= end - 1; j++)
-            {
-                if (comp(arr[j], p))
-                {
-                    i++;
-                    temp = arr[i];
-                    arr[i] = arr[j];
-                    arr[j] = temp;
+            (arr[a], arr[b]) = (arr[b], arr[a]);
+        }  
+
+        private static int Partition<T>(T* arr, int left, int right, Comparison<T> comp) where T : unmanaged
+        {
+            var q = right;
+            while ( q > left ) {
+                while (comp(arr[left], arr[right]))
+                    left++;
+                while (!comp(arr[right], arr[left]) )
+                    right--;
+                if (comp(arr[right], arr[left])) {
+                    Swap(arr, left,q);
                 }
             }
- 
-            temp = arr[i + 1];
-            arr[i + 1] = arr[end];
-            arr[end] = temp;
-            return i + 1;
+            Swap(arr, left, q);
+            return q ;
         }
     }
 }

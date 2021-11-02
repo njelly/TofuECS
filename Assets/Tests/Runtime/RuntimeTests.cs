@@ -148,12 +148,13 @@ public class RuntimeTests
     [Test]
     public unsafe void UtilitiesTests()
     {
+        // unmanaged quick sort (used in physics sim)
         const int length = 10;
         var intArray = stackalloc int[length];
         for (var i = 0; i < length; i++)
             intArray[i] = length - 1 - i;
         
-        UnmanagedQuickSort.Sort(intArray, 0, length, (a, b) => a > b);
+        UnmanagedQuickSort.Sort(intArray, length, (a, b) => a < b);
         
         for(var i = 0; i < length - 1; i++)
             Assert.IsTrue(intArray[i] < intArray[i + 1]);
