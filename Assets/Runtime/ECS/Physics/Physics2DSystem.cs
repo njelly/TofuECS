@@ -61,10 +61,18 @@ namespace Tofunaut.TofuECS.Physics
 
         public void Process(Frame f)
         {
+            // move the bodies based on their forces
             Integrate(f);
+            
+            // broad phase quickly finds potential collisions
             Broadphase();
-            NarrowPhase();
-            ResolveCollisions();
+            
+            // narrow phase finds ACTUAL collisions
+            if(_collisionsLength > 0)
+                NarrowPhase();
+            
+            if(_collisionsLength > 0)
+                ResolveCollisions();
         }
 
         private void Integrate(Frame f)
@@ -74,17 +82,20 @@ namespace Tofunaut.TofuECS.Physics
             var bodiesIndex = 0;
             while (dynamicBody2dIterator.NextUnsafe(out var entityId, out var dynamicBody2d))
             {
+                if (!f.TryGetComponentUnsafe<Transform2D>(entityId, out var transform2d))
+                    continue;
+                
+                bodies[bodiesIndex++] = new BodyInfo(entityId, dynamicBody2d, transform2d);
+                
+                if (dynamicBody2d->IsStatic)
+                    continue;
+                
                 // integrate the forces
                 if (dynamicBody2d->ForcesNextIndex > 0)
                 {
                     dynamicBody2d->Velocity += dynamicBody2d->SumForces() / new Fix64(dynamicBody2d->ForcesNextIndex) * f.DeltaTime;
                     dynamicBody2d->ClearForces();
                 }
-
-                if (!f.TryGetComponentUnsafe<Transform2D>(entityId, out var transform2d))
-                    continue;
-                
-                bodies[bodiesIndex++] = new BodyInfo(entityId, dynamicBody2d, transform2d);
 
                 // move the transform
                 transform2d->PrevPosition = transform2d->Position;
@@ -106,7 +117,10 @@ namespace Tofunaut.TofuECS.Physics
         {
             // sort based on x position, so we don't double check bounding box collisions
             UnmanagedQuickSort.Sort(_bodies, _bodiesLength,
-                (a, b) => a.Transform->Position.X < b.Transform->Position.X);
+                (a, b) =>
+                {
+                    return a.Transform->Position.X < b.Transform->Position.X;
+                });
             
             var collisionPairs = stackalloc CollisionPair[_bodiesLength * _bodiesLength - _bodiesLength];
             var collisionPairsIndex = 0;
@@ -169,7 +183,47 @@ namespace Tofunaut.TofuECS.Physics
         
         private void ResolveCollisions()
         {
-            
+            const int backSteps = 4;
+            for (var i = 0; i < _collisionsLength; i++)
+            {
+                var bodyA = _bodies[_collisions[i].BodyA];
+                var bodyB = _bodies[_collisions[i].BodyB];
+                var bodyACollisionPosition = bodyA.Transform->Position;
+                var bodyANonCollisionPosition = bodyA.Transform->PrevPosition;
+                var bodyBCollisionPosition = bodyB.Transform->Position;
+                var bodyBNonCollisionPosition = bodyB.Transform->PrevPosition;
+                
+                // we won't find the exact collision point, but we'll approach it
+                for (var j = 0; j < backSteps; j++)
+                {
+                    bodyA.Transform->Position =
+                        (bodyA.Transform->Position + bodyA.Transform->PrevPosition) / new Fix64(2);
+                    bodyB.Transform->Position =
+                        (bodyB.Transform->Position + bodyB.Transform->PrevPosition) / new Fix64(2);
+
+                    if (bodyA.Body->GetColliderShape(*bodyA.Transform)
+                        .Intersects(bodyB.Body->GetColliderShape(*bodyB.Transform)))
+                    {
+                        // if the DO intersect, we need to keep moving back to the prev position
+                        bodyA.Transform->PrevPosition = bodyANonCollisionPosition;
+                        bodyB.Transform->PrevPosition = bodyBNonCollisionPosition;
+                    }
+                    else
+                    {
+                        // if they no longer intersect, we stepped too far, and we need to move back to the collision position
+                        bodyA.Transform->PrevPosition = bodyACollisionPosition;
+                        bodyB.Transform->PrevPosition = bodyBCollisionPosition;
+                    }
+                }
+
+                var bodyACollisionImpulse = bodyB.Body->GetColliderShape(*bodyB.Transform)
+                    .CollisionNormal(bodyA.Transform->Position) * bodyA.Body->Velocity.Magnitude * bodyB.Body->Mass;
+                var bodyBCollisionImpulse = bodyA.Body->GetColliderShape(*bodyA.Transform)
+                    .CollisionNormal(bodyB.Transform->Position) * bodyB.Body->Velocity.Magnitude * bodyA.Body->Mass;
+
+                bodyA.Body->AddImpulse(bodyACollisionImpulse);
+                bodyB.Body->AddImpulse(bodyBCollisionImpulse);
+            }
         }
 
         public void Dispose(Frame f)

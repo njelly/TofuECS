@@ -4,8 +4,26 @@
     {
         public delegate bool Comparison<T>(T a, T b) where T : unmanaged;
 
-        public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged =>
-            SortInternal(arr, 0, length - 1, comp);
+        public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged
+        {
+            // bubble sort because this isn't working...
+            for (var i = 0; i < length; i++)
+            {
+                for (var j = 0; j < length; j++)
+                {
+                    if(i == j)
+                        continue;
+
+                    if (comp(arr[i], arr[j]))
+                    {
+                        Swap(arr, i, j);
+                    }
+                }
+            }
+        }
+
+        //public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged =>
+        //    SortInternal(arr, 0, length - 1, comp);
 
         private static void SortInternal<T>(T* arr, int left, int right, Comparison<T> comp) where T : unmanaged 
         {
@@ -13,8 +31,12 @@
                 return;
 
             var pivot = Partition(arr, left, right, comp);
-            SortInternal(arr, left, pivot - 1, comp);
-            SortInternal(arr, pivot + 1, right, comp);
+            
+            if(pivot > left)
+                SortInternal(arr, left, pivot - 1, comp);
+            
+            if(pivot < right)
+                SortInternal(arr, pivot + 1, right, comp);
         }
 
         private static void Swap<T>(T* arr, int a, int b) where T : unmanaged

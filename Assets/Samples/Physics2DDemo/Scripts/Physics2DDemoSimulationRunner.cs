@@ -18,7 +18,6 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
             await _config.Database.PreloadAll();
             
             _demoInputProvider = new Physics2DDemoInputProvider();
-            _entityViewManager = new EntityViewManager(_config.Database);
             
             _sim = new Simulation(_config, new UnityLogService(), _demoInputProvider, new ISystem[]
             {
@@ -26,6 +25,8 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
                 new BallSystem(),
                 new GravitySystem(),
             });
+            
+            _entityViewManager = new EntityViewManager(_sim, _config.Database);
             
             _sim.RegisterComponent<ViewId>();
             

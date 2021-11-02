@@ -2,8 +2,10 @@
 
 namespace Tofunaut.TofuECS.Math
 {
-    public struct FixCircle : IShape
+    public struct FixCircle : IShape2D
     {
+        public static FixCircle Unit => new FixCircle(FixVector2.Zero, Fix64.One);
+        
         public FixVector2 Center;
         public Fix64 Radius;
 
@@ -25,7 +27,7 @@ namespace Tofunaut.TofuECS.Math
 
         public FixAABB BoundingBox => new FixAABB(Center - FixVector2.One * Radius, Center + FixVector2.One * Radius);
 
-        public bool Intersects(IShape other)
+        public bool Intersects(IShape2D other)
         {
             return other switch
             {
@@ -35,6 +37,11 @@ namespace Tofunaut.TofuECS.Math
                 _ => throw new NotImplementedException(
                     "FixCircle.Intersects(IShape other) is not implemented for that IShape implementation")
             };
+        }
+
+        public FixVector2 CollisionNormal(FixVector2 point)
+        {
+            return (point - Center).Normalized;
         }
     }
 }

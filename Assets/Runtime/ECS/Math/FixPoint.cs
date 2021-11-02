@@ -2,7 +2,7 @@
 
 namespace Tofunaut.TofuECS.Math
 {
-    public struct FixPoint : IShape
+    public struct FixPoint : IShape2D
     {
         public FixVector2 Position;
 
@@ -18,7 +18,7 @@ namespace Tofunaut.TofuECS.Math
             return point == Position;
         }
 
-        public bool Intersects(IShape other)
+        public bool Intersects(IShape2D other)
         {
             return other switch
             {
@@ -28,6 +28,11 @@ namespace Tofunaut.TofuECS.Math
                 _ => throw new NotImplementedException(
                     "FixPoint.Intersects(IShape other) is not implemented for that IShape implementation")
             };
+        }
+
+        public FixVector2 CollisionNormal(FixVector2 point)
+        {
+            return (point - Position).Normalized;
         }
     }
 }

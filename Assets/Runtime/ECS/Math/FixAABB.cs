@@ -2,7 +2,7 @@
 
 namespace Tofunaut.TofuECS.Math
 {
-    public struct FixAABB : IShape
+    public struct FixAABB : IShape2D
     {
         public FixVector2 Min;
         public FixVector2 Max;
@@ -10,6 +10,7 @@ namespace Tofunaut.TofuECS.Math
         public Fix64 Width => Max.X - Min.X;
         public Fix64 Height => Max.Y - Min.Y;
         public FixVector2 Center => (new FixVector2(Max.X - Min.X, Max.Y - Min.Y) / new Fix64(2)) + Min;
+        public FixVector2 Extents => (Max - Min) / new Fix64(2);
 
         public FixVector2[] Points => new []
         {
@@ -68,7 +69,7 @@ namespace Tofunaut.TofuECS.Math
             return false;
         }
 
-        public bool Intersects(IShape other)
+        public bool Intersects(IShape2D other)
         {
             return other switch
             {
@@ -78,6 +79,32 @@ namespace Tofunaut.TofuECS.Math
                 _ => throw new NotImplementedException(
                     "FixAABB.Intersects(IShape other) is not implemented for that IShape implementation")
             };
+        }
+
+        public FixVector2 CollisionNormal(FixVector2 point)
+        {
+            var normals = new[]
+            {
+                FixVector2.Up,
+                FixVector2.Right,
+                FixVector2.Down,
+                FixVector2.Left,
+            };
+
+            var fromCenter = point - Center;
+            var highestDot = Fix64.MinValue;
+            var highestIndex = 0;
+            for (var i = 0; i < normals.Length; i++)
+            {
+                var dot = FixVector2.Dot(fromCenter, normals[i]);
+                if (dot <= highestDot) 
+                    continue;
+                
+                highestDot = dot;
+                highestIndex = i;
+            }
+
+            return normals[highestIndex];
         }
 
         public FixAABB BoundingBox => this;

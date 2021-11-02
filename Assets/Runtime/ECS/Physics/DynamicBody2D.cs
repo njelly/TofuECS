@@ -9,7 +9,7 @@ namespace Tofunaut.TofuECS.Physics
         public FixVector2 Velocity;
         public Fix64 AngularVelocity;
         public Fix64 Mass;
-        public bool IsAsleep;
+        public bool IsStatic;
         public ColliderInfo ColliderInfo;
         internal FixVector2* Forces;
         internal int ForcesNextIndex;
@@ -17,6 +17,9 @@ namespace Tofunaut.TofuECS.Physics
 
         public void AddForce(FixVector2 force)
         {
+            if (IsStatic)
+                return;
+            
             if (ForcesNextIndex >= ForcesLength)
             {
                 var prevLength = Marshal.SizeOf(typeof(FixVector2)) * ForcesLength;
@@ -32,7 +35,7 @@ namespace Tofunaut.TofuECS.Physics
 
         public void AddImpulse(FixVector2 impulse) => Velocity += impulse;
 
-        public readonly IShape GetColliderShape(Transform2D transform2D)
+        public readonly IShape2D GetColliderShape(Transform2D transform2D)
         {
             return ColliderInfo.ShapeType switch
             {

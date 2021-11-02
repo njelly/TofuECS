@@ -9,7 +9,20 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo.ECS
     {
         public void Initialize(Frame f)
         {
-            CreateBall(f, FixVector2.Zero);
+            CreateBall(f, FixVector2.Up * new Fix64(6));
+            
+            var platformEntity = f.CreateEntity();
+            f.AddComponent<Transform2D>(platformEntity);
+            f.AddComponent<DynamicBody2D>(platformEntity);
+
+            f.GetComponentUnsafe<Transform2D>(platformEntity)->Position = FixVector2.Right;
+            var dynamicBody2d = f.GetComponentUnsafe<DynamicBody2D>(platformEntity);
+            dynamicBody2d->IsStatic = true;
+            dynamicBody2d->ColliderInfo = new ColliderInfo
+            {
+                ShapeType = ShapeType.AABB,
+                BoxExtents = new FixVector2(new Fix64(3), new Fix64(10)),
+            };
         }
 
         public void Process(Frame f) { }

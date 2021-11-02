@@ -15,7 +15,7 @@ namespace Tofunaut.TofuECS.Unity
         /// <summary>
         /// Invoked when this EntityView is initialized by the EntityViewManager.
         /// </summary>
-        public UnityEvent OnInitialize;
+        public UnityEvent<Simulation> OnInitialize;
         
         /// <summary>
         /// Invoked when this EntityView is released by the EntityViewManager, before it is disabled.
@@ -24,10 +24,10 @@ namespace Tofunaut.TofuECS.Unity
         
         [SerializeField, HideInInspector] private int _prefabId;
         
-        internal void Initialize(int entityId)
+        internal void Initialize(Simulation sim, int entityId)
         {
             EntityId = entityId;
-            OnInitialize?.Invoke();
+            OnInitialize?.Invoke(sim);
         }
 
         internal void CleanUp()

@@ -123,7 +123,25 @@ public class RuntimeTests
         Assert.IsTrue(aAABB.Intersects(bAABB));
         Assert.IsTrue(bAABB.Intersects(aAABB));
         Assert.IsFalse(aAABB.Intersects(cAABB));
-
+        
+        
+        
+        // FixCircle
+        
+        var aCircle = new FixCircle(FixVector2.Zero, new Fix64(1) / new Fix64(2));
+        var bCircle = new FixCircle(FixVector2.Right, new Fix64(1));
+        var cCircle = new FixCircle(FixVector2.Left, new Fix64(1) / new Fix64(3));
+        Assert.IsTrue(aCircle.Intersects(bCircle));
+        Assert.IsFalse(aCircle.Intersects(cCircle));
+        
+        
+        
+        // IShape
+        Assert.IsTrue(aAABB.Intersects(aCircle));
+        Assert.IsTrue(aAABB.CollisionNormal(FixVector2.Up) == FixVector2.Up);
+        Assert.IsTrue(aAABB.CollisionNormal(FixVector2.Down) == FixVector2.Down);
+        Assert.IsTrue(aAABB.CollisionNormal(FixVector2.Right) == FixVector2.Right);
+        Assert.IsTrue(aAABB.CollisionNormal(FixVector2.Left) == FixVector2.Left);
 
 
         // RNG

@@ -7,12 +7,14 @@ namespace Tofunaut.TofuECS.Unity
 {
     public class EntityViewManager
     {
+        private readonly Simulation _sim;
         private readonly ECSDatabase _database;
-        private Dictionary<int, (EntityView, Transform)> _entityToView;
+        private Dictionary<int, (EntityView entityView, Transform transform)> _entityToView;
         private Dictionary<int, Queue<EntityView>> _prefabIdToPool;
 
-        public EntityViewManager(ECSDatabase database)
+        public EntityViewManager(Simulation sim, ECSDatabase database)
         {
+            _sim = sim;
             _database = database;
             _entityToView = new Dictionary<int, (EntityView, Transform)>();
             _prefabIdToPool = new Dictionary<int, Queue<EntityView>>();
@@ -35,7 +37,7 @@ namespace Tofunaut.TofuECS.Unity
                 : pool.Dequeue();
 
             _entityToView[entityId] = (entityView, entityView.transform);
-            entityView.Initialize(entityId);
+            entityView.Initialize(_sim, entityId);
         }
 
         public void ReleaseView(int entityId)
@@ -43,9 +45,9 @@ namespace Tofunaut.TofuECS.Unity
             if (!_entityToView.TryGetValue(entityId, out var tuple))
                 return;
             
-            tuple.Item1.CleanUp();
+            tuple.entityView.CleanUp();
             _entityToView.Remove(entityId);
-            tuple.Item1.gameObject.SetActive(false);
+            tuple.entityView.gameObject.SetActive(false);
             _prefabIdToPool[tuple.Item1.PrefabId].Enqueue(tuple.Item1);
         }
 
@@ -57,8 +59,8 @@ namespace Tofunaut.TofuECS.Unity
                 if (!_entityToView.TryGetValue(entityId, out var tuple))
                     continue;
 
-                tuple.Item2.position = new Vector3((float)transform2d.Position.X, (float)transform2d.Position.Y, 0f);
-                tuple.Item2.eulerAngles = new Vector3(0f, 0f, (float)transform2d.Rotation);
+                tuple.transform.position = new Vector3((float)transform2d.Position.X, (float)transform2d.Position.Y, 0f);
+                tuple.transform.eulerAngles = new Vector3(0f, 0f, (float)transform2d.Rotation);
             }
         }
     }

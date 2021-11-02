@@ -2,6 +2,8 @@
 {
     public struct FixVector2
     {
+        public static Fix64 Dot(FixVector2 a, FixVector2 b) => a.X * b.X + a.Y * b.Y;
+        
         public static FixVector2 Right => new FixVector2(Fix64.One, Fix64.Zero);
         public static FixVector2 Down => new FixVector2(Fix64.Zero, -Fix64.One);
         public static FixVector2 Left => new FixVector2(-Fix64.One, Fix64.Zero);
@@ -15,6 +17,7 @@
         public Fix64 Magnitude => Fix64.Sqrt(SqrMagnitude);
         public Fix64 SqrMagnitude => X * X + Y * Y;
         public Fix64 ManhattanDistance => X + Y;
+        public FixVector2 Normalized => this / Magnitude;
         
         public FixVector2(Fix64 x, Fix64 y)
         {
