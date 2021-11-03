@@ -26,7 +26,7 @@ namespace Tofunaut.TofuECS.Samples.Physics2DDemo
                 new GravitySystem(),
             });
             
-            _entityViewManager = new EntityViewManager(_sim, _config.Database);
+            _entityViewManager = new EntityViewManager(_config.Database);
             
             _sim.RegisterComponent<ViewId>();
             

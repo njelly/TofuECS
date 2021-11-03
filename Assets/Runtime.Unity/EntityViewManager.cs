@@ -7,14 +7,12 @@ namespace Tofunaut.TofuECS.Unity
 {
     public class EntityViewManager
     {
-        private readonly Simulation _sim;
         private readonly ECSDatabase _database;
         private Dictionary<int, (EntityView entityView, Transform transform)> _entityToView;
         private Dictionary<int, Queue<EntityView>> _prefabIdToPool;
 
-        public EntityViewManager(Simulation sim, ECSDatabase database)
+        public EntityViewManager(ECSDatabase database)
         {
-            _sim = sim;
             _database = database;
             _entityToView = new Dictionary<int, (EntityView, Transform)>();
             _prefabIdToPool = new Dictionary<int, Queue<EntityView>>();
@@ -37,7 +35,7 @@ namespace Tofunaut.TofuECS.Unity
                 : pool.Dequeue();
 
             _entityToView[entityId] = (entityView, entityView.transform);
-            entityView.Initialize(_sim, entityId);
+            entityView.Initialize(entityId);
         }
 
         public void ReleaseView(int entityId)

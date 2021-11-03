@@ -3,6 +3,7 @@ using UnityEngine.Events;
 
 namespace Tofunaut.TofuECS.Unity
 {
+
     public sealed class EntityView : MonoBehaviour
     {
         public int EntityId { get; private set; }
@@ -15,7 +16,7 @@ namespace Tofunaut.TofuECS.Unity
         /// <summary>
         /// Invoked when this EntityView is initialized by the EntityViewManager.
         /// </summary>
-        public UnityEvent<Simulation> OnInitialize;
+        public UnityEvent OnInitialize;
         
         /// <summary>
         /// Invoked when this EntityView is released by the EntityViewManager, before it is disabled.
@@ -23,11 +24,11 @@ namespace Tofunaut.TofuECS.Unity
         public UnityEvent OnCleanedUp;
         
         [SerializeField, HideInInspector] private int _prefabId;
-        
-        internal void Initialize(Simulation sim, int entityId)
+
+        internal void Initialize(int entityId)
         {
             EntityId = entityId;
-            OnInitialize?.Invoke(sim);
+            OnInitialize?.Invoke();
         }
 
         internal void CleanUp()
