@@ -1,0 +1,22 @@
+{
+  "name": "com.tofunaut.tofuecs",
+  "version": "0.1.0",
+  "displayName": "TofuECS",
+  "description": "A lightweight, fast, entity component system framework for Unity.",
+  "unity": "2020.3",
+  "unityRelease": "22f1",
+  "dependencies": {
+    "com.unity.addressables": "1.18.19"
+  },
+  "keywords": [
+    "unity",
+    "ecs",
+    "entity",
+    "component",
+    "system"
+  ],
+  "author": {
+    "name" : "Nathaniel Elingson",
+    "url" : "www.tofunaut.com"
+  }
+}
