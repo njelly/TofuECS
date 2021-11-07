@@ -11,13 +11,17 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
     {
         [SerializeField] private Vector2Int _worldSize;
         [SerializeField] private Slider _staticScaleSlider;
+        [SerializeField] private Button _pauseButton;
+        [SerializeField] private Text _pauseButtonLabel;
+        [SerializeField] private Button _tickButton;
+        [SerializeField] private Text _currentTickLabel;
 
         public int FrameNumber => _sim.CurrentFrame.Number;
         public ulong Seed { get; private set; }
 
         private Simulation _sim; 
         private Texture2D _tex2D;
-        private COGLInput _coglInput;
+        private bool _isPaused;
 
         private void Awake()
         {
@@ -29,13 +33,39 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             spriteRenderer.sprite = sprite;
 
             Reset((ulong)DateTime.Now.Ticks);
+            
+            _pauseButton.onClick.RemoveAllListeners();
+            _pauseButton.onClick.AddListener(() =>
+            {
+                _isPaused = !_isPaused;
+                _pauseButtonLabel.text = _isPaused ? "Unpause" : "Pause";
+            });
+            
+            _tickButton.onClick.RemoveAllListeners();
+            _tickButton.onClick.AddListener(() =>
+            {
+                _sim.Tick();
+                _sim.PollEvents();
+            });
         }
 
         private void Update()
         {
+            _sim.InjectInput(new []
+            {
+                new COGLInput
+                {
+                    StaticScale = _staticScaleSlider.value,
+                }
+            });
+
+            _currentTickLabel.text = $"Tick: {_sim.CurrentFrame.Number}";
+            
+            if (_isPaused)
+                return;
+            
             _sim.Tick();
             _sim.PollEvents();
-            _tex2D.Apply();
         }
 
         public void Reset(ulong seed)
@@ -52,13 +82,6 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _sim.RegisterComponent<Board>();
             _sim.Subscribe<BoardStateChangedEvent>(OnStateChange);
             _sim.Initialize();
-            _sim.InjectInput(new []
-            {
-                new COGLInput
-                {
-                    StaticScale = 1f,
-                }
-            });
             
             // initialize the texture
             for(var x = 0; x < _worldSize.x; x++)
@@ -74,6 +97,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         {
             for (var i = 0; i < evt.Length; i++)
                 _tex2D.SetPixel(evt.XPos[i], evt.YPos[i], evt.Value[i] ? Color.white : Color.black);
+            
+            _tex2D.Apply();
         }
 
         private class DummySimulationConfig : ISimulationConfig
