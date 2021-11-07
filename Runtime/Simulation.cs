@@ -10,11 +10,12 @@ namespace Tofunaut.TofuECS
         public bool IsInitialized { get; private set; }
         internal ILogService Log { get; }
         internal EventDispatcher EventDispatcher { get; }
-        internal InputProvider InputProvider { get; }
 
         private readonly ISystem[] _systems;
         private readonly Frame[] _frames;
         private readonly Dictionary<Type, int> _typeToIndex;
+        private readonly Dictionary<Type, object[]> _typeToInput;
+        private readonly object _inputLock;
 
         private int _typeIndexCounter;
 
@@ -23,12 +24,13 @@ namespace Tofunaut.TofuECS
             Config = config;
             Log = log;
             EventDispatcher = new EventDispatcher();
-            InputProvider = new InputProvider();
             IsInitialized = false;
 
             _typeToIndex = new Dictionary<Type, int>();
             _systems = systems;
+            _inputLock = new object();
             _frames = new Frame[config.FramesInMemory];
+            _typeToInput = new Dictionary<Type, object[]>();
             if(_frames.Length < 2)
                 log.Error("The simulation must have at least 2 frames to work properly.");
 
@@ -63,7 +65,37 @@ namespace Tofunaut.TofuECS
 
         public void PollEvents() => EventDispatcher.Dispatch();
 
-        public void InjectInput<TInput>(TInput[] input) where TInput : unmanaged => InputProvider.InjectInput(input);
+        public void InjectNewInput<TInput>(TInput[] input) where TInput : unmanaged
+        {
+            lock (_inputLock)
+            {
+                if (!_typeToInput.TryGetValue(typeof(TInput), out var inputArray))
+                {
+                    inputArray = new object[input.Length];
+                    _typeToInput.Add(typeof(TInput), inputArray);
+                }
+
+                for (var i = 0; i < input.Length; i++)
+                    inputArray[i] = input[i];
+            }
+        }
+
+        public void InjectInputForFrame<TInput>(TInput[] input, int frameNumber) where TInput : unmanaged
+        {
+            var frame = _frames[frameNumber % _frames.Length];
+            if (frame.Number != frameNumber)
+            {
+                // TODO: implement snapshots
+                Log.Error($"the frame {frameNumber} no longer exists");
+                return;
+            }
+
+            var inputObjArray = new object[input.Length];
+            for (var i = 0; i < input.Length; i++)
+                inputObjArray[i] = input[i];
+            
+            frame.SetInput(typeof(TInput), inputObjArray);
+        }
 
         /// <summary>
         /// Register a component and allow it to be added to an Entity. Will throw SimulationIsNotInitializedException if Initialize() has not been called.
@@ -84,6 +116,14 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public void Tick()
         {
+            lock (_inputLock)
+            {
+                foreach (var kvp in _typeToInput)
+                    CurrentFrame.SetInput(kvp.Key, kvp.Value);
+                
+                _typeToInput.Clear();
+            }
+            
             foreach (var system in _systems)
                 system.Process(CurrentFrame);
             

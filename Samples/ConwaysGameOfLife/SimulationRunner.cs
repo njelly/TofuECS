@@ -22,6 +22,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         private Simulation _sim; 
         private Texture2D _tex2D;
         private bool _isPaused;
+        private COGLInput _coglInput;
 
         private void Awake()
         {
@@ -47,17 +48,21 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _sim.Tick();
                 _sim.PollEvents();
             });
+
+            _coglInput = new COGLInput();
         }
 
         private void Update()
         {
-            _sim.InjectInput(new []
+            // inject new input ONLY when the input has changed
+            if (Math.Abs(_coglInput.StaticScale - _staticScaleSlider.value) > 0.01f)
             {
-                new COGLInput
+                _coglInput.StaticScale = _staticScaleSlider.value;
+                _sim.InjectNewInput(new []
                 {
-                    StaticScale = _staticScaleSlider.value,
-                }
-            });
+                    _coglInput
+                });
+            }
 
             _currentTickLabel.text = $"Tick: {_sim.CurrentFrame.Number}";
             

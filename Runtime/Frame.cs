@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
@@ -15,6 +16,7 @@ namespace Tofunaut.TofuECS
         private IComponentBuffer[] _componentBuffers;
         private IEntityComponentIterator[] _iterators;
         private readonly EntityBuffer _entityBuffer;
+        private readonly Dictionary<Type, object[]> _typeToInput;
 
         public Frame(Simulation sim, int numInputs)
         {
@@ -25,6 +27,7 @@ namespace Tofunaut.TofuECS
             _componentBuffers = Array.Empty<IComponentBuffer>();
             _iterators = Array.Empty<IEntityComponentIterator>();
             _entityBuffer = new EntityBuffer();
+            _typeToInput = new Dictionary<Type, object[]>();
         }
 
         public int CreateEntity() => _entityBuffer.Request();
@@ -126,7 +129,9 @@ namespace Tofunaut.TofuECS
             return iterator;
         }
 
-        public TInput GetInput<TInput>(int index) where TInput : unmanaged => _sim.InputProvider.GetInput<TInput>(index);
+        internal void SetInput(Type type, object[] input) => _typeToInput[type] = input;
+
+        public TInput GetInput<TInput>(int index) where TInput : unmanaged => (TInput)_typeToInput[typeof(TInput)][index];
 
         public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged =>
             _sim.EventDispatcher.Enqueue(data);
@@ -151,6 +156,10 @@ namespace Tofunaut.TofuECS
             
             _entityBuffer.Recycle(prevFrame._entityBuffer);
             RNG.CopyState(prevFrame.RNG);
+            
+            _typeToInput.Clear();
+            foreach (var kvp in prevFrame._typeToInput)
+                _typeToInput.Add(kvp.Key, kvp.Value);
         }
 
         internal void Verify()
