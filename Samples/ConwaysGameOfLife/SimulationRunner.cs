@@ -65,7 +65,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             });
             _sim.RegisterComponent<Board>();
             _sim.RegisterComponent<ViewId>();
-            _sim.Subscribe<OnViewIdChangedEventData>(OnViewIdChanged);
+            _sim.Subscribe<OnViewIdChangedEvent>(OnViewIdChanged);
             _sim.Initialize();
 
             _coglInput = new COGLInput();
@@ -101,7 +101,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 Instance = null;
         }
 
-        private void OnViewIdChanged(OnViewIdChangedEventData evt)
+        private void OnViewIdChanged(OnViewIdChangedEvent evt)
         {
             _entityViewManager.ReleaseView(evt.PrevId);
             _entityViewManager.RequestView(evt.EntityId, evt.ViewId);

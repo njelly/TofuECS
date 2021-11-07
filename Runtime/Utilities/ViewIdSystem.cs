@@ -12,7 +12,7 @@
                 if (viewId->Id == viewId->PrevId)
                     continue;
 
-                var eventData = new OnViewIdChangedEventData
+                var eventData = new OnViewIdChangedEvent
                 {
                     ViewId = viewId->Id,
                     PrevId = viewId->PrevId,
@@ -28,7 +28,7 @@
         public void Dispose(Frame f) { }
     }
 
-    public struct OnViewIdChangedEventData
+    public struct OnViewIdChangedEvent
     {
         public int ViewId;
         public int PrevId;
