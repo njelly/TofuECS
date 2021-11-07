@@ -82,8 +82,8 @@ namespace Tofunaut.TofuECS
             otherIterator.Reset();
             Reset();
             _entityIds.Clear();
-            foreach (var otherEntity in otherIterator._entityIds)
-                _entityIds.Add(otherEntity);
+            for(var i = 0; i < otherIterator._entityIds.Count; i++)
+                _entityIds.Add(otherIterator._entityIds[i]);
         }
     }
 }

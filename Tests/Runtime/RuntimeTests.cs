@@ -11,7 +11,6 @@ public class RuntimeTests
     {
         var seed = (ulong)1993;
         var sim = new Simulation(new DummySimulationConfig(seed), new UnityLogService(),
-            new DummyInputProvider(),
             new ISystem[]
             {
                 new TestSystem(),
@@ -115,19 +114,6 @@ public class RuntimeTests
         {
             Seed = seed;
         }
-    }
-
-    private class DummyInputProvider : InputProvider
-    {
-        public override Tofunaut.TofuECS.Input Poll(int index)
-        {
-            return new DummyInput();
-        }
-    }
-
-    private class DummyInput : Tofunaut.TofuECS.Input
-    {
-
     }
 
     private struct TestComponent

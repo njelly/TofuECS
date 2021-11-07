@@ -4,9 +4,9 @@
   "displayName": "TofuECS",
   "description": "A lightweight, fast, entity component system framework for Unity.",
   "unity": "2020.3",
-  "unityRelease": "22f1",
+  "unityRelease": "11f1",
   "dependencies": {
-    "com.unity.addressables": "1.18.19"
+    "com.unity.addressables": "1.19.11"
   },
   "keywords": [
     "unity",

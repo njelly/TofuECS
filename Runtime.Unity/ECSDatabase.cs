@@ -180,6 +180,7 @@ namespace Tofunaut.TofuECS.Unity
                 catch (InvalidCastException e)
                 {
                     Debug.LogError("ECSDatabase ECSAssets must be be a scriptable object derived from ECSAsset");
+                    Debug.LogException(e);
                     toRemove.Add(assetReference);
                     continue;
                 }
@@ -252,6 +253,7 @@ namespace Tofunaut.TofuECS.Unity
                 catch (InvalidCastException e)
                 {
                     Debug.LogError("ECSDatabase EntityViews must be a prefab");
+                    Debug.LogException(e);
                     toRemove.Add(assetReference);
                     continue;
                 }

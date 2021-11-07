@@ -7,24 +7,23 @@ namespace Tofunaut.TofuECS
         public int Number { get; private set; }
         public bool IsVerified { get; private set; }
         public ISimulationConfig Config => _sim.Config;
-        public int NumInputs => _inputs.Length;
+        public int NumInputs { get; }
 
         public XorShiftRandom RNG { get; }
 
         private readonly Simulation _sim;
         private IComponentBuffer[] _componentBuffers;
         private IEntityComponentIterator[] _iterators;
-        private readonly Input[] _inputs;
         private readonly EntityBuffer _entityBuffer;
 
         public Frame(Simulation sim, int numInputs)
         {
             _sim = sim;
             Number = 0;
+            NumInputs = numInputs;
             RNG = new XorShiftRandom(_sim.Config.Seed);
             _componentBuffers = Array.Empty<IComponentBuffer>();
             _iterators = Array.Empty<IEntityComponentIterator>();
-            _inputs = new Input[numInputs];
             _entityBuffer = new EntityBuffer();
         }
 
@@ -127,8 +126,7 @@ namespace Tofunaut.TofuECS
             return iterator;
         }
 
-        public Input GetInput(int index) => _inputs[index];
-        public TInput GetInput<TInput>(int index) where TInput : Input => GetInput(index) as TInput;
+        public TInput GetInput<TInput>(int index) where TInput : unmanaged => _sim.InputProvider.GetInput<TInput>(index);
 
         public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged =>
             _sim.EventDispatcher.Enqueue(data);
@@ -153,8 +151,6 @@ namespace Tofunaut.TofuECS
             
             _entityBuffer.Recycle(prevFrame._entityBuffer);
             RNG.CopyState(prevFrame.RNG);
-
-            Array.Copy(prevFrame._inputs, _inputs, _inputs.Length);
         }
 
         internal void Verify()
@@ -175,8 +171,6 @@ namespace Tofunaut.TofuECS
             _iterators = newIteratorArray;
             _iterators[_iterators.Length - 1] = new EntityComponentIterator<TComponent>();
         }
-
-        internal void CopyInputs(Input[] inputs) => Array.Copy(inputs, _inputs, _inputs.Length);
     }
 
     public class EntityDoesNotContainComponentException<TComponent> : Exception where TComponent : unmanaged

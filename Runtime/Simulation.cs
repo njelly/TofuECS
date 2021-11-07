@@ -10,20 +10,20 @@ namespace Tofunaut.TofuECS
         public bool IsInitialized { get; private set; }
         internal ILogService Log { get; }
         internal EventDispatcher EventDispatcher { get; }
+        internal InputProvider InputProvider { get; }
 
         private readonly ISystem[] _systems;
         private readonly Frame[] _frames;
         private readonly Dictionary<Type, int> _typeToIndex;
-        private readonly InputProvider _inputProvider;
-        private readonly Input[] _currentInputs;
 
         private int _typeIndexCounter;
 
-        public Simulation(ISimulationConfig config, ILogService log, InputProvider inputProvider, ISystem[] systems)
+        public Simulation(ISimulationConfig config, ILogService log, ISystem[] systems)
         {
             Config = config;
             Log = log;
             EventDispatcher = new EventDispatcher();
+            InputProvider = new InputProvider();
             
             _frames = new Frame[config.FramesInMemory];
 
@@ -33,9 +33,6 @@ namespace Tofunaut.TofuECS
             CurrentFrame = _frames[0];
 
             _typeToIndex = new Dictionary<Type, int>();
-
-            _inputProvider = inputProvider;
-            _currentInputs = new Input[Config.NumInputs];
 
             IsInitialized = false;
             
@@ -67,6 +64,8 @@ namespace Tofunaut.TofuECS
 
         public void PollEvents() => EventDispatcher.Dispatch();
 
+        public void InjectInput<TInput>(TInput[] input) where TInput : unmanaged => InputProvider.InjectInput(input);
+
         /// <summary>
         /// Register a component and allow it to be added to an Entity. Will throw SimulationIsNotInitializedException if Initialize() has not been called.
         /// </summary>
@@ -86,11 +85,6 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public void Tick()
         {
-            for (var i = 0; i < Config.NumInputs; i++)
-                _currentInputs[i] = _inputProvider.Poll(i);
-
-            CurrentFrame.CopyInputs(_currentInputs);
-
             foreach (var system in _systems)
                 system.Process(CurrentFrame);
             

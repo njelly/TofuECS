@@ -1,10 +1,8 @@
 {
-    "name": "TofuECS.Samples.ConwaysGameOfLife",
+    "name": "TofuECS.Samples.ConwaysGameOfLife.ECS",
     "rootNamespace": "",
     "references": [
-        "GUID:6988a48b0e6c362459a6035aaaf7c503",
-        "GUID:1da540a19496a4f4a8825f592028c2c8",
-        "GUID:9824a72d87ee942b59fa961c45688e2c"
+        "GUID:6988a48b0e6c362459a6035aaaf7c503"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -14,5 +12,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false
+    "noEngineReferences": true
 }
