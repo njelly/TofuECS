@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Tofunaut.TofuECS.Utilities
+﻿namespace Tofunaut.TofuECS.Utilities
 {
     public unsafe class ViewIdSystem : ISystem
     {

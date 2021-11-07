@@ -11,13 +11,14 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
         public float StartStaticThreshold;
         public bool* State;
 
-        public void Init(int width, int height)
+        public void Init(BoardConfig config)
         {
             Dispose();
 
-            Size = width * height;
-            Width = width;
-            Height = height;
+            Size = config.Width * config.Height;
+            Width = config.Width;
+            Height = config.Height;
+            StartStaticThreshold = config.StartStaticThreshold;
             State = (bool*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)) * Size);
         }
 

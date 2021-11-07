@@ -157,10 +157,7 @@ namespace Tofunaut.TofuECS.Unity
             didSetDirty |= ValidateEntityViews();
 
             if (didSetDirty)
-            {
                 EditorUtility.SetDirty(this);
-                AssetDatabase.SaveAssets();
-            }
         }
 
         private bool ValidateECSAssets()

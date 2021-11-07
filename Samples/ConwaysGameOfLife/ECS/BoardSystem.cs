@@ -1,34 +1,26 @@
+using System;
 using System.Runtime.InteropServices;
+using Tofunaut.TofuECS.Utilities;
 
 namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
 {
     public unsafe class BoardSystem : ISystem
     {
-        private readonly XorShiftRandom _r;
-        private readonly int _boardWidth, _boardHeight;
         private int* _flippedIndexes;
-
-        public BoardSystem(ulong seed, int boardWidth, int boardHeight)
-        {
-            _r = new XorShiftRandom(seed);
-            _boardWidth = boardWidth;
-            _boardHeight = boardHeight;
-            _flippedIndexes = (int*)Marshal.AllocHGlobal(Marshal.SizeOf<int>() * _boardWidth * _boardHeight);
-        }
 
         public void Initialize(Frame f)
         {
             var boardEntityId = f.CreateEntity();
             f.AddComponent<Board>(boardEntityId);
+            f.AddComponent<ViewId>(boardEntityId);
             
             var board = f.GetComponentUnsafe<Board>(boardEntityId);
-            board->StartStaticThreshold = 0.002f;
-            board->Init(_boardWidth, _boardHeight);
+            var boardConfig = f.Config.GetECSData<BoardConfig>(((ICOGLSimulationConfig) f.Config).BoardConfigId);
+            board->Init(boardConfig);
+            _flippedIndexes = (int*)Marshal.AllocHGlobal(Marshal.SizeOf<int>() * boardConfig.Width * boardConfig.Height);
 
-            for (var i = 0; i < _boardWidth * _boardHeight; i++)
-            {
-                board->State[i] = false;
-            }
+            var viewId = f.GetComponentUnsafe<ViewId>(boardEntityId);
+            viewId->Id = boardConfig.ViewId;
         }
 
         public void Process(Frame f)
@@ -88,7 +80,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
                     {
                         didFlip = true;
                     }
-                    else if (_r.NextDouble() <= staticThreshold)
+                    else if (f.RNG.NextDouble() <= staticThreshold)
                         didFlip = true;
 
                     if (didFlip)
@@ -119,6 +111,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
             var iter = f.GetIterator<Board>();
             while(iter.NextUnsafe(out _, out var board))
                 board->Dispose();
+            
+            Marshal.FreeHGlobal((IntPtr)_flippedIndexes);
         }
     }
 }

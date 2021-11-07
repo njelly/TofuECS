@@ -2,38 +2,47 @@ using System;
 using System.Runtime.InteropServices;
 using Tofunaut.TofuECS.Unity;
 using Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS;
+using Tofunaut.TofuECS.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 {
-    public unsafe class SimulationRunner : MonoBehaviour
+    public class SimulationRunner : MonoBehaviour
     {
-        [SerializeField] private Vector2Int _worldSize;
+        public static SimulationRunner Instance { get; private set; }
+        
+        [SerializeField] private COGLSimulationConfigAsset _configAsset;
+        [SerializeField] private ECSDatabase _ecsDatabase;
         [SerializeField] private Slider _staticScaleSlider;
         [SerializeField] private Button _pauseButton;
         [SerializeField] private Text _pauseButtonLabel;
         [SerializeField] private Button _tickButton;
         [SerializeField] private Text _currentTickLabel;
 
-        public int FrameNumber => _sim.CurrentFrame.Number;
         public ulong Seed { get; private set; }
+        public Simulation Simulation => _sim;
 
-        private Simulation _sim; 
-        private Texture2D _tex2D;
+        private Simulation _sim;
         private bool _isPaused;
         private COGLInput _coglInput;
+        private EntityViewManager _entityViewManager;
 
         private void Awake()
         {
-            var spriteGo = new GameObject("Sprite", typeof(SpriteRenderer));
-            var spriteRenderer = spriteGo.GetComponent<SpriteRenderer>();
-            _tex2D = new Texture2D(_worldSize.x, _worldSize.y);
-            _tex2D.filterMode = FilterMode.Point;
-            var sprite = Sprite.Create(_tex2D, new Rect(0, 0, _worldSize.x, _worldSize.y), Vector2.zero, 16f);
-            spriteRenderer.sprite = sprite;
+            if (Instance != null)
+            {
+                Destroy(this);
+                return;
+            }
 
-            Reset((ulong)DateTime.Now.Ticks);
+            Instance = this;
+        }
+
+        private async void Start()
+        {
+            await _ecsDatabase.PreloadAll();
+            _entityViewManager = new EntityViewManager(_ecsDatabase);
             
             _pauseButton.onClick.RemoveAllListeners();
             _pauseButton.onClick.AddListener(() =>
@@ -49,11 +58,24 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _sim.PollEvents();
             });
 
+            _sim = new Simulation(_configAsset, new UnityLogService(), new ISystem[]
+            {
+                new ViewIdSystem(),
+                new BoardSystem()
+            });
+            _sim.RegisterComponent<Board>();
+            _sim.RegisterComponent<ViewId>();
+            _sim.Subscribe<OnViewIdChangedEventData>(OnViewIdChanged);
+            _sim.Initialize();
+
             _coglInput = new COGLInput();
         }
 
         private void Update()
         {
+            if (_sim == null)
+                return;
+            
             // inject new input ONLY when the input has changed
             if (Math.Abs(_coglInput.StaticScale - _staticScaleSlider.value) > 0.01f)
             {
@@ -73,54 +95,16 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
             _sim.PollEvents();
         }
 
-        public void Reset(ulong seed)
+        private void OnDestroy()
         {
-            Seed = seed;
-
-            _sim = new Simulation(new DummySimulationConfig(Seed), new UnityLogService(),
-                new ISystem[] 
-                {
-                    new BoardSystem((ulong)seed, _worldSize.x, _worldSize.y)
-                });
-            
-            // Register components BEFORE initializing the simulation!
-            _sim.RegisterComponent<Board>();
-            _sim.Subscribe<BoardStateChangedEvent>(OnStateChange);
-            _sim.Initialize();
-            
-            // initialize the texture
-            for(var x = 0; x < _worldSize.x; x++)
-            {
-                for (var y = 0; y < _worldSize.y; y++)
-                {
-                    _tex2D.SetPixel(x, y, Color.black);
-                }
-            }
+            if (Instance == this)
+                Instance = null;
         }
 
-        private void OnStateChange(BoardStateChangedEvent evt)
+        private void OnViewIdChanged(OnViewIdChangedEventData evt)
         {
-            for (var i = 0; i < evt.Length; i++)
-                _tex2D.SetPixel(evt.XPos[i], evt.YPos[i], evt.Value[i] ? Color.white : Color.black);
-            
-            _tex2D.Apply();
-        }
-
-        private class DummySimulationConfig : ISimulationConfig
-        {
-            public int FramesInMemory => 2;
-            public TData GetECSData<TData>(int id) where TData : unmanaged
-            {
-                return default;
-            }
-
-            public int NumInputs => 1;
-            public ulong Seed { get; }
-
-            public DummySimulationConfig(ulong seed)
-            {
-                Seed = seed;
-            }
+            _entityViewManager.ReleaseView(evt.PrevId);
+            _entityViewManager.RequestView(evt.EntityId, evt.ViewId);
         }
     }
 }

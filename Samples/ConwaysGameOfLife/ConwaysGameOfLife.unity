@@ -658,7 +658,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 462ebbd1f5bdee44ca2a23cdf98e4224, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _worldSize: {x: 1024, y: 1024}
+  _configAsset: {fileID: 11400000, guid: 9f8ae1e8261934b6a8b443a7354324b3, type: 2}
+  _ecsDatabase: {fileID: 11400000, guid: a7632b9298faf4579bb9461b25ce783c, type: 2}
   _staticScaleSlider: {fileID: 1675794552}
   _pauseButton: {fileID: 1469915059}
   _pauseButtonLabel: {fileID: 1846649447}

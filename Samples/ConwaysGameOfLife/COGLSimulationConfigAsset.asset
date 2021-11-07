@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd0a8631fbb94566aa031a0d9d45fd94, type: 3}
+  m_Name: COGLSimulationConfigAsset
+  m_EditorClassIdentifier: 
+  _seed: 1993
+  _boardConfigAsset: {fileID: 11400000, guid: ff2344c38199448689581e59b01c7915, type: 2}
+  _ecsDatabase: {fileID: 11400000, guid: a7632b9298faf4579bb9461b25ce783c, type: 2}
