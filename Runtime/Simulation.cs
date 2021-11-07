@@ -24,19 +24,18 @@ namespace Tofunaut.TofuECS
             Log = log;
             EventDispatcher = new EventDispatcher();
             InputProvider = new InputProvider();
-            
+            IsInitialized = false;
+
+            _typeToIndex = new Dictionary<Type, int>();
+            _systems = systems;
             _frames = new Frame[config.FramesInMemory];
+            if(_frames.Length < 2)
+                log.Error("The simulation must have at least 2 frames to work properly.");
 
             for (var i = 0; i < _frames.Length; i++)
                 _frames[i] = new Frame(this, Config.NumInputs);
             
             CurrentFrame = _frames[0];
-
-            _typeToIndex = new Dictionary<Type, int>();
-
-            IsInitialized = false;
-            
-            _systems = systems;
         }
 
         /// <summary>
