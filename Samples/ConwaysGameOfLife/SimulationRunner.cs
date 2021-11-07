@@ -99,6 +99,9 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         {
             if (Instance == this)
                 Instance = null;
+            
+            if(_sim != null)
+                _sim.Shutdown();
         }
 
         private void OnViewIdChanged(OnViewIdChangedEvent evt)

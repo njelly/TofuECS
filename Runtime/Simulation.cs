@@ -51,10 +51,17 @@ namespace Tofunaut.TofuECS
             IsInitialized = true;
         }
 
-        ~Simulation()
+        public void Shutdown()
         {
+            IsInitialized = false;
             foreach (var system in _systems)
                 system.Dispose(CurrentFrame);
+        }
+
+        ~Simulation()
+        {
+            if(IsInitialized)
+                Shutdown();
         }
 
         public void Subscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged =>

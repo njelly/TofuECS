@@ -4,11 +4,11 @@ using Tofunaut.TofuECS.Utilities;
 
 namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
 {
-    public unsafe class BoardSystem : ISystem
+    public class BoardSystem : ISystem
     {
-        private int* _flippedIndexes;
+        private IntPtr _flippedIndexes;
 
-        public void Initialize(Frame f)
+        public unsafe void Initialize(Frame f)
         {
             var boardEntityId = f.CreateEntity();
             f.AddComponent<Board>(boardEntityId);
@@ -17,57 +17,60 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
             var board = f.GetComponentUnsafe<Board>(boardEntityId);
             var boardConfig = f.Config.GetECSData<BoardConfig>(((ICOGLSimulationConfig) f.Config).BoardConfigId);
             board->Init(boardConfig);
-            _flippedIndexes = (int*)Marshal.AllocHGlobal(Marshal.SizeOf<int>() * boardConfig.Width * boardConfig.Height);
+            _flippedIndexes = Marshal.AllocHGlobal(Marshal.SizeOf<int>() * boardConfig.Width * boardConfig.Height);
 
             var viewId = f.GetComponentUnsafe<ViewId>(boardEntityId);
             viewId->Id = boardConfig.ViewId;
         }
 
-        public void Process(Frame f)
+        public unsafe void Process(Frame f)
         {
             var iter = f.GetIterator<Board>();
             var input = f.GetInput<COGLInput>(0);
+            var flippedIndexesArray = (int*) _flippedIndexes.ToPointer();
             while(iter.NextUnsafe(out _, out var board))
             {
                 var staticThreshold = board->StartStaticThreshold * input.StaticScale;
                 var numFlipped = 0;
+
+                var boardState = (bool*) board->State.ToPointer();
                 
                 // need to add the board->Size to i so modulo operator will work as intended
                 for (var i = board->Size; i < board->Size * 2; i++)
                 {
                     var numAlive = 0;
-                    var currentState = board->State[i % board->Size];
+                    var currentState = boardState[i % board->Size];
                     
                     // TOP-LEFT
-                    if (board->State[(i - 1 + board->Width) % board->Size])
+                    if (boardState[(i - 1 + board->Width) % board->Size])
                         numAlive++;
                     
                     // TOP-CENTER
-                    if (board->State[(i + board->Width) % board->Size])
+                    if (boardState[(i + board->Width) % board->Size])
                         numAlive++;
                     
                     // TOP-RIGHT
-                    if (board->State[(i + 1 + board->Width) % board->Size])
+                    if (boardState[(i + 1 + board->Width) % board->Size])
                         numAlive++;
                     
                     // MIDDLE-LEFT
-                    if (board->State[(i - 1) % board->Size])
+                    if (boardState[(i - 1) % board->Size])
                         numAlive++;
                     
                     // MIDDLE-RIGHT
-                    if (board->State[(i + 1) % board->Size])
+                    if (boardState[(i + 1) % board->Size])
                         numAlive++;
                     
                     // BOTTOM-LEFT
-                    if (board->State[(i - 1 - board->Width) % board->Size])
+                    if (boardState[(i - 1 - board->Width) % board->Size])
                         numAlive++;
                     
                     // BOTTOM-CENTER
-                    if (board->State[(i - board->Width) % board->Size])
+                    if (boardState[(i - board->Width) % board->Size])
                         numAlive++;
                     
                     // BOTTOM-RIGHT
-                    if (board->State[(i + 1 - board->Width) % board->Size])
+                    if (boardState[(i + 1 - board->Width) % board->Size])
                         numAlive++;
 
                     var didFlip = false;
@@ -84,7 +87,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
                         didFlip = true;
 
                     if (didFlip)
-                        _flippedIndexes[numFlipped++] = i - board->Size;
+                        flippedIndexesArray[numFlipped++] = i - board->Size;
                 }
 
                 var evt = new BoardStateChangedEvent();
@@ -95,24 +98,28 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
                 
                 for (var i = 0; i < numFlipped; i++)
                 {
-                    var index = _flippedIndexes[i];
+                    var index = flippedIndexesArray[i];
                     evt.XPos[i] = index % board->Width;
                     evt.YPos[i] = index / board->Height;
-                    evt.Value[i] = !board->State[index];
-                    board->State[index] = evt.Value[i];
+                    evt.Value[i] = !boardState[index];
+                    boardState[index] = evt.Value[i];
                 }
                 
                 f.RaiseEvent(evt);
             }
         }
 
-        public void Dispose(Frame f)
+        public unsafe void Dispose(Frame f)
         {
             var iter = f.GetIterator<Board>();
             while(iter.NextUnsafe(out _, out var board))
                 board->Dispose();
+
+            if (_flippedIndexes == default) 
+                return;
             
-            Marshal.FreeHGlobal((IntPtr)_flippedIndexes);
+            Marshal.FreeHGlobal(_flippedIndexes);
+            _flippedIndexes = default;
         }
     }
 }

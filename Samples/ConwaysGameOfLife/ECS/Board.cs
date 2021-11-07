@@ -3,13 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
 {
-    public unsafe struct Board
+    public unsafe struct Board : IDisposable
     {
         public int Width;
         public int Height;
         public int Size;
         public float StartStaticThreshold;
-        public bool* State;
+        public IntPtr State;
 
         public void Init(BoardConfig config)
         {
@@ -19,13 +19,21 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
             Width = config.Width;
             Height = config.Height;
             StartStaticThreshold = config.StartStaticThreshold;
-            State = (bool*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)) * Size);
+            State = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)) * Size);
+            var statePtr = (bool*) State.ToPointer();
+            
+            // VERY important to initialize the value of pointers
+            for (var i = 0; i < Size; i++)
+                statePtr[i] = false;
         }
 
         public void Dispose()
         {
-            if(State != null)
-                Marshal.FreeHGlobal((IntPtr)State);
+            if (State != default) 
+                return;
+            
+            Marshal.FreeHGlobal(State);
+            State = default;
         }
     }
 }
