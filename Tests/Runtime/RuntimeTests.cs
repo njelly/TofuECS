@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Tofunaut.TofuECS;
 using Tofunaut.TofuECS.Unity;
 using Tofunaut.TofuECS.Utilities;
+using UnityEngine;
 
 public class RuntimeTests
 {
@@ -83,21 +84,21 @@ public class RuntimeTests
     [Test]
     public unsafe void UtilitiesTests()
     {
-        // unmanaged quick sort (used in physics sim)
+        // unmanaged quick sort
         const int length = 10;
         var intArray = stackalloc int[length];
         for (var i = 0; i < length; i++)
             intArray[i] = length - 1 - i;
         
-        UnmanagedQuickSort.Sort(intArray, length, (a, b) => a < b);
+        UnmanagedQuickSort.Sort(intArray, length, (a, b) => a.CompareTo(b));
         
-        for(var i = 0; i < length - 1; i++)
+        for (var i = 0; i < length - 1; i++)
             Assert.IsTrue(intArray[i] < intArray[i + 1]);
     }
 
     private class DummySimulationConfig : ISimulationConfig
     {
-        public int FramesInMemory => 1;
+        public int FramesInMemory => 60;
         public TData GetECSData<TData>(int id) where TData : unmanaged
         {
             return default;

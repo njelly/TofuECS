@@ -192,9 +192,8 @@ namespace Tofunaut.TofuECS
         public override string Message => $"the entity {_entityId} does not contain the component {nameof(TComponent)}";
     }
 
-    public struct OnEntityDestroyedEvent : IDisposable
+    public struct OnEntityDestroyedEvent
     {
         public int EntityId;
-        public void Dispose() { }
     }
 }

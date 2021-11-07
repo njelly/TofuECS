@@ -1,42 +1,41 @@
-﻿namespace Tofunaut.TofuECS.Utilities
+﻿using System;
+
+namespace Tofunaut.TofuECS.Utilities
 {
     public static unsafe class UnmanagedQuickSort
     {
-        public delegate bool Comparison<T>(T a, T b) where T : unmanaged;
+        //public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged
+        //{
+        //    // bubble sort because this isn't working...
+        //    for (var i = 0; i < length; i++)
+        //    {
+        //        for (var j = 0; j < length; j++)
+        //        {
+        //            if(i == j)
+        //                continue;
+//
+        //            if (comp(arr[i], arr[j]) < 0)
+        //            {
+        //                Swap(arr, i, j);
+        //            }
+        //        }
+        //    }
+        //}
 
-        public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged
-        {
-            // bubble sort because this isn't working...
-            for (var i = 0; i < length; i++)
-            {
-                for (var j = 0; j < length; j++)
-                {
-                    if(i == j)
-                        continue;
-
-                    if (comp(arr[i], arr[j]))
-                    {
-                        Swap(arr, i, j);
-                    }
-                }
-            }
-        }
-
-        //public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged =>
-        //    SortInternal(arr, 0, length - 1, comp);
+        public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged =>
+            SortInternal(arr, 0, length - 1, comp);
 
         private static void SortInternal<T>(T* arr, int left, int right, Comparison<T> comp) where T : unmanaged 
         {
-            if(left >= right)
-                return;
+            if (left < right)
+            {
+                /* pi is partitioning index, arr[pi] is now
+                   at right place */
+                var p = Partition(arr, left, right, comp);
 
-            var pivot = Partition(arr, left, right, comp);
-            
-            if(pivot > left)
-                SortInternal(arr, left, pivot - 1, comp);
-            
-            if(pivot < right)
-                SortInternal(arr, pivot + 1, right, comp);
+                SortInternal(arr, left, p - 1, comp);  // Before pi
+                SortInternal(arr, p + 1, right, comp); // After pi
+            }
         }
 
         private static void Swap<T>(T* arr, int a, int b) where T : unmanaged
@@ -46,18 +45,23 @@
 
         private static int Partition<T>(T* arr, int left, int right, Comparison<T> comp) where T : unmanaged
         {
-            var q = right;
-            while ( q > left ) {
-                while (comp(arr[left], arr[right]))
-                    left++;
-                while (!comp(arr[right], arr[left]) )
-                    right--;
-                if (comp(arr[right], arr[left])) {
-                    Swap(arr, left,q);
+            // pivot (Element to be placed at right position)
+            var pValue = arr[right];
+            var i = left - 1;  // Index of smaller element and indicates the 
+            // right position of pivot found so far
+
+            for (var j = left; j <= right - 1; j++)
+            {
+                // If current element is smaller than the pivot
+                if (comp(arr[j], pValue) < 0)
+                {
+                    i++;    // increment index of smaller element
+                    Swap(arr, i, j);
                 }
             }
-            Swap(arr, left, q);
-            return q ;
+            
+            Swap(arr, i + 1, right);
+            return i + 1;
         }
     }
 }
