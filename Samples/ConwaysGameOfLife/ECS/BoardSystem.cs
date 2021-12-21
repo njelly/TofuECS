@@ -15,7 +15,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
             f.AddComponent<ViewId>(boardEntityId);
             
             var board = f.GetComponentUnsafe<Board>(boardEntityId);
-            var boardConfig = f.Config.GetECSData<BoardConfig>(((ICOGLSimulationConfig) f.Config).BoardConfigId);
+            var boardConfig = f.Database.Get<BoardConfig>(((ICOGLSimulationConfig) f.Config).BoardConfigId);
             board->Init(boardConfig);
             _flippedIndexes = Marshal.AllocHGlobal(Marshal.SizeOf<int>() * boardConfig.Width * boardConfig.Height);
 

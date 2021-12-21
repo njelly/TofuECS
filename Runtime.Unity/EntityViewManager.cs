@@ -5,13 +5,13 @@ namespace Tofunaut.TofuECS.Unity
 {
     public class EntityViewManager
     {
-        private readonly ECSDatabase _database;
+        private readonly ECSDatabaseAsset _databaseAsset;
         private Dictionary<int, (EntityView entityView, Transform transform)> _entityToView;
         private Dictionary<int, Queue<EntityView>> _prefabIdToPool;
 
-        public EntityViewManager(ECSDatabase database)
+        public EntityViewManager(ECSDatabaseAsset databaseAsset)
         {
-            _database = database;
+            _databaseAsset = databaseAsset;
             _entityToView = new Dictionary<int, (EntityView, Transform)>();
             _prefabIdToPool = new Dictionary<int, Queue<EntityView>>();
         }
@@ -29,7 +29,7 @@ namespace Tofunaut.TofuECS.Unity
 
             // TODO: pre-instantiated pools?
             var entityView = pool.Count <= 0
-                ? Object.Instantiate(_database.GetEntityViewPrefab(prefabId)).GetComponent<EntityView>()
+                ? Object.Instantiate(_databaseAsset.GetEntityViewPrefab(prefabId)).GetComponent<EntityView>()
                 : pool.Dequeue();
 
             _entityToView[entityId] = (entityView, entityView.transform);

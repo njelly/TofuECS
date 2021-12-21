@@ -13,7 +13,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
         public static SimulationRunner Instance { get; private set; }
         
         [SerializeField] private COGLSimulationConfigAsset _configAsset;
-        [SerializeField] private ECSDatabase _ecsDatabase;
+        [SerializeField] private ECSDatabaseAsset ecsDatabaseAsset;
         [SerializeField] private Slider _staticScaleSlider;
         [SerializeField] private Button _pauseButton;
         [SerializeField] private Text _pauseButtonLabel;
@@ -41,8 +41,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
 
         private async void Start()
         {
-            await _ecsDatabase.PreloadAll();
-            _entityViewManager = new EntityViewManager(_ecsDatabase);
+            await ecsDatabaseAsset.PreloadAll();
+            _entityViewManager = new EntityViewManager(ecsDatabaseAsset);
             
             _pauseButton.onClick.RemoveAllListeners();
             _pauseButton.onClick.AddListener(() =>
@@ -58,11 +58,12 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife
                 _sim.PollEvents();
             });
 
-            _sim = new Simulation(_configAsset, new UnityLogService(), new ISystem[]
-            {
-                new ViewIdSystem(),
-                new BoardSystem()
-            });
+            _sim = new Simulation(_configAsset, ecsDatabaseAsset.BuildECSDatabase(), new UnityLogService(),
+                new ISystem[]
+                {
+                    new ViewIdSystem(),
+                    new BoardSystem()
+                });
             _sim.RegisterComponent<Board>();
             _sim.RegisterComponent<ViewId>();
             _sim.Subscribe<OnViewIdChangedEvent>(OnViewIdChanged);

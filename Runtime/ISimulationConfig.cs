@@ -16,10 +16,5 @@
         /// The seed for deterministic RNG.
         /// </summary>
         ulong Seed { get; }
-
-        /// <summary>
-        /// Retrieve some data from an asset for use in the simulation with an Id. The Id can be stored on a component, for example.
-        /// </summary>
-        TData GetECSData<TData>(int id) where TData : unmanaged;
     }
 }

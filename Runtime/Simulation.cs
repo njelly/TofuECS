@@ -6,6 +6,7 @@ namespace Tofunaut.TofuECS
     public class Simulation
     {
         public ISimulationConfig Config { get; }
+        public IECSDatabase Database { get; }
         public Frame CurrentFrame { get; private set; }
         public bool IsInitialized { get; private set; }
         internal ILogService Log { get; }
@@ -19,9 +20,10 @@ namespace Tofunaut.TofuECS
 
         private int _typeIndexCounter;
 
-        public Simulation(ISimulationConfig config, ILogService log, ISystem[] systems)
+        public Simulation(ISimulationConfig config, IECSDatabase database, ILogService log, ISystem[] systems)
         {
             Config = config;
+            Database = database;
             Log = log;
             EventDispatcher = new EventDispatcher();
             IsInitialized = false;

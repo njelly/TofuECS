@@ -8,6 +8,7 @@ namespace Tofunaut.TofuECS
         public int Number { get; private set; }
         public bool IsVerified { get; private set; }
         public ISimulationConfig Config => _sim.Config;
+        public IECSDatabase Database => _sim.Database;
         public int NumInputs { get; }
 
         public XorShiftRandom RNG { get; }

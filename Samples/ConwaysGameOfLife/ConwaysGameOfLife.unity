@@ -659,7 +659,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _configAsset: {fileID: 11400000, guid: 9f8ae1e8261934b6a8b443a7354324b3, type: 2}
-  _ecsDatabase: {fileID: 11400000, guid: a7632b9298faf4579bb9461b25ce783c, type: 2}
+  ecsDatabaseAsset: {fileID: 11400000, guid: a7632b9298faf4579bb9461b25ce783c, type: 2}
   _staticScaleSlider: {fileID: 1675794552}
   _pauseButton: {fileID: 1469915059}
   _pauseButtonLabel: {fileID: 1846649447}

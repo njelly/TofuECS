@@ -11,7 +11,7 @@ public class RuntimeTests
     public void RuntimeTestsSimplePasses()
     {
         var seed = (ulong)1993;
-        var sim = new Simulation(new DummySimulationConfig(seed), new UnityLogService(),
+        var sim = new Simulation(new DummySimulationConfig(seed), new DummyECSDatabase(), new UnityLogService(),
             new ISystem[]
             {
                 new TestSystem(),
@@ -114,6 +114,14 @@ public class RuntimeTests
         public DummySimulationConfig(ulong seed)
         {
             Seed = seed;
+        }
+    }
+
+    private class DummyECSDatabase : IECSDatabase
+    {
+        public TData Get<TData>(int id) where TData : unmanaged
+        {
+            throw new NotImplementedException();
         }
     }
 

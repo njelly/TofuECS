@@ -12,9 +12,20 @@ using UnityEditor;
 
 namespace Tofunaut.TofuECS.Unity
 {
+    public class ECSDatabase : IECSDatabase
+    {
+        private readonly Dictionary<int, object> _data;
+
+        public ECSDatabase(Dictionary<int, object> data)
+        {
+            _data = data;
+        }
+
+        public TData Get<TData>(int id) where TData : unmanaged => (TData) _data[id];
+    }
     
     [CreateAssetMenu(fileName = "new ECSDatabase", menuName = "TofuECS/ECSDatabase")]
-    public class ECSDatabase : ScriptableObject
+    public class ECSDatabaseAsset : ScriptableObject
     {
         [SerializeField] private AssetReference[] _eCSAssets = Array.Empty<AssetReference>();
         [SerializeField] private AssetReference[] _entityViews = Array.Empty<AssetReference>();
@@ -29,6 +40,7 @@ namespace Tofunaut.TofuECS.Unity
         private Dictionary<int, GameObject> _idToPreloadedEntityView;
 
         private bool _isInitialized;
+        private ECSDatabase _ecsDatabase;
 
         private void OnEnable()
         {
@@ -105,23 +117,23 @@ namespace Tofunaut.TofuECS.Unity
                 _idToPreloadedEntityView.Add(prefabId, asset);
             }
         }
-
-        /// <summary>
-        /// Returns the asset with the given id. Fails if the asset has not been not been loaded before.
-        /// </summary>
-        public TData GetECSData<TData>(int assetId) where TData : unmanaged
+        
+        public TData GetECSData<TData>(int id) where TData : unmanaged
         {
-            if (!_idToPreloadedEcsAsset.TryGetValue(assetId, out var asset))
-                throw new ECSAssetNotLoadedException(assetId);
+            if (!_idToPreloadedEcsAsset.TryGetValue(id, out var asset))
+                throw new ECSAssetNotLoadedException(id);
 
             if (asset.DataType == typeof(TData)) 
                 return (TData)asset.GetECSData();
             
             Debug.LogError(
-                $"The asset with id {assetId} contains data of type {asset.DataType}, not the requested {typeof(TData)}.");
+                $"The asset with id {id} contains data of type {asset.DataType}, not the requested {typeof(TData)}.");
             
             return default;
-        } 
+        }
+
+        public ECSDatabase BuildECSDatabase() =>
+            new ECSDatabase(_idToPreloadedEcsAsset.ToDictionary(x => x.Key, x => x.Value.GetECSData()));
         
         /// <summary>
         /// Returns the EntityView prefab with the given id. Fails if the asset has not been not been loaded before.

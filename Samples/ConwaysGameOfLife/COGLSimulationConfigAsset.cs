@@ -13,8 +13,5 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
 
         [SerializeField] private ulong _seed;
         [SerializeField] private BoardConfigAsset _boardConfigAsset;
-        [SerializeField] private ECSDatabase _ecsDatabase;
-
-        public TData GetECSData<TData>(int id) where TData : unmanaged => _ecsDatabase.GetECSData<TData>(id);
     }
 }
