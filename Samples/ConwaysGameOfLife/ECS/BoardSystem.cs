@@ -6,7 +6,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
 {
     public class BoardSystem : ISystem
     {
-        private IntPtr _flippedIndexes;
+        private UnmanagedArray<int> _flippedIndexes;
 
         public unsafe void Initialize(Frame f)
         {
@@ -17,7 +17,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
             var board = f.GetComponentUnsafe<Board>(boardEntityId);
             var boardConfig = f.Database.Get<BoardConfig>(((ICOGLSimulationConfig) f.Config).BoardConfigId);
             board->Init(boardConfig);
-            _flippedIndexes = Marshal.AllocHGlobal(Marshal.SizeOf<int>() * boardConfig.Width * boardConfig.Height);
+            _flippedIndexes = new UnmanagedArray<int>(board->Size);
 
             var viewId = f.GetComponentUnsafe<ViewId>(boardEntityId);
             viewId->Id = boardConfig.ViewId;
@@ -27,50 +27,49 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
         {
             var iter = f.GetIterator<Board>();
             var input = f.GetInput<COGLInput>(0);
-            var flippedIndexesArray = (int*) _flippedIndexes.ToPointer();
+            var flippedIndexesArray = _flippedIndexes.RawValue;
             while(iter.NextUnsafe(out _, out var board))
             {
                 var staticThreshold = board->StartStaticThreshold * input.StaticScale;
                 var numFlipped = 0;
 
-                var boardState = (bool*) board->State.ToPointer();
-                
+                var rawBoardState = board->State.RawValue;
                 // need to add the board->Size to i so modulo operator will work as intended
                 for (var i = board->Size; i < board->Size * 2; i++)
                 {
                     var numAlive = 0;
-                    var currentState = boardState[i % board->Size];
+                    var currentState = rawBoardState[i % board->Size];
                     
                     // TOP-LEFT
-                    if (boardState[(i - 1 + board->Width) % board->Size])
+                    if (rawBoardState[(i - 1 + board->Width) % board->Size])
                         numAlive++;
                     
                     // TOP-CENTER
-                    if (boardState[(i + board->Width) % board->Size])
+                    if (rawBoardState[(i + board->Width) % board->Size])
                         numAlive++;
                     
                     // TOP-RIGHT
-                    if (boardState[(i + 1 + board->Width) % board->Size])
+                    if (rawBoardState[(i + 1 + board->Width) % board->Size])
                         numAlive++;
                     
                     // MIDDLE-LEFT
-                    if (boardState[(i - 1) % board->Size])
+                    if (rawBoardState[(i - 1) % board->Size])
                         numAlive++;
                     
                     // MIDDLE-RIGHT
-                    if (boardState[(i + 1) % board->Size])
+                    if (rawBoardState[(i + 1) % board->Size])
                         numAlive++;
                     
                     // BOTTOM-LEFT
-                    if (boardState[(i - 1 - board->Width) % board->Size])
+                    if (rawBoardState[(i - 1 - board->Width) % board->Size])
                         numAlive++;
                     
                     // BOTTOM-CENTER
-                    if (boardState[(i - board->Width) % board->Size])
+                    if (rawBoardState[(i - board->Width) % board->Size])
                         numAlive++;
                     
                     // BOTTOM-RIGHT
-                    if (boardState[(i + 1 - board->Width) % board->Size])
+                    if (rawBoardState[(i + 1 - board->Width) % board->Size])
                         numAlive++;
 
                     var didFlip = false;
@@ -101,8 +100,8 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
                     var index = flippedIndexesArray[i];
                     evt.XPos[i] = index % board->Width;
                     evt.YPos[i] = index / board->Height;
-                    evt.Value[i] = !boardState[index];
-                    boardState[index] = evt.Value[i];
+                    evt.Value[i] = !rawBoardState[index];
+                    rawBoardState[index] = evt.Value[i];
                 }
                 
                 f.RaiseEvent(evt);
@@ -115,11 +114,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
             while(iter.NextUnsafe(out _, out var board))
                 board->Dispose();
 
-            if (_flippedIndexes == default) 
-                return;
-            
-            Marshal.FreeHGlobal(_flippedIndexes);
-            _flippedIndexes = default;
+            _flippedIndexes.Dispose();
         }
     }
 }

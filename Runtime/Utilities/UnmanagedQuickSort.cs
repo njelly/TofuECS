@@ -17,10 +17,7 @@ namespace Tofunaut.TofuECS.Utilities
             SortInternal(arr, p + 1, right, comp);
         }
 
-        private static void Swap<T>(T* arr, int a, int b) where T : unmanaged
-        {
-            (arr[a], arr[b]) = (arr[b], arr[a]);
-        }  
+        private static void Swap<T>(T* arr, int a, int b) where T : unmanaged => (arr[a], arr[b]) = (arr[b], arr[a]);
 
         private static int Partition<T>(T* arr, int left, int right, Comparison<T> comp) where T : unmanaged
         {
