@@ -1,6 +1,6 @@
 {
   "name": "com.tofunaut.tofuecs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "displayName": "TofuECS",
   "description": "A lightweight, fast, entity component system framework for Unity.",
   "unity": "2020.3",

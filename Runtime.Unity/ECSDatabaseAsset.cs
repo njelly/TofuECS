@@ -12,7 +12,7 @@ using UnityEditor;
 
 namespace Tofunaut.TofuECS.Unity
 {
-    public class ECSDatabase : IECSDatabase
+    public class ECSDatabase : IECSDatabase, IDisposable
     {
         private readonly Dictionary<int, object> _data;
 
@@ -22,6 +22,13 @@ namespace Tofunaut.TofuECS.Unity
         }
 
         public TData Get<TData>(int id) where TData : unmanaged => (TData) _data[id];
+        
+        public void Dispose()
+        {
+            foreach(var kvp in _data)
+                if(kvp.Value is IDisposable disposableData)
+                    disposableData.Dispose();
+        }
     }
     
     [CreateAssetMenu(fileName = "new ECSDatabase", menuName = "TofuECS/ECSDatabase")]

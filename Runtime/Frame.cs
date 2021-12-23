@@ -83,6 +83,16 @@ namespace Tofunaut.TofuECS
             return ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).Get(index);
         }
 
+        public unsafe TComponent* GetOrAddComponentUnsafe<TComponent>(int entityId) where TComponent : unmanaged
+        {
+            var entity = _entityBuffer.Get(entityId);
+            if (!entity.TryGetComponentIndex(typeof(TComponent), out var index))
+                AddComponent<TComponent>(entityId);
+            
+            var typeIndex = _sim.GetIndexForType(typeof(TComponent));
+            return ((ComponentBuffer<TComponent>)_componentBuffers[typeIndex]).GetUnsafe(index);
+        }
+
         public unsafe TComponent* GetComponentUnsafe<TComponent>(int entityId) where TComponent : unmanaged
         {
             var entity = _entityBuffer.Get(entityId);
