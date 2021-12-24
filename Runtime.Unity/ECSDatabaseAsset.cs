@@ -138,9 +138,25 @@ namespace Tofunaut.TofuECS.Unity
             
             return default;
         }
+        
+        public ECSDatabase BuildECSDatabase()
+        {
+            var dict = new Dictionary<int, object>();
+            foreach (var kvp in _idToPreloadedEcsAsset)
+            {
+               try
+               {
+                   dict.Add(kvp.Key, kvp.Value.GetECSData());
+               }
+               catch (Exception e)
+               {
+                   Debug.LogException(e);
+                   throw;
+               }
+            }
 
-        public ECSDatabase BuildECSDatabase() =>
-            new ECSDatabase(_idToPreloadedEcsAsset.ToDictionary(x => x.Key, x => x.Value.GetECSData()));
+            return new ECSDatabase(dict);
+        }
         
         /// <summary>
         /// Returns the EntityView prefab with the given id. Fails if the asset has not been not been loaded before.
