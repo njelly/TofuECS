@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Tofunaut.TofuECS
 {
@@ -119,6 +120,38 @@ namespace Tofunaut.TofuECS
         }
 
         internal int GetIndexForType(Type type) => _typeToIndex[type];
+
+
+        private Dictionary<Type, Action<Frame, object>[]> _typeToSystemEventListenerCallbacks;
+        internal void RaiseSystemEvent<TEventData>(Frame f, TEventData eventData) where TEventData : unmanaged
+        {
+            // cache all callbacks on the first invocation of the system event - is there a better way?
+            if (!_typeToSystemEventListenerCallbacks.TryGetValue(typeof(TEventData),
+                out var systemEventListenerCallbacks))
+            {
+                var callbacks = new List<Action<Frame, TEventData>>();
+                foreach (var system in _systems)
+                {
+                    if(system is ISystemEventListener<TEventData> systemEventListener)
+                        callbacks.Add(systemEventListener.OnSystemEvent);
+                }
+
+                systemEventListenerCallbacks = new Action<Frame, object>[callbacks.Count];
+                for (var i = 0; i < callbacks.Count; i++)
+                {
+                    var index = i;
+                    systemEventListenerCallbacks[i] = (frame, data) =>
+                    {
+                        callbacks[index].Invoke(frame, (TEventData)data);
+                    };
+                }
+                
+                _typeToSystemEventListenerCallbacks.Add(typeof(TEventData), systemEventListenerCallbacks);
+            }
+            
+            foreach(var systemEventListenerCallback in systemEventListenerCallbacks)
+                systemEventListenerCallback.Invoke(f, eventData);
+        }
 
         /// <summary>
         /// Process the current frame and go to the next.

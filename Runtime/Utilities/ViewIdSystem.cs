@@ -21,7 +21,7 @@
 
                 viewId->PrevId = viewId->Id;
                 
-                f.RaiseEvent(eventData);
+                f.RaiseExternalEvent(eventData);
             }
         }
 

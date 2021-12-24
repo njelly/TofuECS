@@ -38,7 +38,7 @@ namespace Tofunaut.TofuECS
             var entity = _entityBuffer.Get(entityId);
             entity.Destroy(Number);
             _entityBuffer.Release(entity);
-            RaiseEvent(new OnEntityDestroyedEvent
+            RaiseExternalEvent(new OnEntityDestroyedEvent
             {
                 EntityId = entityId,
             });
@@ -144,8 +144,11 @@ namespace Tofunaut.TofuECS
 
         public TInput GetInput<TInput>(int index) where TInput : unmanaged => (TInput)_typeToInput[typeof(TInput)][index];
 
-        public void RaiseEvent<TEventData>(TEventData data) where TEventData : unmanaged =>
+        public void RaiseExternalEvent<TEventData>(TEventData data) where TEventData : unmanaged =>
             _sim.EventDispatcher.Enqueue(data);
+
+        public void RaiseSystemEvent<TEventData>(TEventData data) where TEventData : unmanaged =>
+            _sim.RaiseSystemEvent(this, data);
 
         public void LogInfo(string s) => _sim.Log.Info(s);
         public void LogWarn(string s) => _sim.Log.Warn(s);

@@ -104,7 +104,7 @@ namespace Tofunaut.TofuECS.Samples.ConwaysGameOfLife.ECS
                     rawBoardState[index] = evt.Value[i];
                 }
                 
-                f.RaiseEvent(evt);
+                f.RaiseExternalEvent(evt);
             }
         }
 

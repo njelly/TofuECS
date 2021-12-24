@@ -130,7 +130,7 @@ public class RuntimeTests
         public int Value;
     }
 
-    private unsafe class TestSystem : ISystem
+    private unsafe class TestSystem : ISystem, ISystemEventListener<TestSystemEvent>, ISystemEventListener<AnotherSystemEvent>
     {
         public void Initialize(Frame f) { }
         
@@ -139,8 +139,29 @@ public class RuntimeTests
         public void Process(Frame f)
         {
             var iter = f.GetIterator<TestComponent>();
-            while (iter.NextUnsafe(out var entity, out var testComponent))
+            while (iter.NextUnsafe(out _, out var testComponent))
                 testComponent->Value++;
         }
+
+        public void OnSystemEvent(Frame f, TestSystemEvent data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnSystemEvent(Frame f, AnotherSystemEvent data)
+        {
+            throw new NotImplementedException();
+        }
     }
+
+    private struct TestSystemEvent
+    {
+        public int Data;
+    }
+
+    private struct AnotherSystemEvent
+    {
+        public float SomeOtherData;
+    }
+
 }
