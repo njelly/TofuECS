@@ -1,16 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Tofunaut.TofuECS
 {
-    /// <summary>
-    /// Allows for concurrent subscribing and unsubscribing to events. Events are queued from the Simulation thread and
-    /// Dispatched from the main thread (i.e., the Unity thread). Event data is required to be unmanaged because all state
-    /// data in the ECS is unmanaged by design.
-    /// </summary>
     internal class EventDispatcher
     {
         private readonly Dictionary<Type, List<(object callbackTarget, Action<object> callBack)>> _typeToEvent;
