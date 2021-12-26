@@ -17,7 +17,6 @@ namespace Tofunaut.TofuECS
         private readonly Frame[] _frames;
         private readonly Dictionary<Type, int> _typeToIndex;
         private readonly Dictionary<Type, object[]> _typeToInput;
-        private readonly object _inputLock;
 
         private int _typeIndexCounter;
 
@@ -31,7 +30,6 @@ namespace Tofunaut.TofuECS
 
             _typeToIndex = new Dictionary<Type, int>();
             _systems = systems;
-            _inputLock = new object();
             _frames = new Frame[config.FramesInMemory];
             _typeToInput = new Dictionary<Type, object[]>();
             if(_frames.Length < 2)
@@ -77,17 +75,14 @@ namespace Tofunaut.TofuECS
 
         public void InjectNewInput<TInput>(TInput[] input) where TInput : unmanaged
         {
-            lock (_inputLock)
+            if (!_typeToInput.TryGetValue(typeof(TInput), out var inputArray))
             {
-                if (!_typeToInput.TryGetValue(typeof(TInput), out var inputArray))
-                {
-                    inputArray = new object[input.Length];
-                    _typeToInput.Add(typeof(TInput), inputArray);
-                }
-
-                for (var i = 0; i < input.Length; i++)
-                    inputArray[i] = input[i];
+                inputArray = new object[input.Length];
+                _typeToInput.Add(typeof(TInput), inputArray);
             }
+
+            for (var i = 0; i < input.Length; i++)
+                inputArray[i] = input[i];
         }
 
         public void InjectInputForFrame<TInput>(TInput[] input, int frameNumber) where TInput : unmanaged
@@ -158,13 +153,10 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public void Tick()
         {
-            lock (_inputLock)
-            {
-                foreach (var kvp in _typeToInput)
-                    CurrentFrame.SetInput(kvp.Key, kvp.Value);
+            foreach (var kvp in _typeToInput)
+                CurrentFrame.SetInput(kvp.Key, kvp.Value);
                 
-                _typeToInput.Clear();
-            }
+            _typeToInput.Clear();
             
             foreach (var system in _systems)
                 system.Process(CurrentFrame);

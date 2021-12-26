@@ -13,18 +13,23 @@ namespace Tofunaut.TofuECS
     /// </summary>
     internal class EventDispatcher
     {
-        private readonly ConcurrentDictionary<Type, List<(object callbackTarget, Action<object> callBack)>> _typeToEvent;
-        private readonly ConcurrentQueue<(Type type, object data)> _eventQueue;
+        private readonly Dictionary<Type, List<(object callbackTarget, Action<object> callBack)>> _typeToEvent;
+        private readonly Queue<(Type type, object data)> _eventQueue;
 
         public EventDispatcher()
         {
-            _typeToEvent = new ConcurrentDictionary<Type, List<(object, Action<object>)>>();
-            _eventQueue = new ConcurrentQueue<(Type type, object data)>();
+            _typeToEvent = new Dictionary<Type, List<(object, Action<object>)>>();
+            _eventQueue = new Queue<(Type type, object data)>();
         }
 
         public void Subscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged
         {
-            var callbackList = _typeToEvent.GetOrAdd(typeof(TEventData), new List<(object, Action<object>)>());
+            if (!_typeToEvent.TryGetValue(typeof(TEventData), out var callbackList))
+            {
+                callbackList = new List<(object, Action<object>)>();
+                _typeToEvent.Add(typeof(TEventData), callbackList);
+            }
+            
             callbackList.Add((callback.Target, data => callback.Invoke((TEventData)data)));
         }
 
@@ -41,13 +46,14 @@ namespace Tofunaut.TofuECS
 
         public void Dispatch()
         {
-            while (_eventQueue.TryDequeue(out var eventData))
+            while (_eventQueue.Count > 0)
             {
-                if (_typeToEvent.TryGetValue(eventData.type, out var eventList))
-                {
-                    foreach (var callbackTuple in eventList)
-                        callbackTuple.callBack.Invoke(eventData.data);
-                }
+                var (type, data) = _eventQueue.Dequeue();
+                if (!_typeToEvent.TryGetValue(type, out var eventList)) 
+                    continue;
+                
+                foreach (var callbackTuple in eventList)
+                    callbackTuple.callBack.Invoke(data);
             }
         }
     }
