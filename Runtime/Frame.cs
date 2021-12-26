@@ -194,6 +194,12 @@ namespace Tofunaut.TofuECS
             _iterators = newIteratorArray;
             _iterators[_iterators.Length - 1] = new EntityComponentIterator<TComponent>();
         }
+
+        internal void Dispose()
+        {
+            foreach(var componentBuffer in _componentBuffers)
+                componentBuffer.Dispose();
+        }
     }
 
     public class EntityDoesNotContainComponentException<TComponent> : Exception where TComponent : unmanaged

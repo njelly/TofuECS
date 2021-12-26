@@ -54,8 +54,12 @@ namespace Tofunaut.TofuECS
         public void Shutdown()
         {
             IsInitialized = false;
+            
             foreach (var system in _systems)
                 system.Dispose(CurrentFrame);
+            
+            foreach (var frame in _frames)
+                frame.Dispose();
         }
 
         ~Simulation()
