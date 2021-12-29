@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TofuECS", "TofuECS\TofuECS.csproj", "{D349DD1D-B11C-48C3-B612-5B4D8858A1A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TofuECS.Utilities", "TofuECS.Utilities\TofuECS.Utilities.csproj", "{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TofuECS.Tests", "TofuECS.Tests\TofuECS.Tests.csproj", "{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D349DD1D-B11C-48C3-B612-5B4D8858A1A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D349DD1D-B11C-48C3-B612-5B4D8858A1A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D349DD1D-B11C-48C3-B612-5B4D8858A1A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D349DD1D-B11C-48C3-B612-5B4D8858A1A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
