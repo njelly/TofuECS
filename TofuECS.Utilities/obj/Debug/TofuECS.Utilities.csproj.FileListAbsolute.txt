@@ -1,9 +1,0 @@
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/bin/Debug/TofuECS.Utilities.dll
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/bin/Debug/TofuECS.Utilities.pdb
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/bin/Debug/TofuECS.dll
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/bin/Debug/TofuECS.pdb
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/obj/Debug/TofuECS.Utilities.csproj.AssemblyReference.cache
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/obj/Debug/TofuECS.Utilities.csproj.CoreCompileInputs.cache
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/obj/Debug/TofuECS.Utilities.csproj.CopyComplete
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/obj/Debug/TofuECS.Utilities.dll
-/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/TofuECS.Utilities/obj/Debug/TofuECS.Utilities.pdb

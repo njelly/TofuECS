@@ -4,3 +4,8 @@
 .DS_Store
 *.dll
 *.pdb
+TofuECS.Tests/bin/
+TofuECS.Tests/obj/
+TofuECS/obj/
+TofuECS.Utilities/obj/
+TofuECS.Tests/obj/
