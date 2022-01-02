@@ -9,6 +9,7 @@ namespace Tofunaut.TofuECS
         public IECSDatabase Database { get; }
         public Frame CurrentFrame { get; private set; }
         public bool IsInitialized { get; private set; }
+        public int HighestProcessedFrameNumber { get; private set; }
         internal ILogService Log { get; }
         internal EventDispatcher EventDispatcher { get; }
 
@@ -17,7 +18,6 @@ namespace Tofunaut.TofuECS
         private readonly Dictionary<Type, int> _typeToIndex;
         private readonly Dictionary<Type, object[]> _typeToInput;
         private readonly Dictionary<Type, Action<Frame, object>[]> _typeToSystemEventListenerCallbacks;
-        private int _highestedProcessedFrameNumber;
         private int _typeIndexCounter;
 
         public Simulation(ISimulationConfig config, IECSDatabase database, ILogService log, ISystem[] systems)
@@ -40,7 +40,7 @@ namespace Tofunaut.TofuECS
                 _frames[i] = new Frame(this, Config.NumInputs);
             
             CurrentFrame = _frames[0];
-            _highestedProcessedFrameNumber = -1;
+            HighestProcessedFrameNumber = -1;
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace Tofunaut.TofuECS
             foreach (var system in _systems)
                 system.Process(CurrentFrame);
             
-            _highestedProcessedFrameNumber = Math.Max(_highestedProcessedFrameNumber, CurrentFrame.Number);
+            HighestProcessedFrameNumber = Math.Max(HighestProcessedFrameNumber, CurrentFrame.Number);
             
             EventDispatcher.Dispatch();
             
@@ -178,7 +178,7 @@ namespace Tofunaut.TofuECS
 
         public void RollbackTo(int frameNumber)
         {
-            if (frameNumber < 0 || frameNumber > _highestedProcessedFrameNumber || _highestedProcessedFrameNumber - frameNumber >= _frames.Length - 2)
+            if (frameNumber < 0 || frameNumber > HighestProcessedFrameNumber || HighestProcessedFrameNumber - frameNumber >= _frames.Length - 2)
                 throw new InvalidRollbackException(CurrentFrame.Number, frameNumber);
             
             var prevFrameIndex = (frameNumber - 1) % _frames.Length;

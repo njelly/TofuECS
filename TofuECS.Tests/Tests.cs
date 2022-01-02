@@ -51,13 +51,14 @@ namespace TofuECS.Tests
             // sure why this would be desirable...
             s.RollbackTo(29);
             Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).IncrementingValue == 29);
-            // ...although frame 30 has not been processed, so we "rollback" to it.
+            // ...although frame 30 has not been processed, so we cannot "rollback" to it or any frames beyond it.
             Assert.Catch<InvalidRollbackException>(() =>
             {
                 s.RollbackTo(30);
             });
             
-            // frame 1 is too far back to rollback to
+            // frame 1 is too far back to rollback to, now that we've processed 29 frames
+            // ISimulationConfig.FramesInMemory - 2 is the max number of frames we can rollback to from the highest processed frame
             Assert.Catch<InvalidRollbackException>(() =>
             {
                 s.RollbackTo(1);
@@ -166,6 +167,8 @@ namespace TofuECS.Tests
 
             for(var i = 1; i < unmanagedArray.Length; i++)
                 Assert.IsTrue(unmanagedArray[i] > unmanagedArray[i - 1]);
+            
+            unmanagedArray.Dispose();
         }
 
         private class RollbackTestSimulationConfig : ISimulationConfig

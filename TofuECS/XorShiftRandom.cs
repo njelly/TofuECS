@@ -19,9 +19,6 @@ namespace Tofunaut.TofuECS
     {
 
         #region Data Members
-
-        public ulong StateX => x_;
-        public ulong StateY => y_;
         
         // Constants
         private const double DOUBLE_UNIT = 1.0 / (int.MaxValue + 1.0);
@@ -37,16 +34,6 @@ namespace Tofunaut.TofuECS
         #endregion
 
         #region Constructor
-
-        /// <summary>
-        ///   Constructs a new  generator using two
-        ///   random Guid hash codes as a seed.
-        /// </summary>
-        public XorShiftRandom()
-        {
-            x_ = (ulong)Guid.NewGuid().GetHashCode();
-            y_ = (ulong)Guid.NewGuid().GetHashCode();
-        }
 
         /// <summary>
         ///   Constructs a new  generator
