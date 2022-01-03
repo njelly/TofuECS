@@ -178,7 +178,7 @@ namespace TofuECS.Tests
             public ulong Seed => 1234;
         }
         
-        private class DummyECSDatabase : IECSDatabase
+        public class DummyECSDatabase : IECSDatabase
         {
             private readonly Dictionary<int, object> _data = new Dictionary<int, object>();
 
@@ -244,7 +244,7 @@ namespace TofuECS.Tests
             public void Dispose(Frame f) { }
         }
 
-        private class TestLogService : ILogService
+        public class TestLogService : ILogService
         {
             public void Info(string s)
             {

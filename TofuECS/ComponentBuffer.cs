@@ -13,7 +13,7 @@ namespace Tofunaut.TofuECS
         public ComponentBuffer()
         {
             _length = 1;
-            _buffer = Marshal.AllocHGlobal(Marshal.SizeOf<TComponent>());
+            _buffer = Marshal.AllocHGlobal(sizeof(TComponent));
             _freeIndexes = new Queue<int>();
             _freeIndexes.Enqueue(0);
         }
@@ -32,9 +32,9 @@ namespace Tofunaut.TofuECS
 
             // expand the buffer - there are no free indexes
             var prevLength = _length;
-            var prevByteCount = Marshal.SizeOf<TComponent>() * prevLength;
+            var prevByteCount = sizeof(TComponent) * prevLength;
             _length *= 2;
-            var newBuffer = Marshal.AllocHGlobal(Marshal.SizeOf<TComponent>() * _length);
+            var newBuffer = Marshal.AllocHGlobal(sizeof(TComponent) * _length);
             Buffer.MemoryCopy(_buffer.ToPointer(), newBuffer.ToPointer(), prevByteCount, prevByteCount);
             Marshal.FreeHGlobal(_buffer);
             _buffer = newBuffer;

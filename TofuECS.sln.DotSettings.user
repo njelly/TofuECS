@@ -1,21 +1,22 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=28cedb15_002D4a67_002D416f_002D8fed_002D27e82c1b4b7b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Tests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=28cedb15_002D4a67_002D416f_002D8fed_002D27e82c1b4b7b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Tests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests.BigTest&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=3b9120aa_002Dcd62_002D4d5c_002D92ca_002D4abe752edc09/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=3b9120aa_002Dcd62_002D4d5c_002D92ca_002D4abe752edc09/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=45fb6298_002Da6f8_002D4cf1_002D816e_002Dd4d4d293ce90/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=45fb6298_002Da6f8_002D4cf1_002D816e_002Dd4d4d293ce90/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=afd200e4_002Db8fc_002D4fab_002Db6ad_002D7456f23bbe16/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="RollbackTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests.RollbackTests&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=afd200e4_002Db8fc_002D4fab_002Db6ad_002D7456f23bbe16/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="RollbackTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests.RollbackTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

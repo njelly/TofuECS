@@ -122,7 +122,6 @@ namespace Tofunaut.TofuECS
 
         internal int GetIndexForType(Type type) => _typeToIndex[type];
 
-
         internal void RaiseSystemEvent<TEventData>(Frame f, TEventData eventData) where TEventData : unmanaged
         {
             // cache all callbacks on the first invocation of the system event - is there a better way?
