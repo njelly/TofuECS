@@ -2,12 +2,13 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    public class EntityComponentIterator<TComponent> : IEntityComponentIterator where TComponent : unmanaged
+    public unsafe class EntityComponentIterator<TComponent> : IEntityComponentIterator where TComponent : unmanaged
     {
         public int Count => _entityIds.Count;
         private readonly List<int> _entityIds;
         private readonly List<int> _entitiesToRemove;
         private int _currentIndex;
+        private TComponent* _rawBufferValue;
         internal ComponentBuffer<TComponent> buffer;
         private Frame _currentFrame;
 
@@ -32,6 +33,7 @@ namespace Tofunaut.TofuECS
         public void Reset()
         {
             _currentIndex = 0;
+            _rawBufferValue = buffer.RawValue;
             foreach (var entity in _entitiesToRemove)
                 _entityIds.Remove(entity);
             
@@ -53,12 +55,12 @@ namespace Tofunaut.TofuECS
             entityId = _entityIds[_currentIndex];
             var entity = _currentFrame.GetEntity(entityId);
             entity.TryGetComponentIndex(typeof(TComponent), out var index);
-            component = buffer.Get(index);
+            component = _rawBufferValue[index];
             _currentIndex++;
             return true;
         }
         
-        public unsafe bool NextUnsafe(out int entityId, out TComponent* component)
+        public bool NextUnsafe(out int entityId, out TComponent* component)
         {
             if (_currentIndex == _entityIds.Count)
             {
@@ -70,7 +72,7 @@ namespace Tofunaut.TofuECS
             entityId = _entityIds[_currentIndex];
             var entity = _currentFrame.GetEntity(entityId);
             entity.TryGetComponentIndex(typeof(TComponent), out var index);
-            component = buffer.GetUnsafe(index);
+            component = &_rawBufferValue[index];
             _currentIndex++;
             return true;
         }
@@ -79,6 +81,7 @@ namespace Tofunaut.TofuECS
         {
             var otherIterator = (EntityComponentIterator<TComponent>)other;
             otherIterator.Reset();
+            buffer = otherIterator.buffer;
             Reset();
             _entityIds.Clear();
             for(var i = 0; i < otherIterator._entityIds.Count; i++)

@@ -6,6 +6,8 @@ namespace Tofunaut.TofuECS
 {
     internal unsafe class ComponentBuffer<TComponent> : IComponentBuffer where TComponent : unmanaged
     {
+        public TComponent* RawValue => (TComponent*) _buffer.ToPointer();
+        
         private IntPtr _buffer;
         private readonly Queue<int> _freeIndexes;
         private int _length;

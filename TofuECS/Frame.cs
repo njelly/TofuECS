@@ -138,8 +138,8 @@ namespace Tofunaut.TofuECS
         {
             var typeIndex = _sim.GetIndexForType(typeof(TComponent));
             var iterator = (EntityComponentIterator<TComponent>)_iterators[typeIndex];
-            iterator.Reset(this);
             iterator.buffer = (ComponentBuffer<TComponent>)_componentBuffers[typeIndex];
+            iterator.Reset(this);
             return iterator;
         }
 
