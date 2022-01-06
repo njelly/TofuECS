@@ -4,13 +4,13 @@ This is an entity component system (ECS) framework written in C# that can be eas
 
 This repo contains a solution with three projects: TofuECS, TofuECS.Utilities, and TofuECS.Tests. TofuECS is the main dll you will want to include in your project, while TofuECS.Utilities contains some other useful classes that aren't strictly necessary. TofuECS.Tests should not be included, but showcases how to start and run a simulation and how you can use this framework.
 
-ECS frameworks are fun to code in and offer performance benefits against the typical GameObject/MonoBehaviour Unity workflow, all while presenting a clear separation of logic from views (for example: your GameObjects, Meshes, Sprites, etc.). I have a lot of experience working with other frameworks, and I wanted to write my own while attempting to match their performance and ease of use.
+ECS frameworks are fun to code in and offer performance benefits against the typical GameObject/MonoBehaviour Unity workflow, all while presenting a clear separation of logic from views (for example: your GameObjects, Meshes, Sprites, etc.). They solve a problem that is very common in game development: messy class hierarchies that make it difficult to share code between two unrelated classes. Essentially, an ECS is a data structure containing the entire state of your game (or simulation) at every moment, with rules on how to alter that data over time.
 
 ## Components
 Components contain all data about the state of the simulation. For TofuECS, all components must be unmanaged (see [MS docs for the Unmanaged type constraint](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-7.3/blittable)), i.e, structs with only fields of types `int`, `bool`, etc. The type `UnmanagedArray<T>` is included in `TofuECS.Utilities` to help out with arrayed data. This requires some creativity on the part of the developer to inject or read event data in Unity, as it must be converted to some unmanaged struct.
 
 ## Entities
-Entities are pointers to components. References to entities are passed around and store on components as integers (the actual `Entity` class is internal and not accessible to the user). Entities can point to multiple components and can be created and destroyed over the lifetime of the simulation.
+Entities are pointers to components. References to entities are passed around and are stored on components as integers (the actual `Entity` class is internal and not accessible to the user). Entities can point to multiple components and can be created and destroyed over the lifetime of the simulation.
 
 ## Events
 There are two type of events: *external* and *system* events. Both must be unmanaged types, just like components. External events can be raised via `Frame.RaiseExternalEvent<TEvent>()` and will be invoked **after** the frame is processed. System events can be raised via `Frame.RaiseSystemEvent<TEvent>()`, are used to communicate between instances of `ISystem`, and will be invoked immediately, like any function call. Instances of `ISystem` must implement `ISystemEventListener<TEvent>` in order to respond to the system event.
