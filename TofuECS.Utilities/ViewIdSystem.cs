@@ -2,11 +2,11 @@
 {
     public unsafe class ViewIdSystem : ISystem
     {
-        public void Initialize(Frame f) { }
+        public void Initialize(ECS ecs) { }
 
-        public void Process(Frame f)
+        public void Process(ECS ecs)
         {
-            var viewIdIterator = f.GetIterator<ViewId>();
+            var viewIdIterator = ecs.GetIterator<ViewId>();
             while (viewIdIterator.NextUnsafe(out var entityId, out var viewId))
             {
                 if (viewId->Id == viewId->PrevId)
@@ -21,11 +21,9 @@
 
                 viewId->PrevId = viewId->Id;
                 
-                f.RaiseExternalEvent(eventData);
+                ecs.QueueExternalEvent(eventData);
             }
         }
-
-        public void Dispose(Frame f) { }
     }
 
     public struct OnViewIdChangedEvent

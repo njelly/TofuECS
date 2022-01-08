@@ -9,6 +9,7 @@ namespace TofuECS.Tests
     [TestFixture]
     public unsafe class Tests
     {
+        /*
         [Test]
         public void RollbackTests()
         {
@@ -38,7 +39,7 @@ namespace TofuECS.Tests
                     case 15:
                         randomAt15 = s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).RandomValue;
                         break;
-                }
+                }Ωz
             }
             
             Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).IncrementingValue == 30);
@@ -87,39 +88,36 @@ namespace TofuECS.Tests
             
             s.Shutdown();
         }
+        */
 
         [Test]
         public void SystemEventTests()
-        {            
-            var s = new Simulation(new RollbackTestSimulationConfig(), new DummyECSDatabase(),
-                new TestLogService(), new ISystem[]
-                {
-                    new SystemEventTestSystem(),
-                });
+        {
+            var ecs = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            {
+                new SystemEventTestSystem(),
+            });
             
-            s.RegisterComponent<SomeValueComponent>();
-            s.Initialize();
+            ecs.RegisterComponent<SomeValueComponent>(1);
+            ecs.Initialize();
 
-            var entityA = s.CurrentFrame.CreateEntity();
-            s.CurrentFrame.AddComponent<SomeValueComponent>(entityA);
+            var entityA = ecs.CreateEntity();
+            ecs.AssignComponent<SomeValueComponent>(entityA);
 
             const int numTicks = 10;
             for (var i = 0; i < numTicks; i++)
-                s.Tick();
+                ecs.Tick();
             
-            Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).EventIncrementingValue == numTicks);
-            
-            s.Shutdown();
+            Assert.IsTrue(ecs.Get<SomeValueComponent>(entityA).EventIncrementingValue == numTicks);
         }
 
         [Test]
         public void ExternalEventTests()
         {
-            var s = new Simulation(new RollbackTestSimulationConfig(), new DummyECSDatabase(),
-                new TestLogService(), new ISystem[]
-                {
-                    new ExternalEventTestSystem(),
-                });
+            var s = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            {
+                new ExternalEventTestSystem(),
+            });
             
             s.Initialize();
 
@@ -142,8 +140,6 @@ namespace TofuECS.Tests
                 s.Tick();
             
             Assert.IsTrue(testValue == numTicks);
-            
-            s.Shutdown();
         }
 
         [Test]
@@ -170,13 +166,6 @@ namespace TofuECS.Tests
             
             unmanagedArray.Dispose();
         }
-
-        private class RollbackTestSimulationConfig : ISimulationConfig
-        {
-            public int FramesInMemory => 30;
-            public int NumInputs => 1;
-            public ulong Seed => 1234;
-        }
         
         public class DummyECSDatabase : IECSDatabase
         {
@@ -194,54 +183,48 @@ namespace TofuECS.Tests
         
         private class SomeValueSystem : ISystem
         {
-            public void Initialize(Frame f) { }
+            public void Initialize(ECS ecs) { }
 
-            public void Process(Frame f)
+            public void Process(ECS ecs)
             {
-                var someValueIterator = f.GetIterator<SomeValueComponent>();
+                var someValueIterator = ecs.GetIterator<SomeValueComponent>();
                 while (someValueIterator.NextUnsafe(out _, out var someValueComponent))
                 {
                     someValueComponent->IncrementingValue++;
-                    someValueComponent->RandomValue = f.RNG.NextInt32();
+                    someValueComponent->RandomValue = ecs.RNG.NextInt32();
                 }
             }
-
-            public void Dispose(Frame f) { }
         }
 
         private class SystemEventTestSystem : ISystem, ISystemEventListener<IncrementValueSystemEvent>
         {
-            public void Initialize(Frame f) { }
+            public void Initialize(ECS ecs) { }
 
-            public void Process(Frame f)
+            public void Process(ECS ecs)
             {
-                var someValueComponentIterator = f.GetIterator<SomeValueComponent>();
+                var someValueComponentIterator = ecs.GetIterator<SomeValueComponent>();
                 while(someValueComponentIterator.Next(out var entity, out _))
-                    f.RaiseSystemEvent(new IncrementValueSystemEvent
+                    ecs.RaiseSystemEvent(new IncrementValueSystemEvent
                     {
                         EntityId = entity
                     });
             }
-
-            public void Dispose(Frame f) { }
             
-            public void OnSystemEvent(Frame f, IncrementValueSystemEvent data)
+            public void OnSystemEvent(ECS ecs, IncrementValueSystemEvent data)
             {
-                var someValueComponent = f.GetComponentUnsafe<SomeValueComponent>(data.EntityId);
+                var someValueComponent = ecs.GetUnsafe<SomeValueComponent>(data.EntityId);
                 someValueComponent->EventIncrementingValue++;
             }
         }
 
         private class ExternalEventTestSystem : ISystem
         {
-            public void Initialize(Frame f) { }
+            public void Initialize(ECS ecs) { }
 
-            public void Process(Frame f)
+            public void Process(ECS ecs)
             {
-                f.RaiseExternalEvent(new TestExternalEvent());
+                ecs.QueueExternalEvent(new TestExternalEvent());
             }
-
-            public void Dispose(Frame f) { }
         }
 
         public class TestLogService : ILogService

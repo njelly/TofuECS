@@ -1,91 +1,46 @@
-using System.Collections.Generic;
+using System;
 
 namespace Tofunaut.TofuECS
 {
-    public unsafe class EntityComponentIterator<TComponent> : IEntityComponentIterator where TComponent : unmanaged
+    public class EntityComponentIterator<TComponent> where TComponent : unmanaged
     {
-        public int Count => _entityIds.Count;
-        private readonly List<int> _entityIds;
-        private readonly List<int> _entitiesToRemove;
-        private int _currentIndex;
-        private TComponent* _rawBufferValue;
-        internal ComponentBuffer<TComponent> buffer;
-        private Frame _currentFrame;
+        private readonly ComponentBuffer<TComponent> _rootBuffer;
+        private ComponentBuffer<TComponent> _currentBuffer;
 
-        internal EntityComponentIterator()
+        internal EntityComponentIterator(ComponentBuffer<TComponent> rootBuffer)
         {
-            _entityIds = new List<int>();
-            _entitiesToRemove = new List<int>();
-        }
-
-        internal EntityComponentIterator(EntityComponentIterator<TComponent> copyFrom)
-        {
-            _entityIds = copyFrom._entityIds;
-            _entitiesToRemove = copyFrom._entitiesToRemove;
-        }
-
-        public void Reset(Frame f)
-        {
-            _currentFrame = f;
+            _rootBuffer = rootBuffer;
             Reset();
         }
-        
+
         public void Reset()
         {
-            _currentIndex = 0;
-            _rawBufferValue = buffer.RawValue;
-            foreach (var entity in _entitiesToRemove)
-                _entityIds.Remove(entity);
-            
-            _entitiesToRemove.Clear();
+            _currentBuffer = _rootBuffer;
+            _currentBuffer.ResetIterator();
         }
-
-        public void AddEntity(int entityId) => _entityIds.Add(entityId);
-        public void RemoveEntity(int entityId) => _entitiesToRemove.Add(entityId);
 
         public bool Next(out int entityId, out TComponent component)
         {
-            if (_currentIndex == _entityIds.Count)
+            while (_currentBuffer.Next(out entityId, out component))
             {
-                entityId = -1;
-                component = default;
-                return false;
+                if (entityId != ECS.InvalidEntityId)
+                    return true;
             }
 
-            entityId = _entityIds[_currentIndex];
-            var entity = _currentFrame.GetEntity(entityId);
-            entity.TryGetComponentIndex(typeof(TComponent), out var index);
-            component = _rawBufferValue[index];
-            _currentIndex++;
-            return true;
+            _currentBuffer = _currentBuffer.NextBuffer;
+            return _currentBuffer != null && Next(out entityId, out component);
         }
-        
-        public bool NextUnsafe(out int entityId, out TComponent* component)
+
+        public unsafe bool NextUnsafe(out int entityId, out TComponent* component)
         {
-            if (_currentIndex == _entityIds.Count)
+            while (_currentBuffer.NextUnsafe(out entityId, out component))
             {
-                entityId = -1;
-                component = default;
-                return false;
+                if (entityId != ECS.InvalidEntityId)
+                    return true;
             }
 
-            entityId = _entityIds[_currentIndex];
-            var entity = _currentFrame.GetEntity(entityId);
-            entity.TryGetComponentIndex(typeof(TComponent), out var index);
-            component = &_rawBufferValue[index];
-            _currentIndex++;
-            return true;
-        }
-
-        public void Recycle(IEntityComponentIterator other)
-        {
-            var otherIterator = (EntityComponentIterator<TComponent>)other;
-            otherIterator.Reset();
-            buffer = otherIterator.buffer;
-            Reset();
-            _entityIds.Clear();
-            for(var i = 0; i < otherIterator._entityIds.Count; i++)
-                _entityIds.Add(otherIterator._entityIds[i]);
+            _currentBuffer = _currentBuffer.NextBuffer;
+            return _currentBuffer != null && NextUnsafe(out entityId, out component);
         }
     }
 }

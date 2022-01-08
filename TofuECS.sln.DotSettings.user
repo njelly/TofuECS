@@ -16,6 +16,13 @@
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6e271954_002D935e_002D4635_002D96c4_002Df2f97526701f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #4" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests.BigTest&lt;/TestId&gt;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=afd200e4_002Db8fc_002D4fab_002Db6ad_002D7456f23bbe16/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="RollbackTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests.RollbackTests&lt;/TestId&gt;

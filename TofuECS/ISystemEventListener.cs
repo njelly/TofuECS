@@ -1,7 +1,7 @@
 namespace Tofunaut.TofuECS
 {
-    public interface ISystemEventListener<in TEventData> where TEventData : unmanaged
+    public interface ISystemEventListener<in TEvent> where TEvent : unmanaged
     {
-        void OnSystemEvent(Frame f, TEventData data);
+        void OnSystemEvent(ECS ecs, TEvent data);
     }
 }

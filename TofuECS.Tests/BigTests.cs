@@ -6,19 +6,20 @@ namespace TofuECS.Tests
 {
     [TestFixture]
     public class BigTests
-    {
+    { 
+        private const int numCoordinates = 150000;
+        
         [Test]
         public void BigTest()
         {
             // This test simply creates a large number of entities and components, modifies them with a system, and confirms
             // the results.
-            var s = new Simulation(new BigTestSimulationConfig(), new Tests.DummyECSDatabase(),
-                new Tests.TestLogService(), new ISystem[]
-                {
-                    new CoordinateSystem(),
-                });
+            var s = new ECS(new Tests.DummyECSDatabase(), new Tests.TestLogService(), 1234, new ISystem[]
+            {
+                new CoordinateSystem(),
+            });
             
-            s.RegisterComponent<Coordinate>();
+            s.RegisterComponent<Coordinate>(numCoordinates/4);
             
             s.Initialize();
 
@@ -26,14 +27,12 @@ namespace TofuECS.Tests
             for (var i = 0; i < numTicks; i++)
                 s.Tick();
 
-            var coordinateIterator = s.CurrentFrame.GetIterator<Coordinate>();
+            var coordinateIterator = s.GetIterator<Coordinate>();
             while (coordinateIterator.Next(out _, out var coordinate))
             {
                 Assert.IsTrue(coordinate.X == coordinate.StartX + numTicks);
                 Assert.IsTrue(coordinate.Y == coordinate.StartY + numTicks);
             }
-            
-            s.Shutdown();
         }
 
         private struct Coordinate
@@ -46,51 +45,40 @@ namespace TofuECS.Tests
 
         private unsafe class CoordinateSystem : ISystem
         {
-            public void Initialize(Frame f)
+            public void Initialize(ECS ecs)
             {
-                // one million entities will be created
                 const int width = 1000;
-                const int height = 1000;
-                for (var x = 0; x < width; x++)
+                for (var i = 0; i < numCoordinates; i++)
                 {
-                    for (var y = 0; y < height; y++)
+                    var e = ecs.CreateEntity();
+                    var x = i % width;
+                    var y = i / width;
+                    try
                     {
-                        var e = f.CreateEntity();
-                        try
-                        {
-                            var coordinate = f.GetOrAddComponentUnsafe<Coordinate>(e);
-                            coordinate->StartX = x;
-                            coordinate->StartY = y;
-                            coordinate->X = x;
-                            coordinate->Y = y;
-                        }
-                        catch (Exception exception)
-                        {
-                            Console.WriteLine(exception);
-                            throw;
-                        }
+                        ecs.AssignComponent<Coordinate>(e);
+                        var coordinate = ecs.GetUnsafe<Coordinate>(e);
+                        coordinate->StartX = x;
+                        coordinate->StartY = y;
+                        coordinate->X = x;
+                        coordinate->Y = y;
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine(exception);
+                        throw;
                     }
                 }
             }
 
-            public void Process(Frame f)
+            public void Process(ECS ecs)
             {
-                var coordinateIterator = f.GetIterator<Coordinate>();
+                var coordinateIterator = ecs.GetIterator<Coordinate>();
                 while (coordinateIterator.NextUnsafe(out _, out var coordinate))
                 {
                     coordinate->X++;
                     coordinate->Y++;
                 }
             }
-
-            public void Dispose(Frame f) { }
-        }
-        
-        private class BigTestSimulationConfig : ISimulationConfig
-        {
-            public int FramesInMemory => 2;
-            public int NumInputs => 1;
-            public ulong Seed => 987654321;
         }
 
     }

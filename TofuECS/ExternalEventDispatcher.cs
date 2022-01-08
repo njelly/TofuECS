@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    internal class EventDispatcher
+    internal class ExternalEventDispatcher
     {
         private readonly Dictionary<Type, List<(object callbackTarget, Action<object> callBack)>> _typeToEvent;
         private readonly Queue<(Type type, object data)> _eventQueue;
 
-        public EventDispatcher()
+        public ExternalEventDispatcher()
         {
             _typeToEvent = new Dictionary<Type, List<(object, Action<object>)>>();
             _eventQueue = new Queue<(Type type, object data)>();
