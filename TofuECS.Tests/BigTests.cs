@@ -7,7 +7,7 @@ namespace TofuECS.Tests
     [TestFixture]
     public class BigTests
     { 
-        private const int numCoordinates = 150000;
+        private const int numCoordinates = 1000000;
         
         [Test]
         public void BigTest()
@@ -19,11 +19,11 @@ namespace TofuECS.Tests
                 new CoordinateSystem(),
             });
             
-            s.RegisterComponent<Coordinate>(numCoordinates/4);
+            s.RegisterComponent<Coordinate>(numCoordinates);
             
             s.Initialize();
 
-            const int numTicks = 100;
+            const int numTicks = 10;
             for (var i = 0; i < numTicks; i++)
                 s.Tick();
 
@@ -50,11 +50,11 @@ namespace TofuECS.Tests
                 const int width = 1000;
                 for (var i = 0; i < numCoordinates; i++)
                 {
-                    var e = ecs.CreateEntity();
-                    var x = i % width;
+                    var x = i % width; 
                     var y = i / width;
                     try
                     {
+                        var e = ecs.CreateEntity();
                         ecs.AssignComponent<Coordinate>(e);
                         var coordinate = ecs.GetUnsafe<Coordinate>(e);
                         coordinate->StartX = x;

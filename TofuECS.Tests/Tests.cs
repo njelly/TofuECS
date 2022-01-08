@@ -98,7 +98,7 @@ namespace TofuECS.Tests
                 new SystemEventTestSystem(),
             });
             
-            ecs.RegisterComponent<SomeValueComponent>(1);
+            ecs.RegisterComponent<SomeValueComponent>(1024);
             ecs.Initialize();
 
             var entityA = ecs.CreateEntity();

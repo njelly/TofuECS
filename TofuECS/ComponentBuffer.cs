@@ -60,9 +60,9 @@ namespace Tofunaut.TofuECS
                 NextBuffer.Release(componentIndex - _buffer.Length);
                 return;
             }
-
-            _entityAssignments[componentIndex] = ECS.InvalidEntityId;
+            
             _freeIndexes.Enqueue(componentIndex);
+            _entityAssignments[componentIndex] = -1;
         }
 
         public void ResetIterator() => _currentIteratorIndex = 0;
@@ -100,29 +100,29 @@ namespace Tofunaut.TofuECS
             return false;
         }
 
-        public TComponent Get(int entityId)
+        public TComponent Get(int componentIndex)
         {
-            for (var i = 0; i < _buffer.Length; i++)
-            {
-                if (entityId == _entityAssignments[i])
-                    return _buffer[i];
-            }
+            if (componentIndex < _buffer.Length) 
+                return _buffer[componentIndex];
+            
+            if (NextBuffer == null)
+                throw new InvalidComponentIndexException<TComponent>(componentIndex);
 
-            return NextBuffer?.Get(entityId) ?? default;
+            return NextBuffer.Get(componentIndex - _buffer.Length);
         }
 
-        public unsafe TComponent* GetUnsafe(int entityId)
+        public unsafe TComponent* GetUnsafe(int componentIndex)
         {
-            for (var i = 0; i < _buffer.Length; i++)
+            if (componentIndex < _buffer.Length)
             {
-                if (entityId == _entityAssignments[i])
-                {
-                    fixed (TComponent* ptr = &_buffer[i])
-                        return ptr;
-                }
+                fixed (TComponent* ptr = &_buffer[componentIndex])
+                    return ptr;
             }
+            
+            if (NextBuffer == null)
+                throw new InvalidComponentIndexException<TComponent>(componentIndex);
 
-            return NextBuffer != null ? NextBuffer.GetUnsafe(entityId) : null;
+            return NextBuffer.GetUnsafe(componentIndex - _buffer.Length);
         }
     }
 

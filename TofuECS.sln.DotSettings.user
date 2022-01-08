@@ -6,6 +6,11 @@
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=388088a4_002D252b_002D4061_002D922f_002D966e863d6eaf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="BigTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests.BigTest&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=3b9120aa_002Dcd62_002D4d5c_002D92ca_002D4abe752edc09/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
