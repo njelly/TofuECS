@@ -7,7 +7,7 @@ using Tofunaut.TofuECS.Utilities;
 namespace TofuECS.Tests
 {
     [TestFixture]
-    public unsafe class Tests
+    public class Tests
     {
         /*
         [Test]
@@ -93,7 +93,7 @@ namespace TofuECS.Tests
         [Test]
         public void AddRemoveComponentTest()
         {
-            var ecs = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new ECS(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
             {
                 new AddRemoveComponentExternalEventSystem(),
             });
@@ -112,19 +112,19 @@ namespace TofuECS.Tests
 
             var e = ecs.CreateEntity();
             
-            ecs.AssignComponent(e, new SomeValueComponent());
+            ecs.Buffer<SomeValueComponent>().Set(e);
             
             ecs.Tick();
             
             Assert.True(testValue == 1);
             
-            ecs.RemoveComponent<SomeValueComponent>(e);
+            Assert.True(ecs.Buffer<SomeValueComponent>().Remove(e));
             
             ecs.Tick();
             
             Assert.True(testValue == 1);
             
-            ecs.AssignComponent(e, new SomeValueComponent());
+            ecs.Buffer<SomeValueComponent>().Set(e);
             
             ecs.Tick();
             
@@ -134,28 +134,29 @@ namespace TofuECS.Tests
         [Test]
         public void SystemEventTests()
         {
-            var ecs = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new ECS(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
             {
                 new SystemEventTestSystem(),
             });
             
-            ecs.RegisterComponent<SomeValueComponent>(1024);
+            ecs.RegisterComponent<SomeValueComponent>(3);
             ecs.Initialize();
 
             var entityA = ecs.CreateEntity();
-            ecs.AssignComponent<SomeValueComponent>(entityA);
+            ecs.Buffer<SomeValueComponent>().Set(entityA);
 
             const int numTicks = 10;
             for (var i = 0; i < numTicks; i++)
                 ecs.Tick();
-            
-            Assert.IsTrue(ecs.Get<SomeValueComponent>(entityA).EventIncrementingValue == numTicks);
+
+            Assert.IsTrue(ecs.Buffer<SomeValueComponent>().Get(entityA, out var someValueComponent) &&
+                          someValueComponent.EventIncrementingValue == numTicks);
         }
 
         [Test]
         public void ExternalEventTests()
         {
-            var ecs = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new ECS(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
             {
                 new ExternalEventTestSystem(),
             });
@@ -207,13 +208,6 @@ namespace TofuECS.Tests
             
             unmanagedArray.Dispose();
         }
-        
-        public class DummyECSDatabase : IECSDatabase
-        {
-            private readonly Dictionary<int, object> _data = new Dictionary<int, object>();
-
-            public TData Get<TData>(int id) where TData : unmanaged => (TData)_data[id];
-        }
 
         private struct SomeValueComponent
         {
@@ -228,11 +222,14 @@ namespace TofuECS.Tests
 
             public void Process(ECS ecs)
             {
-                var someValueIterator = ecs.GetIterator<SomeValueComponent>();
-                while (someValueIterator.NextUnsafe(out _, out var someValueComponent))
+                var someValueIterator = ecs.Buffer<SomeValueComponent>().GetIterator();
+                while (someValueIterator.Next())
                 {
-                    someValueComponent->IncrementingValue++;
-                    someValueComponent->RandomValue = ecs.RNG.NextInt32();
+                    someValueIterator.ModifyCurrent((ref SomeValueComponent component) =>
+                    {
+                        component.IncrementingValue++;
+                        component.RandomValue = ecs.RNG.NextInt32();
+                    });
                 }
             }
         }
@@ -243,18 +240,20 @@ namespace TofuECS.Tests
 
             public void Process(ECS ecs)
             {
-                var someValueComponentIterator = ecs.GetIterator<SomeValueComponent>();
-                while(someValueComponentIterator.Next(out var entity, out _))
+                var someValueIterator = ecs.Buffer<SomeValueComponent>().GetIterator();
+                while (someValueIterator.Next())
+                {
                     ecs.RaiseSystemEvent(new IncrementValueSystemEvent
                     {
-                        EntityId = entity
+                        EntityId = someValueIterator.CurrentEntity,
                     });
+                }
             }
             
             public void OnSystemEvent(ECS ecs, IncrementValueSystemEvent data)
             {
-                var someValueComponent = ecs.GetUnsafe<SomeValueComponent>(data.EntityId);
-                someValueComponent->EventIncrementingValue++;
+                ecs.Buffer<SomeValueComponent>().GetAndModify(data.EntityId,
+                    (ref SomeValueComponent someValueComponent) => { someValueComponent.EventIncrementingValue++; });
             }
         }
 
@@ -274,8 +273,8 @@ namespace TofuECS.Tests
 
             public void Process(ECS ecs)
             {
-                var iterator = ecs.GetIterator<SomeValueComponent>();
-                while(iterator.Next(out _, out _))
+                var iterator = ecs.Buffer<SomeValueComponent>().GetIterator();
+                while(iterator.Next())
                     ecs.QueueExternalEvent(new TestExternalEvent());
             }
         }

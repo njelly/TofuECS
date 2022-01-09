@@ -40,10 +40,10 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="ComponentBuffer.cs" />
+        <Compile Include="ComponentIterator.cs" />
         <Compile Include="ECS.cs" />
-        <Compile Include="EntityComponentIterator.cs" />
+        <Compile Include="ECSDatabase.cs" />
         <Compile Include="ExternalEventDispatcher.cs" />
-        <Compile Include="IECSDatabase.cs" />
         <Compile Include="ILogService.cs" />
         <Compile Include="ISystem.cs" />
         <Compile Include="ISystemEventListener.cs" />

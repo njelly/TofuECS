@@ -14,7 +14,7 @@ namespace TofuECS.Tests
         {
             // This test simply creates a large number of entities and components, modifies them with a system, and confirms
             // the results.
-            var s = new ECS(new Tests.DummyECSDatabase(), new Tests.TestLogService(), 1234, new ISystem[]
+            var s = new ECS(new ECSDatabase(), new Tests.TestLogService(), 1234, new ISystem[]
             {
                 new CoordinateSystem(),
             });
@@ -27,11 +27,11 @@ namespace TofuECS.Tests
             for (var i = 0; i < numTicks; i++)
                 s.Tick();
 
-            var coordinateIterator = s.GetIterator<Coordinate>();
-            while (coordinateIterator.Next(out _, out var coordinate))
+            var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
+            while (coordinateIterator.Next())
             {
-                Assert.IsTrue(coordinate.X == coordinate.StartX + numTicks);
-                Assert.IsTrue(coordinate.Y == coordinate.StartY + numTicks);
+                Assert.IsTrue(coordinateIterator.Current.X == coordinateIterator.Current.StartX + numTicks);
+                Assert.IsTrue(coordinateIterator.Current.Y == coordinateIterator.Current.StartY + numTicks);
             }
         }
 
@@ -43,7 +43,7 @@ namespace TofuECS.Tests
             public int Y;
         }
 
-        private unsafe class CoordinateSystem : ISystem
+        private class CoordinateSystem : ISystem
         {
             public void Initialize(ECS ecs)
             {
@@ -55,12 +55,14 @@ namespace TofuECS.Tests
                     try
                     {
                         var e = ecs.CreateEntity();
-                        ecs.AssignComponent<Coordinate>(e);
-                        var coordinate = ecs.GetUnsafe<Coordinate>(e);
-                        coordinate->StartX = x;
-                        coordinate->StartY = y;
-                        coordinate->X = x;
-                        coordinate->Y = y;
+                        var coordinateBuffer = ecs.Buffer<Coordinate>();
+                        coordinateBuffer.Set(e, new Coordinate
+                        {
+                            StartX = x,
+                            StartY = y,
+                            X = x,
+                            Y = y,
+                        });
                     }
                     catch (Exception exception)
                     {
@@ -72,11 +74,14 @@ namespace TofuECS.Tests
 
             public void Process(ECS ecs)
             {
-                var coordinateIterator = ecs.GetIterator<Coordinate>();
-                while (coordinateIterator.NextUnsafe(out _, out var coordinate))
+                var coordinateIterator = ecs.Buffer<Coordinate>().GetIterator();
+                while (coordinateIterator.Next())
                 {
-                    coordinate->X++;
-                    coordinate->Y++;
+                    coordinateIterator.ModifyCurrent((ref Coordinate coordinate) =>
+                    {
+                        coordinate.X++;
+                        coordinate.Y++;
+                    });
                 }
             }
         }

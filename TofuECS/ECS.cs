@@ -8,30 +8,28 @@ namespace Tofunaut.TofuECS
         public const int InvalidEntityId = 0;
         public int CurrentTick { get; private set; }
         public bool IsInitialized { get; private set; }
-        public IECSDatabase Database { get; }
+        public ECSDatabase DB { get; }
         public ILogService Log { get; }
-        public XorShiftRandom RNG { get; }
+        public XorShiftRandom RNG { get; private set; }
         
         private readonly ISystem[] _systems;
-        private readonly Dictionary<Type, object> _typeToComponentBuffer;
         private readonly Dictionary<Type, Action<ECS, object>[]> _typeToSystemEventListenerCallbacks;
-        private readonly Dictionary<int, Dictionary<Type, int>> _entityToTypeToComponentIndex;
         private readonly ExternalEventDispatcher _externalEventDispatcher;
+        private Dictionary<Type, object> _typeToComponentBuffer;
         private int _entityIdCounter;
 
-        public ECS(IECSDatabase database, ILogService logService, ulong seed, ISystem[] systems)
+        public ECS(ECSDatabase database, ILogService logService, ulong seed, ISystem[] systems)
         {
-            Database = database;
+            DB = database;
             Log = logService;
             RNG = new XorShiftRandom(seed);
             _systems = systems;
             _typeToComponentBuffer = new Dictionary<Type, object>();
             _typeToSystemEventListenerCallbacks = new Dictionary<Type, Action<ECS, object>[]>();
-            _entityToTypeToComponentIndex = new Dictionary<int, Dictionary<Type, int>>();
             _externalEventDispatcher = new ExternalEventDispatcher();
         }
 
-        public void RegisterComponent<TComponent>(int bufferLength, bool canExpand = true) where TComponent : unmanaged
+        public void RegisterComponent<TComponent>(int bufferSize) where TComponent : unmanaged
         {
             if (IsInitialized)
                 throw new ECSAlreadyInitializedException();
@@ -39,7 +37,7 @@ namespace Tofunaut.TofuECS
             if (_typeToComponentBuffer.ContainsKey(typeof(TComponent)))
                 throw new ComponentAlreadyRegisteredException<TComponent>();
             
-            _typeToComponentBuffer.Add(typeof(TComponent), new ComponentBuffer<TComponent>(bufferLength, canExpand));
+            _typeToComponentBuffer.Add(typeof(TComponent), new ComponentBuffer<TComponent>(bufferSize));
         }
 
         public void Initialize()
@@ -55,71 +53,13 @@ namespace Tofunaut.TofuECS
 
         public int CreateEntity() => ++_entityIdCounter;
 
-        public void AssignComponent<TComponent>(int entityId, TComponent component = default) where TComponent : unmanaged
+        public ComponentBuffer<TComponent> Buffer<TComponent>() where TComponent : unmanaged
         {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var componentBufferObj))
-                throw new ComponentNotRegisteredException<TComponent>();
-            
-            var componentIndex = ((ComponentBuffer<TComponent>) componentBufferObj).Request(entityId, component);
-
-            if (!_entityToTypeToComponentIndex.TryGetValue(entityId, out var typeToComponentIndex))
-            {
-                typeToComponentIndex = new Dictionary<Type, int>();
-                _entityToTypeToComponentIndex.Add(entityId, typeToComponentIndex);
-            }
-            
-            typeToComponentIndex.Add(typeof(TComponent), componentIndex);
-        }
-
-        public void RemoveComponent<TComponent>(int entityId) where TComponent : unmanaged
-        {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var componentBufferObj))
+            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
+                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
                 throw new ComponentNotRegisteredException<TComponent>();
 
-            if (!_entityToTypeToComponentIndex.TryGetValue(entityId, out var typeToComponentIndex))
-                return;
-
-            if (!(componentBufferObj is ComponentBuffer<TComponent> componentBuffer))
-                return;
-            
-            componentBuffer.Release(typeToComponentIndex[typeof(TComponent)]);
-            typeToComponentIndex.Remove(typeof(TComponent));
-        }
-
-        public TComponent Get<TComponent>(int entityId) where TComponent : unmanaged
-        {
-            if (!_entityToTypeToComponentIndex.TryGetValue(entityId, out var typeToComponentIndex) ||
-                !typeToComponentIndex.TryGetValue(typeof(TComponent), out var componentIndex))
-                throw new ComponentNotAssignedException<TComponent>(entityId);
-
-            if (!(_typeToComponentBuffer[typeof(TComponent)] is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            return componentBuffer.Get(componentIndex);
-        }
-
-        public unsafe TComponent* GetUnsafe<TComponent>(int entityId) where TComponent : unmanaged
-        {
-            if (!_entityToTypeToComponentIndex.TryGetValue(entityId, out var typeToComponentIndex) ||
-                !typeToComponentIndex.TryGetValue(typeof(TComponent), out var componentIndex))
-                throw new ComponentNotAssignedException<TComponent>(entityId);
-
-            if (!(_typeToComponentBuffer[typeof(TComponent)] is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            return componentBuffer.GetUnsafe(componentIndex);
-        }
-
-        public EntityComponentIterator<TComponent> GetIterator<TComponent>() where TComponent : unmanaged
-        {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var componentBufferObj))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            if (!(componentBufferObj is ComponentBuffer<TComponent> componentBuffer))
-                return null;
-            
-            componentBuffer.ResetIterator();
-            return new EntityComponentIterator<TComponent>(componentBuffer);
+            return componentBuffer;
         }
 
         public void Subscribe<TEvent>(Action<TEvent> callback) where TEvent : unmanaged =>
@@ -195,17 +135,5 @@ namespace Tofunaut.TofuECS
     public class ComponentAlreadyRegisteredException<TComponent> : Exception where TComponent : unmanaged
     {
         public override string Message => $"The component of type {typeof(TComponent)} is already registered.";
-    }
-
-    public class ComponentNotAssignedException<TComponent> : Exception where TComponent : unmanaged
-    {
-        public override string Message =>
-            $"The component of type {typeof(TComponent)} is not assigned to entity {_entityId}.";
-        private readonly int _entityId;
-
-        public ComponentNotAssignedException(int entityId)
-        {
-            _entityId = entityId;
-        }
     }
 }

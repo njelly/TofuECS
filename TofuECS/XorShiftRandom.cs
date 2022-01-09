@@ -24,6 +24,8 @@ namespace Tofunaut.TofuECS
         private const double DOUBLE_UNIT = 1.0 / (int.MaxValue + 1.0);
 
         // State Fields
+        public ulong StateX => x_;
+        public ulong StateY => y_;
         private ulong x_;
         private ulong y_;
 
@@ -46,6 +48,12 @@ namespace Tofunaut.TofuECS
         {
             x_ = seed << 3;
             y_ = seed >> 3;
+        }
+
+        public XorShiftRandom(ulong stateX, ulong stateY)
+        {
+            x_ = stateX;
+            y_ = stateY;
         }
 
         #endregion

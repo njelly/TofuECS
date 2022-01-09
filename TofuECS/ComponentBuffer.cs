@@ -3,26 +3,23 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    internal class ComponentBuffer<TComponent> where TComponent : unmanaged
+    public delegate void ModifyDelegate<TComponent>(ref TComponent component) where TComponent : unmanaged;
+    
+    public class ComponentBuffer<TComponent> where TComponent : unmanaged
     {
-        
-        /// <summary>
-        /// ComponentBuffers can act as linked lists when allowed to arbitrarily expand to fit data.
-        /// </summary>
-        internal ComponentBuffer<TComponent> NextBuffer { get; private set; }
+        public int Size => _buffer.Length;
 
-        private readonly TComponent[] _buffer;
-        private readonly int[] _entityAssignments;
+        private TComponent[] _buffer;
+        private int[] _entityAssignments;
         private readonly Queue<int> _freeIndexes;
-        private readonly bool _canExpand;
-        private int _currentIteratorIndex;
+        private readonly Dictionary<int, int> _entityIdToBufferIndex;
 
-        public ComponentBuffer(int size, bool canExpand)
+        internal ComponentBuffer(int size)
         {
             _buffer = new TComponent[size];
             _entityAssignments = new int[size];
             _freeIndexes = new Queue<int>(size);
-            _canExpand = canExpand;
+            _entityIdToBufferIndex = new Dictionary<int, int>();
 
             for (var i = size - 1; i >= 0; i--)
             {
@@ -31,115 +28,66 @@ namespace Tofunaut.TofuECS
             }
         }
 
-        public int Request(int entityId, TComponent component)
+        public bool Get(int entityId, out TComponent component)
         {
-            if (_freeIndexes.Count > 0)
+            if (_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
             {
-                if (!_canExpand)
-                    throw new BufferFullException<TComponent>();
-                
-                var nextIndex = _freeIndexes.Dequeue();
-                _entityAssignments[nextIndex] = entityId;
-                _buffer[nextIndex] = component;
-                return nextIndex;
-            }
-
-            if (NextBuffer == null)
-                NextBuffer = new ComponentBuffer<TComponent>(_buffer.Length, _canExpand);
-
-            return NextBuffer.Request(entityId, component) + _buffer.Length;
-        }
-
-        public void Release(int componentIndex)
-        {
-            if (componentIndex >= _buffer.Length)
-            {
-                if (NextBuffer == null)
-                    throw new InvalidComponentIndexException<TComponent>(componentIndex);
-
-                NextBuffer.Release(componentIndex - _buffer.Length);
-                return;
-            }
-            
-            _freeIndexes.Enqueue(componentIndex);
-            _entityAssignments[componentIndex] = ECS.InvalidEntityId;
-        }
-
-        public void ResetIterator() => _currentIteratorIndex = 0;
-
-        public bool Next(out int entityId, out TComponent component)
-        {
-            if (_currentIteratorIndex < _buffer.Length)
-            {
-                entityId = _entityAssignments[_currentIteratorIndex];
-                component = _buffer[_currentIteratorIndex];
-                _currentIteratorIndex++;
+                component = _buffer[componentIndex];
                 return true;
             }
 
-            entityId = ECS.InvalidEntityId;
-            component = default;
-            return false;
-        }
-        
-        public unsafe bool NextUnsafe(out int entityId, out TComponent* component)
-        {
-            if (_currentIteratorIndex < _buffer.Length)
-            {
-                fixed (TComponent* ptr = &_buffer[_currentIteratorIndex])
-                {
-                    entityId = _entityAssignments[_currentIteratorIndex];
-                    component = ptr;
-                    _currentIteratorIndex++;
-                    return true;
-                }
-            }
-
-            entityId = ECS.InvalidEntityId;
             component = default;
             return false;
         }
 
-        public TComponent Get(int componentIndex)
+        public bool GetAndModify(int entityId, ModifyDelegate<TComponent> modifyDelegate)
         {
-            if (componentIndex < _buffer.Length) 
-                return _buffer[componentIndex];
+            if (!_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex)) 
+                return false;
             
-            if (NextBuffer == null)
-                throw new InvalidComponentIndexException<TComponent>(componentIndex);
-
-            return NextBuffer.Get(componentIndex - _buffer.Length);
+            modifyDelegate.Invoke(ref _buffer[componentIndex]);
+            return true;
         }
 
-        public unsafe TComponent* GetUnsafe(int componentIndex)
+        public void Set(int entityId, in TComponent component = default)
         {
-            if (componentIndex < _buffer.Length)
+            if (_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
             {
-                fixed (TComponent* ptr = &_buffer[componentIndex])
-                    return ptr;
+                _buffer[componentIndex] = component;
+                return;
             }
             
-            if (NextBuffer == null)
-                throw new InvalidComponentIndexException<TComponent>(componentIndex);
-
-            return NextBuffer.GetUnsafe(componentIndex - _buffer.Length);
+            if (_freeIndexes.Count <= 0)
+                throw new BufferFullException<TComponent>();
+            
+            componentIndex = _freeIndexes.Dequeue();
+            _entityIdToBufferIndex.Add(entityId, componentIndex);
+            _entityAssignments[componentIndex] = entityId;
+            _buffer[componentIndex] = component;
         }
+
+        public bool Remove(int entityId)
+        {
+            if(!_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
+                return false;
+            
+            _freeIndexes.Enqueue(componentIndex);
+            _entityAssignments[componentIndex] = ECS.InvalidEntityId;
+            _entityIdToBufferIndex.Remove(entityId);
+            return true;
+        }
+
+        public ComponentIterator<TComponent> GetIterator() => new ComponentIterator<TComponent>(this);
+
+        internal int GetEntityAt(int index) => _entityAssignments[index];
+        internal TComponent GetAt(int index) => _buffer[index];
+        internal void ModifyAt(int index, ModifyDelegate<TComponent> modifyDelegate) =>
+            modifyDelegate.Invoke(ref _buffer[index]);
     }
 
     public class BufferFullException<TComponent> : Exception where TComponent : unmanaged
     {
         public override string Message =>
             $"Unable to complete the operation, the buffer of type {typeof(TComponent)} is full.";
-    }
-
-    public class InvalidComponentIndexException<TComponent> : Exception where TComponent : unmanaged
-    {
-        public override string Message =>
-            $"The component index {_index} for buffer type {typeof(TComponent)} is invalid.";
-        private readonly int _index;
-        public InvalidComponentIndexException(int index)
-        {
-            _index = index;
-        }
     }
 }

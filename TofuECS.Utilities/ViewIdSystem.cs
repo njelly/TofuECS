@@ -1,25 +1,25 @@
 ﻿namespace Tofunaut.TofuECS.Utilities
 {
-    public unsafe class ViewIdSystem : ISystem
+    public class ViewIdSystem : ISystem
     {
         public void Initialize(ECS ecs) { }
 
         public void Process(ECS ecs)
         {
-            var viewIdIterator = ecs.GetIterator<ViewId>();
-            while (viewIdIterator.NextUnsafe(out var entityId, out var viewId))
+            var viewIdIterator = ecs.Buffer<ViewId>().GetIterator();
+            while (viewIdIterator.Next())
             {
-                if (viewId->Id == viewId->PrevId)
-                    continue;
+                if (viewIdIterator.Current.Id == viewIdIterator.Current.PrevId)
+                    return;
 
+                viewIdIterator.ModifyCurrent((ref ViewId viewId) => { viewId.PrevId = viewId.Id; });
+                
                 var eventData = new OnViewIdChangedEvent
                 {
-                    ViewId = viewId->Id,
-                    PrevId = viewId->PrevId,
-                    EntityId = entityId,
+                    ViewId = viewIdIterator.Current.Id,
+                    PrevId = viewIdIterator.Current.PrevId,
+                    EntityId = viewIdIterator.CurrentEntity,
                 };
-
-                viewId->PrevId = viewId->Id;
                 
                 ecs.QueueExternalEvent(eventData);
             }
