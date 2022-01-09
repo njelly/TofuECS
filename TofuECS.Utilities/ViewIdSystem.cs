@@ -2,11 +2,11 @@
 {
     public class ViewIdSystem : ISystem
     {
-        public void Initialize(ECS ecs) { }
+        public void Initialize(Simulation s) { }
 
-        public void Process(ECS ecs)
+        public void Process(Simulation s)
         {
-            var viewIdIterator = ecs.Buffer<ViewId>().GetIterator();
+            var viewIdIterator = s.Buffer<ViewId>().GetIterator();
             while (viewIdIterator.Next())
             {
                 if (viewIdIterator.Current.Id == viewIdIterator.Current.PrevId)
@@ -21,7 +21,7 @@
                     EntityId = viewIdIterator.CurrentEntity,
                 };
                 
-                ecs.QueueExternalEvent(eventData);
+                s.QueueExternalEvent(eventData);
             }
         }
     }

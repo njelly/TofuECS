@@ -14,13 +14,14 @@ namespace Tofunaut.TofuECS
         internal ComponentIterator(ComponentBuffer<TComponent> buffer)
         {
             _buffer = buffer;
+            _currentIteratorIndex = -1;
         }
 
         public bool Next()
         {
             _currentIteratorIndex++;
             while (_currentIteratorIndex < _buffer.Size &&
-                   _buffer.GetEntityAt(_currentIteratorIndex) == ECS.InvalidEntityId)
+                   _buffer.GetEntityAt(_currentIteratorIndex) == Simulation.InvalidEntityId)
                 _currentIteratorIndex++;
 
             return _currentIteratorIndex < _buffer.Size;

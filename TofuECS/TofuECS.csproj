@@ -41,7 +41,7 @@
     <ItemGroup>
         <Compile Include="ComponentBuffer.cs" />
         <Compile Include="ComponentIterator.cs" />
-        <Compile Include="ECS.cs" />
+        <Compile Include="Simulation.cs" />
         <Compile Include="ECSDatabase.cs" />
         <Compile Include="ExternalEventDispatcher.cs" />
         <Compile Include="ILogService.cs" />

@@ -3,29 +3,29 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    public class ECS
+    public class Simulation
     {
         public const int InvalidEntityId = 0;
         public int CurrentTick { get; private set; }
         public bool IsInitialized { get; private set; }
         public ECSDatabase DB { get; }
         public ILogService Log { get; }
-        public XorShiftRandom RNG { get; private set; }
+        public XorShiftRandom RNG { get; }
         
         private readonly ISystem[] _systems;
-        private readonly Dictionary<Type, Action<ECS, object>[]> _typeToSystemEventListenerCallbacks;
+        private readonly Dictionary<Type, Action<Simulation, object>[]> _typeToSystemEventListenerCallbacks;
         private readonly ExternalEventDispatcher _externalEventDispatcher;
-        private Dictionary<Type, object> _typeToComponentBuffer;
+        private readonly Dictionary<Type, object> _typeToComponentBuffer;
         private int _entityIdCounter;
 
-        public ECS(ECSDatabase database, ILogService logService, ulong seed, ISystem[] systems)
+        public Simulation(ECSDatabase database, ILogService logService, ulong seed, ISystem[] systems)
         {
             DB = database;
             Log = logService;
             RNG = new XorShiftRandom(seed);
             _systems = systems;
             _typeToComponentBuffer = new Dictionary<Type, object>();
-            _typeToSystemEventListenerCallbacks = new Dictionary<Type, Action<ECS, object>[]>();
+            _typeToSystemEventListenerCallbacks = new Dictionary<Type, Action<Simulation, object>[]>();
             _externalEventDispatcher = new ExternalEventDispatcher();
         }
 
@@ -79,14 +79,14 @@ namespace Tofunaut.TofuECS
             if (!_typeToSystemEventListenerCallbacks.TryGetValue(typeof(TEventData),
                     out var systemEventListenerCallbacks))
             {
-                var callbacks = new List<Action<ECS, TEventData>>();
+                var callbacks = new List<Action<Simulation, TEventData>>();
                 foreach (var system in _systems)
                 {
                     if(system is ISystemEventListener<TEventData> systemEventListener)
                         callbacks.Add(systemEventListener.OnSystemEvent);
                 }
 
-                systemEventListenerCallbacks = new Action<ECS, object>[callbacks.Count];
+                systemEventListenerCallbacks = new Action<Simulation, object>[callbacks.Count];
                 for (var i = 0; i < callbacks.Count; i++)
                 {
                     var index = i;

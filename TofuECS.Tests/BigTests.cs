@@ -14,7 +14,7 @@ namespace TofuECS.Tests
         {
             // This test simply creates a large number of entities and components, modifies them with a system, and confirms
             // the results.
-            var s = new ECS(new ECSDatabase(), new Tests.TestLogService(), 1234, new ISystem[]
+            var s = new Simulation(new ECSDatabase(), new Tests.TestLogService(), 1234, new ISystem[]
             {
                 new CoordinateSystem(),
             });
@@ -24,7 +24,7 @@ namespace TofuECS.Tests
             s.Initialize();
 
             const int numTicks = 10;
-            for (var i = 0; i < numTicks; i++)
+            while(s.CurrentTick < numTicks)
                 s.Tick();
 
             var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
@@ -45,7 +45,7 @@ namespace TofuECS.Tests
 
         private class CoordinateSystem : ISystem
         {
-            public void Initialize(ECS ecs)
+            public void Initialize(Simulation s)
             {
                 const int width = 1000;
                 for (var i = 0; i < numCoordinates; i++)
@@ -54,8 +54,8 @@ namespace TofuECS.Tests
                     var y = i / width;
                     try
                     {
-                        var e = ecs.CreateEntity();
-                        var coordinateBuffer = ecs.Buffer<Coordinate>();
+                        var e = s.CreateEntity();
+                        var coordinateBuffer = s.Buffer<Coordinate>();
                         coordinateBuffer.Set(e, new Coordinate
                         {
                             StartX = x,
@@ -72,9 +72,9 @@ namespace TofuECS.Tests
                 }
             }
 
-            public void Process(ECS ecs)
+            public void Process(Simulation s)
             {
-                var coordinateIterator = ecs.Buffer<Coordinate>().GetIterator();
+                var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
                 while (coordinateIterator.Next())
                 {
                     coordinateIterator.ModifyCurrent((ref Coordinate coordinate) =>

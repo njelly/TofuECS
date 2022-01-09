@@ -93,7 +93,7 @@ namespace TofuECS.Tests
         [Test]
         public void AddRemoveComponentTest()
         {
-            var ecs = new ECS(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new Simulation(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
             {
                 new AddRemoveComponentExternalEventSystem(),
             });
@@ -134,7 +134,7 @@ namespace TofuECS.Tests
         [Test]
         public void SystemEventTests()
         {
-            var ecs = new ECS(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new Simulation(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
             {
                 new SystemEventTestSystem(),
             });
@@ -156,7 +156,7 @@ namespace TofuECS.Tests
         [Test]
         public void ExternalEventTests()
         {
-            var ecs = new ECS(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new Simulation(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
             {
                 new ExternalEventTestSystem(),
             });
@@ -215,17 +215,17 @@ namespace TofuECS.Tests
         
         private class SomeValueSystem : ISystem
         {
-            public void Initialize(ECS ecs) { }
+            public void Initialize(Simulation s) { }
 
-            public void Process(ECS ecs)
+            public void Process(Simulation s)
             {
-                var someValueIterator = ecs.Buffer<SomeValueComponent>().GetIterator();
+                var someValueIterator = s.Buffer<SomeValueComponent>().GetIterator();
                 while (someValueIterator.Next())
                 {
                     someValueIterator.ModifyCurrent((ref SomeValueComponent component) =>
                     {
                         component.IncrementingValue++;
-                        component.RandomValue = ecs.RNG.NextInt32();
+                        component.RandomValue = s.RNG.NextInt32();
                     });
                 }
             }
@@ -233,46 +233,46 @@ namespace TofuECS.Tests
 
         private class SystemEventTestSystem : ISystem, ISystemEventListener<IncrementValueSystemEvent>
         {
-            public void Initialize(ECS ecs) { }
+            public void Initialize(Simulation s) { }
 
-            public void Process(ECS ecs)
+            public void Process(Simulation s)
             {
-                var someValueIterator = ecs.Buffer<SomeValueComponent>().GetIterator();
+                var someValueIterator = s.Buffer<SomeValueComponent>().GetIterator();
                 while (someValueIterator.Next())
                 {
-                    ecs.RaiseSystemEvent(new IncrementValueSystemEvent
+                    s.RaiseSystemEvent(new IncrementValueSystemEvent
                     {
                         EntityId = someValueIterator.CurrentEntity,
                     });
                 }
             }
             
-            public void OnSystemEvent(ECS ecs, IncrementValueSystemEvent data)
+            public void OnSystemEvent(Simulation simulation, IncrementValueSystemEvent data)
             {
-                ecs.Buffer<SomeValueComponent>().GetAndModify(data.EntityId,
+                simulation.Buffer<SomeValueComponent>().GetAndModify(data.EntityId,
                     (ref SomeValueComponent someValueComponent) => { someValueComponent.EventIncrementingValue++; });
             }
         }
 
         private class ExternalEventTestSystem : ISystem
         {
-            public void Initialize(ECS ecs) { }
+            public void Initialize(Simulation s) { }
 
-            public void Process(ECS ecs)
+            public void Process(Simulation s)
             {
-                ecs.QueueExternalEvent(new TestExternalEvent());
+                s.QueueExternalEvent(new TestExternalEvent());
             }
         }
 
         private class AddRemoveComponentExternalEventSystem : ISystem
         {
-            public void Initialize(ECS ecs) { }
+            public void Initialize(Simulation s) { }
 
-            public void Process(ECS ecs)
+            public void Process(Simulation s)
             {
-                var iterator = ecs.Buffer<SomeValueComponent>().GetIterator();
+                var iterator = s.Buffer<SomeValueComponent>().GetIterator();
                 while(iterator.Next())
-                    ecs.QueueExternalEvent(new TestExternalEvent());
+                    s.QueueExternalEvent(new TestExternalEvent());
             }
         }
 

@@ -9,8 +9,8 @@ namespace Tofunaut.TofuECS
     {
         public int Size => _buffer.Length;
 
-        private TComponent[] _buffer;
-        private int[] _entityAssignments;
+        private readonly TComponent[] _buffer;
+        private readonly int[] _entityAssignments;
         private readonly Queue<int> _freeIndexes;
         private readonly Dictionary<int, int> _entityIdToBufferIndex;
 
@@ -23,7 +23,7 @@ namespace Tofunaut.TofuECS
 
             for (var i = size - 1; i >= 0; i--)
             {
-                _entityAssignments[i] = ECS.InvalidEntityId;
+                _entityAssignments[i] = Simulation.InvalidEntityId;
                 _freeIndexes.Enqueue(i);
             }
         }
@@ -72,7 +72,7 @@ namespace Tofunaut.TofuECS
                 return false;
             
             _freeIndexes.Enqueue(componentIndex);
-            _entityAssignments[componentIndex] = ECS.InvalidEntityId;
+            _entityAssignments[componentIndex] = Simulation.InvalidEntityId;
             _entityIdToBufferIndex.Remove(entityId);
             return true;
         }
