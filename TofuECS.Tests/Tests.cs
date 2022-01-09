@@ -91,6 +91,47 @@ namespace TofuECS.Tests
         */
 
         [Test]
+        public void AddRemoveComponentTest()
+        {
+            var ecs = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            {
+                new AddRemoveComponentExternalEventSystem(),
+            });
+            
+            ecs.RegisterComponent<SomeValueComponent>(16);
+
+            var testValue = 0;
+            void onTestExternalEvent(TestExternalEvent data)
+            {
+                testValue++;
+            }
+
+            ecs.Subscribe<TestExternalEvent>(onTestExternalEvent);
+
+            ecs.Initialize();
+
+            var e = ecs.CreateEntity();
+            
+            ecs.AssignComponent(e, new SomeValueComponent());
+            
+            ecs.Tick();
+            
+            Assert.True(testValue == 1);
+            
+            ecs.RemoveComponent<SomeValueComponent>(e);
+            
+            ecs.Tick();
+            
+            Assert.True(testValue == 1);
+            
+            ecs.AssignComponent(e, new SomeValueComponent());
+            
+            ecs.Tick();
+            
+            Assert.True(testValue == 2);
+        }
+
+        [Test]
         public void SystemEventTests()
         {
             var ecs = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
@@ -114,12 +155,12 @@ namespace TofuECS.Tests
         [Test]
         public void ExternalEventTests()
         {
-            var s = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new ECS(new DummyECSDatabase(), new TestLogService(), 1234, new ISystem[]
             {
                 new ExternalEventTestSystem(),
             });
             
-            s.Initialize();
+            ecs.Initialize();
 
             var testValue = 0;
             void onTestExternalEvent(TestExternalEvent data)
@@ -127,17 +168,17 @@ namespace TofuECS.Tests
                 testValue++;
             }
             
-            s.Subscribe<TestExternalEvent>(onTestExternalEvent);
+            ecs.Subscribe<TestExternalEvent>(onTestExternalEvent);
 
             const int numTicks = 10;
             
             for (var i = 0; i < numTicks; i++)
-                s.Tick();
+                ecs.Tick();
             
-            s.Unsubscribe<TestExternalEvent>(onTestExternalEvent);
+            ecs.Unsubscribe<TestExternalEvent>(onTestExternalEvent);
             
             for (var i = 0; i < numTicks; i++)
-                s.Tick();
+                ecs.Tick();
             
             Assert.IsTrue(testValue == numTicks);
         }
@@ -224,6 +265,18 @@ namespace TofuECS.Tests
             public void Process(ECS ecs)
             {
                 ecs.QueueExternalEvent(new TestExternalEvent());
+            }
+        }
+
+        private class AddRemoveComponentExternalEventSystem : ISystem
+        {
+            public void Initialize(ECS ecs) { }
+
+            public void Process(ECS ecs)
+            {
+                var iterator = ecs.GetIterator<SomeValueComponent>();
+                while(iterator.Next(out _, out _))
+                    ecs.QueueExternalEvent(new TestExternalEvent());
             }
         }
 

@@ -7,7 +7,7 @@ namespace Tofunaut.TofuECS
     {
         public const int InvalidEntityId = 0;
         public int CurrentTick { get; private set; }
-        public bool Initialized { get; private set; }
+        public bool IsInitialized { get; private set; }
         public IECSDatabase Database { get; }
         public ILogService Log { get; }
         public XorShiftRandom RNG { get; }
@@ -33,7 +33,7 @@ namespace Tofunaut.TofuECS
 
         public void RegisterComponent<TComponent>(int bufferLength, bool canExpand = true) where TComponent : unmanaged
         {
-            if (Initialized)
+            if (IsInitialized)
                 throw new ECSAlreadyInitializedException();
 
             if (_typeToComponentBuffer.ContainsKey(typeof(TComponent)))
@@ -44,13 +44,13 @@ namespace Tofunaut.TofuECS
 
         public void Initialize()
         {
-            if (Initialized)
+            if (IsInitialized)
                 throw new ECSAlreadyInitializedException();
             
             foreach(var system in _systems)
                 system.Initialize(this);
 
-            Initialized = true;
+            IsInitialized = true;
         }
 
         public int CreateEntity() => ++_entityIdCounter;
@@ -165,7 +165,7 @@ namespace Tofunaut.TofuECS
 
         public void Tick()
         {
-            if (!Initialized)
+            if (!IsInitialized)
                 throw new ECSNotInitializedException();
 
             CurrentTick++;

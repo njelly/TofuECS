@@ -62,7 +62,7 @@ namespace Tofunaut.TofuECS
             }
             
             _freeIndexes.Enqueue(componentIndex);
-            _entityAssignments[componentIndex] = -1;
+            _entityAssignments[componentIndex] = ECS.InvalidEntityId;
         }
 
         public void ResetIterator() => _currentIteratorIndex = 0;
