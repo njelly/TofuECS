@@ -26,8 +26,28 @@ namespace Tofunaut.TofuECS
         public void RegisterSingleton<TData>(TData data) where TData : struct =>
             _typeToSingletonData[typeof(TData)] = data;
 
-        public void GetById<TData>(int id, out TData data) => data = (TData) _idToData[id];
+        public bool GetById<TData>(int id, out TData data)
+        {
+            if (!_idToData.TryGetValue(id, out var dataObj) || !(dataObj is TData dataAsTData))
+            {
+                data = default;
+                return false;
+            }
 
-        public void GetSingleton<TData>(out TData data) => data = (TData) _typeToSingletonData[typeof(TData)];
+            data = dataAsTData;
+            return true;
+        }
+
+        public bool GetSingleton<TData>(out TData data)
+        { 
+            if (!_typeToSingletonData.TryGetValue(typeof(TData), out var dataObj) || !(dataObj is TData dataAsTData))
+            {
+                data = default;
+                return false;
+            }
+
+            data = dataAsTData;
+            return true;
+        }
     }
 }
