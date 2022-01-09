@@ -200,13 +200,10 @@ namespace TofuECS.Tests
                 9
             };
 
-            var unmanagedArray = new UnmanagedArray<int>(arr);
-            UnmanagedQuickSort.Sort(unmanagedArray, (a, b) => a.CompareTo(b));
+            ArrayQuickSort.Sort(arr, (a, b) => a.CompareTo(b));
 
-            for(var i = 1; i < unmanagedArray.Length; i++)
-                Assert.IsTrue(unmanagedArray[i] > unmanagedArray[i - 1]);
-            
-            unmanagedArray.Dispose();
+            for(var i = 1; i < arr.Length; i++)
+                Assert.IsTrue(arr[i] > arr[i - 1]);
         }
 
         private struct SomeValueComponent

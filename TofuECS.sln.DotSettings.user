@@ -82,6 +82,13 @@
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e0932859_002Dac69_002D4156_002D8e53_002D20b78e5ddfc8/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Tests #14" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests.BigTest&lt;/TestId&gt;
+    &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ed1bc7ba_002D16f4_002D4cd2_002D9bbc_002Dd2574a852a47/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #9" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
@@ -89,7 +96,7 @@
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f1162f3a_002D7ade_002D4ae9_002Dbc0a_002Dd11c1cdab564/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Tests #13" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f1162f3a_002D7ade_002D4ae9_002Dbc0a_002Dd11c1cdab564/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #13" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests.BigTest&lt;/TestId&gt;

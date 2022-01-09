@@ -2,13 +2,13 @@
 
 namespace Tofunaut.TofuECS.Utilities
 {
-    public static unsafe class UnmanagedQuickSort
+    public static unsafe class ArrayQuickSort
     {
-        public static void Sort<T>(UnmanagedArray<T> arr, Comparison<T> comp) where T : unmanaged =>
-            Sort(arr.RawValue, arr.Length, comp);
-    
-        public static void Sort<T>(T* arr, int length, Comparison<T> comp) where T : unmanaged =>
-            SortInternal(arr, 0, length - 1, comp);
+        public static void Sort<T>(T[] arr, Comparison<T> comp) where T : unmanaged
+        {
+            fixed(T* ptr = arr)
+                SortInternal(ptr, 0, arr.Length - 1, comp);
+        }
 
         private static void SortInternal<T>(T* arr, int left, int right, Comparison<T> comp) where T : unmanaged
         {
