@@ -16,6 +16,7 @@ namespace Tofunaut.TofuECS
         private readonly Dictionary<Type, Action<Simulation, object>[]> _typeToSystemEventListenerCallbacks;
         private readonly ExternalEventDispatcher _externalEventDispatcher;
         private readonly Dictionary<Type, object> _typeToComponentBuffer;
+        private readonly Dictionary<Type, object> _typeToInputArray;
         private int _entityIdCounter;
 
         public Simulation(ECSDatabase database, ILogService logService, ulong seed, ISystem[] systems)
@@ -25,6 +26,7 @@ namespace Tofunaut.TofuECS
             RNG = new XorShiftRandom(seed);
             _systems = systems;
             _typeToComponentBuffer = new Dictionary<Type, object>();
+            _typeToInputArray = new Dictionary<Type, object>();
             _typeToSystemEventListenerCallbacks = new Dictionary<Type, Action<Simulation, object>[]>();
             _externalEventDispatcher = new ExternalEventDispatcher();
         }
@@ -101,6 +103,18 @@ namespace Tofunaut.TofuECS
             
             foreach(var systemEventListenerCallback in systemEventListenerCallbacks)
                 systemEventListenerCallback.Invoke(this, eventData);
+        }
+
+        public void SetInput<TInput>(TInput[] inputs) where TInput : unmanaged =>
+            _typeToInputArray[typeof(TInput)] = inputs;
+
+        public TInput GetInput<TInput>(int index) where TInput : unmanaged
+        {
+            if (!_typeToInputArray.TryGetValue(typeof(TInput), out var inputArrayObj) ||
+                !(inputArrayObj is TInput[] inputs))
+                return default;
+
+            return inputs[index];
         }
 
         public void Tick()

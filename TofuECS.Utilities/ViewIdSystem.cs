@@ -11,8 +11,6 @@
             {
                 if (viewIdIterator.Current.Id == viewIdIterator.Current.PrevId)
                     return;
-
-                viewIdIterator.ModifyCurrent((ref ViewId viewId) => { viewId.PrevId = viewId.Id; });
                 
                 var eventData = new OnViewIdChangedEvent
                 {
@@ -20,6 +18,8 @@
                     PrevId = viewIdIterator.Current.PrevId,
                     EntityId = viewIdIterator.CurrentEntity,
                 };
+
+                viewIdIterator.ModifyCurrent((ref ViewId viewId) => { viewId.PrevId = viewId.Id; });
                 
                 s.QueueExternalEvent(eventData);
             }
