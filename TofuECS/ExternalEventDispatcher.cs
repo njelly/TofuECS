@@ -14,7 +14,7 @@ namespace Tofunaut.TofuECS
             _eventQueue = new Queue<(Type type, object data)>();
         }
 
-        public void Subscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged
+        public void Subscribe<TEventData>(Action<TEventData> callback) where TEventData : struct
         {
             if (!_typeToEvent.TryGetValue(typeof(TEventData), out var callbackList))
             {
@@ -25,7 +25,7 @@ namespace Tofunaut.TofuECS
             callbackList.Add((callback.Target, data => callback.Invoke((TEventData)data)));
         }
 
-        public void Unsubscribe<TEventData>(Action<TEventData> callback) where TEventData : unmanaged
+        public void Unsubscribe<TEventData>(Action<TEventData> callback) where TEventData : struct
         {
             if (!_typeToEvent.TryGetValue(typeof(TEventData), out var eventList)) 
                 return;
@@ -33,7 +33,7 @@ namespace Tofunaut.TofuECS
             eventList.RemoveAll(x => x.callbackTarget == callback.Target);
         }
 
-        public void Enqueue<TEventData>(TEventData data) where TEventData : unmanaged =>
+        public void Enqueue<TEventData>(TEventData data) where TEventData : struct =>
             _eventQueue.Enqueue((typeof(TEventData), data));
 
         public void Dispatch()

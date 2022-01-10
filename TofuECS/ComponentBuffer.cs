@@ -79,6 +79,35 @@ namespace Tofunaut.TofuECS
 
         public ComponentIterator<TComponent> GetIterator() => new ComponentIterator<TComponent>(this);
 
+        internal bool GetFirst(out TComponent component)
+        {
+            for (var i = 0; i < _buffer.Length; i++)
+            {
+                if (_entityAssignments[i] == Simulation.InvalidEntityId) 
+                    continue;
+                
+                component = _buffer[i];
+                return true;
+            }
+
+            component = default;
+            return false;
+        }
+        
+        internal bool ModifyFirst(ModifyDelegate<TComponent> modifyDelegate)
+        {
+            for (var i = 0; i < _buffer.Length; i++)
+            {
+                if (_entityAssignments[i] == Simulation.InvalidEntityId) 
+                    continue;
+
+                modifyDelegate(ref _buffer[i]);
+                return true;
+            }
+
+            return false;
+        }
+
         internal int GetEntityAt(int index) => _entityAssignments[index];
         internal TComponent GetAt(int index) => _buffer[index];
         internal void ModifyAt(int index, ModifyDelegate<TComponent> modifyDelegate) =>

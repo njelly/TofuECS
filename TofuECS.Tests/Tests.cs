@@ -139,17 +139,14 @@ namespace TofuECS.Tests
                 new SystemEventTestSystem(),
             });
             
-            ecs.RegisterComponent<SomeValueComponent>(3);
+            ecs.RegisterSingletonComponent<SomeValueComponent>();
             ecs.Initialize();
-
-            var entityA = ecs.CreateEntity();
-            ecs.Buffer<SomeValueComponent>().Set(entityA);
 
             const int numTicks = 10;
             for (var i = 0; i < numTicks; i++)
                 ecs.Tick();
 
-            Assert.IsTrue(ecs.Buffer<SomeValueComponent>().Get(entityA, out var someValueComponent) &&
+            Assert.IsTrue(ecs.GetSingletonComponent(out SomeValueComponent someValueComponent) &&
                           someValueComponent.EventIncrementingValue == numTicks);
         }
 

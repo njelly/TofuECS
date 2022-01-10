@@ -42,6 +42,12 @@ namespace Tofunaut.TofuECS
             _typeToComponentBuffer.Add(typeof(TComponent), new ComponentBuffer<TComponent>(bufferSize));
         }
 
+        public void RegisterSingletonComponent<TComponent>(TComponent component = default) where TComponent : unmanaged
+        {
+            RegisterComponent<TComponent>(1);
+            Buffer<TComponent>().Set(CreateEntity(), component);
+        }
+
         public void Initialize()
         {
             if (IsInitialized)
@@ -70,7 +76,7 @@ namespace Tofunaut.TofuECS
         public void Unsubscribe<TEvent>(Action<TEvent> callback) where TEvent : unmanaged =>
             _externalEventDispatcher.Unsubscribe(callback);
 
-        public void QueueExternalEvent<TEvent>(TEvent eventData) where TEvent : unmanaged
+        public void QueueExternalEvent<TEvent>(TEvent eventData) where TEvent : struct
         {
             _externalEventDispatcher.Enqueue(eventData);
         }
@@ -115,6 +121,25 @@ namespace Tofunaut.TofuECS
                 return default;
 
             return inputs[index];
+        }
+
+        public bool GetSingletonComponent<TComponent>(out TComponent component) where TComponent : unmanaged
+        {
+            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
+                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
+                throw new ComponentNotRegisteredException<TComponent>();
+
+            return componentBuffer.GetFirst(out component);
+        }
+
+        public bool ModifySingletonComponent<TComponent>(ModifyDelegate<TComponent> modifyDelegate)
+            where TComponent : unmanaged
+        {
+            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
+                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
+                throw new ComponentNotRegisteredException<TComponent>();
+
+            return componentBuffer.ModifyFirst(modifyDelegate);
         }
 
         public void Tick()

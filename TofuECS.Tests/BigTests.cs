@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Tofunaut.TofuECS;
 
@@ -18,7 +19,7 @@ namespace TofuECS.Tests
             {
                 new CoordinateSystem(),
             });
-            
+
             s.RegisterComponent<Coordinate>(numCoordinates);
             
             s.Initialize();
@@ -27,12 +28,9 @@ namespace TofuECS.Tests
             while(s.CurrentTick < numTicks)
                 s.Tick();
 
-            var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
-            while (coordinateIterator.Next())
-            {
-                Assert.IsTrue(coordinateIterator.Current.X == coordinateIterator.Current.StartX + numTicks);
-                Assert.IsTrue(coordinateIterator.Current.Y == coordinateIterator.Current.StartY + numTicks);
-            }
+            Assert.True(s.GetSingletonComponent(out Coordinate coordinate));
+            Assert.IsTrue(coordinate.X == coordinate.StartX + numTicks);
+            Assert.IsTrue(coordinate.Y == coordinate.StartY + numTicks);
         }
 
         private struct Coordinate
