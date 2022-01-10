@@ -182,7 +182,7 @@ namespace TofuECS.Tests
         }
 
         [Test]
-        public void UnmanagedQuickSortTests()
+        public void ArrayQuickSortTests()
         {
             var arr = new []
             {
