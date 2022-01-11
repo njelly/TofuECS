@@ -6,7 +6,7 @@
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=28cedb15_002D4a67_002D416f_002D8fed_002D27e82c1b4b7b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=28cedb15_002D4a67_002D416f_002D8fed_002D27e82c1b4b7b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Tests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests.BigTest&lt;/TestId&gt;
@@ -30,7 +30,7 @@
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=444462d7_002D8bc9_002D462e_002D927d_002Dc04187ab8a8c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Tests #15" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=444462d7_002D8bc9_002D462e_002D927d_002Dc04187ab8a8c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Tests #15" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.Tests&lt;/TestId&gt;
     &lt;TestId&gt;NUnit3x::0A6D0856-DE6E-4E28-AA86-FC0482A9D806::.NETFramework,Version=v4.8::TofuECS.Tests.BigTests.BigTest&lt;/TestId&gt;

@@ -9,9 +9,10 @@ namespace TofuECS.Tests
     public class BigTests
     { 
         private const int numCoordinates = 1000000;
+        private const int numBigStructs = 1;
         
         [Test]
-        public void BigTest()
+        public void LotsOfEntitiesAndComponentsTest()
         {
             // This test simply creates a large number of entities and components, modifies them with a system, and confirms
             // the results.
@@ -28,9 +29,35 @@ namespace TofuECS.Tests
             while(s.CurrentTick < numTicks)
                 s.Tick();
 
-            Assert.True(s.GetSingletonComponent(out Coordinate coordinate));
-            Assert.IsTrue(coordinate.X == coordinate.StartX + numTicks);
-            Assert.IsTrue(coordinate.Y == coordinate.StartY + numTicks);
+            var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
+            while (coordinateIterator.Next())
+            {
+                Assert.IsTrue(coordinateIterator.Current.X == coordinateIterator.Current.StartX + numTicks);
+                Assert.IsTrue(coordinateIterator.Current.Y == coordinateIterator.Current.StartY + numTicks);
+            }
+        }
+
+        [Test]
+        public unsafe void VeryLargeAndVeryManyComponentsTest()
+        {
+            var s = new Simulation(new ECSDatabase(), new Tests.TestLogService(), 1234, new ISystem[]
+            {
+                new ManyBigStructsSystem(),
+            });
+            
+            s.RegisterComponent<BigStruct>(numCoordinates);
+            s.Initialize();
+            s.Tick();
+
+            var iterator = s.Buffer<BigStruct>().GetIterator();
+            while (iterator.Next()) 
+            {
+                iterator.ModifyCurrentUnsafe(component =>
+                {
+                    Assert.True(component->SomeState[0]);
+                    //Assert.True(component.SomeState[BigStruct.MaxArraySize - 1]);
+                });
+            }
         }
 
         private struct Coordinate
@@ -84,5 +111,36 @@ namespace TofuECS.Tests
             }
         }
 
+        private class ManyBigStructsSystem : ISystem
+        {
+            public void Initialize(Simulation s)
+            {
+                var buffer = s.Buffer<BigStruct>();
+                for (var i = 0; i < numBigStructs; i++)
+                {
+                    var e = s.CreateEntity();
+                    buffer.Set(e);
+                }
+            }
+
+            public unsafe void Process(Simulation s)
+            {
+                var iterator = s.Buffer<BigStruct>().GetIterator();
+                while (iterator.Next())
+                {
+                    iterator.ModifyCurrentUnsafe(bigStruct =>
+                    {
+                        bigStruct->SomeState[0] = true;
+                        //bigStruct->SomeState[BigStruct.MaxArraySize - 1] = true;
+                    });
+                }
+            }
+        }
+
+        public unsafe struct BigStruct
+        {
+            public const int MaxArraySize = 1028040; // literally the largest possible bool array size
+            public fixed bool SomeState[MaxArraySize];
+        }
     }
 }

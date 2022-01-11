@@ -29,5 +29,8 @@ namespace Tofunaut.TofuECS
 
         public void ModifyCurrent(ModifyDelegate<TComponent> modifyDelegate) =>
             _buffer.ModifyAt(_currentIteratorIndex, modifyDelegate);
+
+        public void ModifyCurrentUnsafe(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe) =>
+            _buffer.ModifyAtUnsafe(_currentIteratorIndex, modifyDelegateUnsafe);
     }
 }

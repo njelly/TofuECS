@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Tofunaut.TofuECS
 {
     public delegate void ModifyDelegate<TComponent>(ref TComponent component) where TComponent : unmanaged;
+    public unsafe delegate void ModifyDelegateUnsafe<TComponent>(TComponent* component) where TComponent : unmanaged;
     
     public class ComponentBuffer<TComponent> where TComponent : unmanaged
     {
@@ -49,7 +50,18 @@ namespace Tofunaut.TofuECS
             return true;
         }
 
-        public void Set(int entityId, in TComponent component = default)
+        public unsafe bool GetAndModifyUnsafe(int entityId, ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
+        {
+            if (!_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex)) 
+                return false;
+
+            fixed (TComponent* ptr = &_buffer[componentIndex])
+                modifyDelegateUnsafe.Invoke(ptr);
+
+            return true;
+        }
+
+        public void Set(int entityId, in TComponent component)
         {
             if (_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
             {
@@ -64,6 +76,23 @@ namespace Tofunaut.TofuECS
             _entityIdToBufferIndex.Add(entityId, componentIndex);
             _entityAssignments[componentIndex] = entityId;
             _buffer[componentIndex] = component;
+        }
+
+        public void Set(int entityId)
+        {
+            if (_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
+            {
+                _buffer[componentIndex] = new TComponent();
+                return;
+            }
+            
+            if (_freeIndexes.Count <= 0)
+                throw new BufferFullException<TComponent>();
+            
+            componentIndex = _freeIndexes.Dequeue();
+            _entityIdToBufferIndex.Add(entityId, componentIndex);
+            _entityAssignments[componentIndex] = entityId;
+            _buffer[componentIndex] = new TComponent();
         }
 
         public bool Remove(int entityId)
@@ -108,10 +137,31 @@ namespace Tofunaut.TofuECS
             return false;
         }
 
+        internal unsafe bool ModifyFirstUnsafe(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
+        {
+            for (var i = 0; i < _buffer.Length; i++)
+            {
+                if (_entityAssignments[i] == Simulation.InvalidEntityId) 
+                    continue;
+
+                fixed (TComponent* ptr = &_buffer[i])
+                    modifyDelegateUnsafe(ptr);
+                
+                return true;
+            }
+
+            return false;
+        }
+
         internal int GetEntityAt(int index) => _entityAssignments[index];
         internal TComponent GetAt(int index) => _buffer[index];
         internal void ModifyAt(int index, ModifyDelegate<TComponent> modifyDelegate) =>
             modifyDelegate.Invoke(ref _buffer[index]);
+        internal unsafe void ModifyAtUnsafe(int index, ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
+        {
+            fixed (TComponent* ptr = &_buffer[index])
+                modifyDelegateUnsafe(ptr);
+        }
     }
 
     public class BufferFullException<TComponent> : Exception where TComponent : unmanaged

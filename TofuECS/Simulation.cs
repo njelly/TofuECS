@@ -42,10 +42,10 @@ namespace Tofunaut.TofuECS
             _typeToComponentBuffer.Add(typeof(TComponent), new ComponentBuffer<TComponent>(bufferSize));
         }
 
-        public void RegisterSingletonComponent<TComponent>(TComponent component = default) where TComponent : unmanaged
+        public void RegisterSingletonComponent<TComponent>() where TComponent : unmanaged
         {
             RegisterComponent<TComponent>(1);
-            Buffer<TComponent>().Set(CreateEntity(), component);
+            Buffer<TComponent>().Set(CreateEntity());
         }
 
         public void Initialize()
@@ -140,6 +140,16 @@ namespace Tofunaut.TofuECS
                 throw new ComponentNotRegisteredException<TComponent>();
 
             return componentBuffer.ModifyFirst(modifyDelegate);
+        }
+
+        public bool ModifySingletonComponentUnsafe<TComponent>(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
+            where TComponent : unmanaged
+        {
+            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
+                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
+                throw new ComponentNotRegisteredException<TComponent>();
+
+            return componentBuffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
         }
 
         public void Tick()
