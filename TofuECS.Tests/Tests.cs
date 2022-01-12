@@ -9,132 +9,42 @@ namespace TofuECS.Tests
     [TestFixture]
     public class Tests
     {
-        /*
-        [Test]
-        public void RollbackTests()
-        {
-            var s = new Simulation(new RollbackTestSimulationConfig(), new DummyECSDatabase(),
-                new TestLogService(), new ISystem[]
-                {
-                    new SomeValueSystem(),
-                });
-            
-            s.RegisterComponent<SomeValueComponent>();
-            s.Initialize();
-
-            var entityA = s.CurrentFrame.CreateEntity();
-            s.CurrentFrame.AddComponent<SomeValueComponent>(entityA);
-
-            var randomAt30 = 0;
-            var randomAt15 = 0;
-            for (var i = 0; i < 30; i++)
-            {
-                s.Tick();
-
-                switch (s.CurrentFrame.Number)
-                {
-                    case 30:
-                        randomAt30 = s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).RandomValue;
-                        break;
-                    case 15:
-                        randomAt15 = s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).RandomValue;
-                        break;
-                }Ωz
-            }
-            
-            Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).IncrementingValue == 30);
-            s.RollbackTo(15);
-            Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).IncrementingValue == 15);
-            s.RollbackTo(2);
-            Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).IncrementingValue == 2);
-            
-            // The simulation can "rollback" into the future if the frames have already been processed, although I'm not
-            // sure why this would be desirable...
-            s.RollbackTo(29);
-            Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).IncrementingValue == 29);
-            // ...although frame 30 has not been processed, so we cannot "rollback" to it or any frames beyond it.
-            Assert.Catch<InvalidRollbackException>(() =>
-            {
-                s.RollbackTo(30);
-            });
-            
-            // frame 1 is too far back to rollback to, now that we've processed 29 frames
-            // ISimulationConfig.FramesInMemory - 2 is the max number of frames we can rollback to from the highest processed frame
-            Assert.Catch<InvalidRollbackException>(() =>
-            {
-                s.RollbackTo(1);
-            });
-            // frame -1 is obviously invalid
-            Assert.Catch<InvalidRollbackException>(() =>
-            {
-                s.RollbackTo(-1);
-            });
-            
-            // make sure RNG is the same when the sim is played back
-            for (var i = 0; i < 30; i++)
-            {
-                s.Tick();
-
-                switch (s.CurrentFrame.Number)
-                {
-                    case 30:
-                        Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).RandomValue == randomAt30);
-                        break;
-                    case 15:
-                        Assert.IsTrue(s.CurrentFrame.GetComponent<SomeValueComponent>(entityA).RandomValue == randomAt15);
-                        break;
-                }
-            }
-            
-            s.Shutdown();
-        }
-        */
-
         [Test]
         public void AddRemoveComponentTest()
         {
-            var ecs = new Simulation(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var s = new Simulation(new TestLogService(), new ISystem[]
             {
-                new AddRemoveComponentExternalEventSystem(),
+                new SomeValueSystem(),
             });
             
-            ecs.RegisterComponent<SomeValueComponent>(16);
+            s.RegisterSingletonComponent<XorShiftRandom>();
+            s.RegisterComponent<SomeValueComponent>(16);
 
-            var testValue = 0;
-            void onTestExternalEvent(TestExternalEvent data)
-            {
-                testValue++;
-            }
+            s.Initialize();
 
-            ecs.Subscribe<TestExternalEvent>(onTestExternalEvent);
-
-            ecs.Initialize();
-
-            var e = ecs.CreateEntity();
+            var e = s.CreateEntity();
             
-            ecs.Buffer<SomeValueComponent>().Set(e);
+            s.Buffer<SomeValueComponent>().Set(e);
             
-            ecs.Tick();
+            s.Tick();
             
-            Assert.True(testValue == 1);
+            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out var theFirstComponent) && theFirstComponent.IncrementingValue == 1);
+            Assert.True(s.Buffer<SomeValueComponent>().Remove(e));
+            Assert.False(s.Buffer<SomeValueComponent>().Get(e, out _));
             
-            Assert.True(ecs.Buffer<SomeValueComponent>().Remove(e));
+            s.Tick();
             
-            ecs.Tick();
+            s.Buffer<SomeValueComponent>().Set(e);
             
-            Assert.True(testValue == 1);
+            s.Tick();
             
-            ecs.Buffer<SomeValueComponent>().Set(e);
-            
-            ecs.Tick();
-            
-            Assert.True(testValue == 2);
+            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out var theSecondComponent) && theSecondComponent.IncrementingValue == 1);
         }
 
         [Test]
         public void SystemEventTests()
         {
-            var ecs = new Simulation(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new Simulation(new TestLogService(), new ISystem[]
             {
                 new SystemEventTestSystem(),
             });
@@ -149,40 +59,36 @@ namespace TofuECS.Tests
             Assert.IsTrue(ecs.GetSingletonComponent(out SomeValueComponent someValueComponent) &&
                           someValueComponent.EventIncrementingValue == numTicks);
         }
-
+        
         [Test]
-        public void ExternalEventTests()
+        public void InputEventTest()
         {
-            var ecs = new Simulation(new ECSDatabase(), new TestLogService(), 1234, new ISystem[]
+            var ecs = new Simulation(new TestLogService(), new ISystem[]
             {
-                new ExternalEventTestSystem(),
+                new InputTestSystem(),
             });
             
+            ecs.RegisterComponent<SomeValueComponent>(1);
             ecs.Initialize();
 
-            var testValue = 0;
-            void onTestExternalEvent(TestExternalEvent data)
+            const int incrementAmount = 5;
+            
+            ecs.ProcessInput(new InputTest
             {
-                testValue++;
-            }
+                SomeInputValue = incrementAmount,
+            });
             
-            ecs.Subscribe<TestExternalEvent>(onTestExternalEvent);
+            ecs.Tick();
 
-            const int numTicks = 10;
-            
-            for (var i = 0; i < numTicks; i++)
-                ecs.Tick();
-            
-            ecs.Unsubscribe<TestExternalEvent>(onTestExternalEvent);
-            
-            for (var i = 0; i < numTicks; i++)
-                ecs.Tick();
-            
-            Assert.IsTrue(testValue == numTicks);
+            var iterator = ecs.Buffer<SomeValueComponent>().GetIterator();
+            while (iterator.Next())
+            {
+                Assert.True(iterator.Current.IncrementingValue == incrementAmount);
+            }
         }
 
         [Test]
-        public void ArrayQuickSortTests()
+        public void ArrayQuickSortTest()
         {
             var arr = new []
             {
@@ -222,7 +128,12 @@ namespace TofuECS.Tests
                     someValueIterator.ModifyCurrent((ref SomeValueComponent component) =>
                     {
                         component.IncrementingValue++;
-                        component.RandomValue = s.RNG.NextInt32();
+                        var randValue = 0;
+                        s.ModifySingletonComponent((ref XorShiftRandom random) =>
+                        {
+                            randValue = random.NextInt32();
+                        });
+                        component.RandomValue = randValue;
                     });
                 }
             }
@@ -244,32 +155,30 @@ namespace TofuECS.Tests
                 }
             }
             
-            public void OnSystemEvent(Simulation simulation, IncrementValueSystemEvent data)
+            public void OnSystemEvent(Simulation simulation, in IncrementValueSystemEvent data)
             {
                 simulation.Buffer<SomeValueComponent>().GetAndModify(data.EntityId,
                     (ref SomeValueComponent someValueComponent) => { someValueComponent.EventIncrementingValue++; });
             }
         }
 
-        private class ExternalEventTestSystem : ISystem
+        private class InputTestSystem : ISystem, IInputEventListener<InputTest>
         {
             public void Initialize(Simulation s) { }
 
-            public void Process(Simulation s)
-            {
-                s.QueueExternalEvent(new TestExternalEvent());
-            }
-        }
+            public void Process(Simulation s) { }
 
-        private class AddRemoveComponentExternalEventSystem : ISystem
-        {
-            public void Initialize(Simulation s) { }
-
-            public void Process(Simulation s)
+            public void OnInputEvent(Simulation s, in InputTest input)
             {
                 var iterator = s.Buffer<SomeValueComponent>().GetIterator();
-                while(iterator.Next())
-                    s.QueueExternalEvent(new TestExternalEvent());
+                var someInputValue = input.SomeInputValue;
+                while (iterator.Next())
+                {
+                    iterator.ModifyCurrent((ref SomeValueComponent component) =>
+                    {
+                        component.IncrementingValue += someInputValue;
+                    });
+                }
             }
         }
 
@@ -299,6 +208,11 @@ namespace TofuECS.Tests
         private struct IncrementValueSystemEvent
         {
             public int EntityId;
+        }
+
+        private struct InputTest
+        {
+            public int SomeInputValue;
         }
         
         private struct TestExternalEvent { }

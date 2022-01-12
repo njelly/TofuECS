@@ -1,7 +1,7 @@
 namespace Tofunaut.TofuECS
 {
-    public interface ISystemEventListener<in TEvent> where TEvent : unmanaged
+    public interface ISystemEventListener<TEvent> where TEvent : struct
     {
-        void OnSystemEvent(Simulation simulation, TEvent data);
+        void OnSystemEvent(Simulation s, in TEvent data);
     }
 }

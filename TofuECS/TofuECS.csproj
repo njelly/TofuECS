@@ -41,14 +41,12 @@
     <ItemGroup>
         <Compile Include="ComponentBuffer.cs" />
         <Compile Include="ComponentIterator.cs" />
+        <Compile Include="IInputEventListener.cs" />
         <Compile Include="Simulation.cs" />
-        <Compile Include="ECSDatabase.cs" />
-        <Compile Include="ExternalEventDispatcher.cs" />
         <Compile Include="ILogService.cs" />
         <Compile Include="ISystem.cs" />
         <Compile Include="ISystemEventListener.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="XorShiftRandom.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

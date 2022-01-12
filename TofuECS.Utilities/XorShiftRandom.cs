@@ -8,14 +8,14 @@
 
 using System;
 
-namespace Tofunaut.TofuECS
+namespace Tofunaut.TofuECS.Utilities
 {
 
     /// <summary>
     ///   Generates pseudorandom primitive types with a 64-bit implementation
     ///   of the XorShift algorithm.
     /// </summary>
-    public class XorShiftRandom
+    public struct XorShiftRandom
     {
 
         #region Data Members
@@ -46,12 +46,16 @@ namespace Tofunaut.TofuECS
         /// </param>
         public XorShiftRandom(ulong seed)
         {
+            buffer_ = default;
+            bufferMask_ = default;
             x_ = seed << 3;
             y_ = seed >> 3;
         }
 
         public XorShiftRandom(ulong stateX, ulong stateY)
         {
+            buffer_ = default;
+            bufferMask_ = default;
             x_ = stateX;
             y_ = stateY;
         }

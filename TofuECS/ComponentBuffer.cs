@@ -13,14 +13,14 @@ namespace Tofunaut.TofuECS
         private readonly TComponent[] _buffer;
         private readonly int[] _entityAssignments;
         private readonly Queue<int> _freeIndexes;
-        private readonly Dictionary<int, int> _entityIdToBufferIndex;
+        private readonly Dictionary<int, int> _entityToIndex;
 
         internal ComponentBuffer(int size)
         {
             _buffer = new TComponent[size];
             _entityAssignments = new int[size];
             _freeIndexes = new Queue<int>(size);
-            _entityIdToBufferIndex = new Dictionary<int, int>();
+            _entityToIndex = new Dictionary<int, int>();
 
             for (var i = size - 1; i >= 0; i--)
             {
@@ -31,7 +31,7 @@ namespace Tofunaut.TofuECS
 
         public bool Get(int entityId, out TComponent component)
         {
-            if (_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
+            if (_entityToIndex.TryGetValue(entityId, out var componentIndex))
             {
                 component = _buffer[componentIndex];
                 return true;
@@ -43,7 +43,7 @@ namespace Tofunaut.TofuECS
 
         public bool GetAndModify(int entityId, ModifyDelegate<TComponent> modifyDelegate)
         {
-            if (!_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex)) 
+            if (!_entityToIndex.TryGetValue(entityId, out var componentIndex)) 
                 return false;
             
             modifyDelegate.Invoke(ref _buffer[componentIndex]);
@@ -52,7 +52,7 @@ namespace Tofunaut.TofuECS
 
         public unsafe bool GetAndModifyUnsafe(int entityId, ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
         {
-            if (!_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex)) 
+            if (!_entityToIndex.TryGetValue(entityId, out var componentIndex)) 
                 return false;
 
             fixed (TComponent* ptr = &_buffer[componentIndex])
@@ -63,7 +63,7 @@ namespace Tofunaut.TofuECS
 
         public void Set(int entityId, in TComponent component)
         {
-            if (_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
+            if (_entityToIndex.TryGetValue(entityId, out var componentIndex))
             {
                 _buffer[componentIndex] = component;
                 return;
@@ -73,14 +73,14 @@ namespace Tofunaut.TofuECS
                 throw new BufferFullException<TComponent>();
             
             componentIndex = _freeIndexes.Dequeue();
-            _entityIdToBufferIndex.Add(entityId, componentIndex);
+            _entityToIndex.Add(entityId, componentIndex);
             _entityAssignments[componentIndex] = entityId;
             _buffer[componentIndex] = component;
         }
 
         public void Set(int entityId)
         {
-            if (_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
+            if (_entityToIndex.TryGetValue(entityId, out var componentIndex))
             {
                 _buffer[componentIndex] = new TComponent();
                 return;
@@ -90,23 +90,47 @@ namespace Tofunaut.TofuECS
                 throw new BufferFullException<TComponent>();
             
             componentIndex = _freeIndexes.Dequeue();
-            _entityIdToBufferIndex.Add(entityId, componentIndex);
+            _entityToIndex.Add(entityId, componentIndex);
             _entityAssignments[componentIndex] = entityId;
             _buffer[componentIndex] = new TComponent();
         }
 
         public bool Remove(int entityId)
         {
-            if(!_entityIdToBufferIndex.TryGetValue(entityId, out var componentIndex))
+            if(!_entityToIndex.TryGetValue(entityId, out var componentIndex))
                 return false;
             
             _freeIndexes.Enqueue(componentIndex);
             _entityAssignments[componentIndex] = Simulation.InvalidEntityId;
-            _entityIdToBufferIndex.Remove(entityId);
+            _entityToIndex.Remove(entityId);
             return true;
         }
 
         public ComponentIterator<TComponent> GetIterator() => new ComponentIterator<TComponent>(this);
+
+        internal void SetState(TComponent[] state, int[] entityAssignments)
+        {
+            Array.Copy(_buffer, state, Math.Min(state.Length, _buffer.Length));
+            Array.Copy(_entityAssignments, entityAssignments,
+                Math.Min(entityAssignments.Length, _entityAssignments.Length));
+            
+            _freeIndexes.Clear();
+            _entityToIndex.Clear();
+
+            for (var i = _entityAssignments.Length - 1; i >= 0; i--)
+            {
+                if (_entityAssignments[i] == Simulation.InvalidEntityId)
+                    _freeIndexes.Enqueue(i);
+                else
+                    _entityToIndex.Add(_entityAssignments[i], i);
+            }
+        }
+
+        internal void GetState(out TComponent[] state, out int[] entityAssignments)
+        {
+            state = _buffer;
+            entityAssignments = _entityAssignments;
+        }
 
         internal bool GetFirst(out TComponent component)
         {
