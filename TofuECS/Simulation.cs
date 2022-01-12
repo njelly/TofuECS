@@ -115,7 +115,7 @@ namespace Tofunaut.TofuECS
             componentBuffer.GetState(out components, out entityAssignments);
         }
 
-        public void SetState<TComponent>(TComponent[] components, int[] entityAssignments) where TComponent : unmanaged
+        public void SetState<TComponent>(TComponent[] components, int[] entityAssignments, int currentTick) where TComponent : unmanaged
         {
             if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
                 !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
@@ -124,7 +124,8 @@ namespace Tofunaut.TofuECS
             // need to make sure the entityIdCounter is larger than any entity that exists in the current state
             foreach (var entity in entityAssignments)
                 _entityIdCounter = Math.Max(entity + 1, _entityIdCounter);
-            
+
+            CurrentTick = currentTick;
             componentBuffer.SetState(components, entityAssignments);
         }
 
@@ -136,6 +137,8 @@ namespace Tofunaut.TofuECS
                     systemEventListener.OnSystemEvent(this, eventData);
             }
         }
+
+        public void Debug(string s) => Log.Debug(s);
 
         public void ProcessInput<TInput>(in TInput input) where TInput : struct
         {
