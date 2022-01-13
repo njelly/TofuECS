@@ -21,12 +21,12 @@ It is extremely important to remember the term ***stateless***. While there's no
 
 # Other Notes...
 
-This ECS is about as barebones as it could be. It is intended to be compatible with multi-threaded applications, Physics engines, and rollback engines. When using Unity, I recommend putting your ECS code inside an assembly definition that does not allow engine references (and allows unsafe code). The ECS ought to be Unity-agnostic, and because of the type constraints on your components, there's not any use for MonoBehaviours and GameObjects in your system logic anyway. 
+This ECS is about as bare-bones as it could be. It is intended to be compatible with multi-threaded applications, physics engines, and rollback engines. When using Unity, I recommend putting your ECS code inside an assembly definition that does not allow engine references (and allows unsafe code). The ECS ought to be Unity-agnostic, and because of the type constraints on your components, there's not any use for MonoBehaviours and GameObjects in your system logic anyway. 
 
 
 The utilities included in `TofuECS.Utilities` are simply there because I thought they'd be helpful for game developers:
 - `ArrayQuickSort`: An implementation of QuickSort that can be used for arrays.
-- `XorShiftRandom`: This can be used as a singleton component when psuedo-RNG is necessary.
+- `XorShiftRandom`: A very-lightly modified implementation of a super-fast RNG. It can, for example, be used as a singleton component when pseudo-RNG is necessary.
 
 `ILogService` is a boarder-line utility that is there to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????");`.
 

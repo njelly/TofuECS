@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    public class ComponentIterator<TComponent>where TComponent : unmanaged
+    public class ComponentIterator<TComponent> where TComponent : unmanaged
     {
         public TComponent Current => _buffer.GetAt(_currentIteratorIndex);
         public int CurrentEntity => _buffer.GetEntityAt(_currentIteratorIndex);

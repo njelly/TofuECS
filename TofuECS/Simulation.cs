@@ -26,31 +26,25 @@ namespace Tofunaut.TofuECS
 
         public void RegisterComponent<TComponent>(int bufferSize) where TComponent : unmanaged
         {
-            ThrowIfInvalidComponentRegistration<TComponent>();
+            if (IsInitialized)
+                throw new SimulationAlreadyInitializedException();
+
+            if (_typeToComponentBuffer.ContainsKey(typeof(TComponent)))
+                throw new ComponentAlreadyRegisteredException<TComponent>();
+            
             _typeToComponentBuffer.Add(typeof(TComponent), new ComponentBuffer<TComponent>(bufferSize));
         }
 
         public void RegisterSingletonComponent<TComponent>() where TComponent : unmanaged
         {
-            ThrowIfInvalidComponentRegistration<TComponent>();
             RegisterComponent<TComponent>(1);
             Buffer<TComponent>().Set(CreateEntity());
         }
 
         public void RegisterSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
         {
-            ThrowIfInvalidComponentRegistration<TComponent>();
             RegisterComponent<TComponent>(1);
             Buffer<TComponent>().Set(CreateEntity(), component);
-        }
-
-        private void ThrowIfInvalidComponentRegistration<TComponent>() where TComponent : unmanaged
-        {
-            if (IsInitialized)
-                throw new SimulationAlreadyInitializedException();
-
-            if (_typeToComponentBuffer.ContainsKey(typeof(TComponent)))
-                throw new ComponentAlreadyRegisteredException<TComponent>();
         }
 
         public void Initialize()
@@ -68,57 +62,38 @@ namespace Tofunaut.TofuECS
 
         public ComponentBuffer<TComponent> Buffer<TComponent>() where TComponent : unmanaged
         {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
-                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            return componentBuffer;
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            return buffer;
         }
 
         public bool GetSingletonComponent<TComponent>(out TComponent component) where TComponent : unmanaged
         {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
-                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            return componentBuffer.GetFirst(out component);
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            return buffer.GetFirst(out component);
         }
 
         public bool ModifySingletonComponent<TComponent>(ModifyDelegate<TComponent> modifyDelegate)
             where TComponent : unmanaged
         {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
-                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            return componentBuffer.ModifyFirst(modifyDelegate);
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            return buffer.ModifyFirst(modifyDelegate);
         }
 
         public bool ModifySingletonComponentUnsafe<TComponent>(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
             where TComponent : unmanaged
         {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
-                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            return componentBuffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            return buffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
         }
-        
+
         /// <summary>
         /// Gets the entire state of the buffer.
         /// </summary>
         /// <param name="components">An array of <typeparam name="TComponent"></typeparam>> representing the current state of the buffer.</param>
         /// <param name="entityAssignments">An array of integers representing entity assignments at each buffer index.</param>
         /// <exception cref="ComponentNotRegisteredException{TComponent}">Will be thrown if the component has not been registered.</exception>
-        public void GetState<TComponent>(out TComponent[] components, out int[] entityAssignments) 
-            where TComponent : unmanaged
-        {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
-                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
-
-            componentBuffer.GetState(out components, out entityAssignments);
-        }
+        public void GetState<TComponent>(out TComponent[] components, out int[] entityAssignments)
+            where TComponent : unmanaged => Buffer<TComponent>().GetState(out components, out entityAssignments);
 
         /// <summary>
         /// Overwrites the entire state of the buffer.
@@ -129,16 +104,14 @@ namespace Tofunaut.TofuECS
         /// <exception cref="ComponentNotRegisteredException{TComponent}">Will be thrown if the component has not been registered.</exception>
         public void SetState<TComponent>(TComponent[] components, int[] entityAssignments, int currentTick) where TComponent : unmanaged
         {
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
-                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
-                throw new ComponentNotRegisteredException<TComponent>();
+            var buffer = Buffer<TComponent>();
             
             // need to make sure the entityIdCounter is larger than any entity that exists in the current state
             foreach (var entity in entityAssignments)
                 _entityIdCounter = Math.Max(entity + 1, _entityIdCounter);
 
             CurrentTick = currentTick;
-            componentBuffer.SetState(components, entityAssignments);
+            buffer.SetState(components, entityAssignments);
         }
 
         // TODO: no op on release builds?
@@ -152,6 +125,7 @@ namespace Tofunaut.TofuECS
                 _typeToSystemEventListeners.Add(typeof(TEvent), systemEventListeners);
             }
 
+            // TODO: remove check in release builds?
             if (systemEventListeners.Length == 0)
                 throw new NoSystemImplementsSystemEventException<TEvent>();
             
@@ -161,6 +135,7 @@ namespace Tofunaut.TofuECS
 
         public void Tick()
         {
+            // TODO: remove check in release builds?
             if (!IsInitialized)
                 throw new SimulationNotInitializedException();
 
@@ -168,6 +143,17 @@ namespace Tofunaut.TofuECS
 
             foreach (var system in _systems)
                 system.Process(this);
+        }
+
+        private void ThrowIfBufferDoesntExist<TComponent>(out ComponentBuffer<TComponent> buffer)
+            where TComponent : unmanaged
+        {
+            // TODO: remove check in release builds?
+            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
+                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
+                throw new ComponentNotRegisteredException<TComponent>();
+
+            buffer = componentBuffer;
         }
     }
 
