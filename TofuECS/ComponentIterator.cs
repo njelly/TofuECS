@@ -5,8 +5,7 @@ namespace Tofunaut.TofuECS
 {
     public class ComponentIterator<TComponent> where TComponent : unmanaged
     {
-        public TComponent Current => _buffer.GetAt(_currentIteratorIndex);
-        public int CurrentEntity => _buffer.GetEntityAt(_currentIteratorIndex);
+        public int Entity => _buffer.GetEntityAt(_currentIteratorIndex);
         
         private readonly ComponentBuffer<TComponent> _buffer;
         private int _currentIteratorIndex;
@@ -27,10 +26,12 @@ namespace Tofunaut.TofuECS
             return _currentIteratorIndex < _buffer.Size;
         }
 
-        public void ModifyCurrent(ModifyDelegate<TComponent> modifyDelegate) =>
+        public void Get(out TComponent component) => _buffer.GetAt(_currentIteratorIndex, out component);
+
+        public void Modify(ModifyDelegate<TComponent> modifyDelegate) =>
             _buffer.ModifyAt(_currentIteratorIndex, modifyDelegate);
 
-        public void ModifyCurrentUnsafe(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe) =>
+        public void ModifyUnsafe(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe) =>
             _buffer.ModifyAtUnsafe(_currentIteratorIndex, modifyDelegateUnsafe);
     }
 }

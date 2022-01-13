@@ -123,8 +123,12 @@ namespace TofuECS.Tests
                 9
             };
 
+            var prevLength = arr.Length;
+
             ArrayQuickSort.Sort(arr, (a, b) => a.CompareTo(b));
 
+            Assert.True(prevLength == arr.Length);
+            
             for(var i = 1; i < arr.Length; i++)
                 Assert.IsTrue(arr[i] > arr[i - 1]);
         }
@@ -145,7 +149,7 @@ namespace TofuECS.Tests
                 var someValueIterator = s.Buffer<SomeValueComponent>().GetIterator();
                 while (someValueIterator.Next())
                 {
-                    someValueIterator.ModifyCurrent((ref SomeValueComponent component) =>
+                    someValueIterator.Modify((ref SomeValueComponent component) =>
                     {
                         component.IncrementingValue++;
                         var randValue = 0;
@@ -170,7 +174,7 @@ namespace TofuECS.Tests
                 {
                     s.SystemEvent(new IncrementValueSystemEvent
                     {
-                        EntityId = someValueIterator.CurrentEntity,
+                        EntityId = someValueIterator.Entity,
                     });
                 }
             }

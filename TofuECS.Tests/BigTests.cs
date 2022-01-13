@@ -32,8 +32,9 @@ namespace TofuECS.Tests
             var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
             while (coordinateIterator.Next())
             {
-                Assert.IsTrue(coordinateIterator.Current.X == coordinateIterator.Current.StartX + numTicks);
-                Assert.IsTrue(coordinateIterator.Current.Y == coordinateIterator.Current.StartY + numTicks);
+                coordinateIterator.Get(out var component);
+                Assert.IsTrue(component.X == component.StartX + numTicks);
+                Assert.IsTrue(component.Y == component.StartY + numTicks);
             }
         }
 
@@ -52,7 +53,7 @@ namespace TofuECS.Tests
         //    var iterator = s.Buffer<BigStruct>().GetIterator();
         //    while (iterator.Next()) 
         //    {
-        //        iterator.ModifyCurrentUnsafe(component =>
+        //        iterator.ModifyUnsafe(component =>
         //        {
         //            Assert.True(component->SomeState[0]);
         //            //Assert.True(component.SomeState[BigStruct.MaxArraySize - 1]);
@@ -102,7 +103,7 @@ namespace TofuECS.Tests
                 var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
                 while (coordinateIterator.Next())
                 {
-                    coordinateIterator.ModifyCurrent((ref Coordinate coordinate) =>
+                    coordinateIterator.Modify((ref Coordinate coordinate) =>
                     {
                         coordinate.X++;
                         coordinate.Y++;
@@ -128,7 +129,7 @@ namespace TofuECS.Tests
                 var iterator = s.Buffer<BigStruct>().GetIterator();
                 while (iterator.Next())
                 {
-                    iterator.ModifyCurrentUnsafe(bigStruct =>
+                    iterator.ModifyUnsafe(bigStruct =>
                     {
                         bigStruct->SomeState[0] = true;
                         //bigStruct->SomeState[BigStruct.MaxArraySize - 1] = true;

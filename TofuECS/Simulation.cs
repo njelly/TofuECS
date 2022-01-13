@@ -119,6 +119,9 @@ namespace Tofunaut.TofuECS
 
         public void SystemEvent<TEvent>(in TEvent eventData) where TEvent : struct
         {
+            if (!IsInitialized)
+                throw new SimulationNotInitializedException();
+            
             if (!_typeToSystemEventListeners.TryGetValue(typeof(TEvent), out var systemEventListeners))
             {
                 systemEventListeners = _systems.Where(x => x is ISystemEventListener<TEvent>).ToArray();

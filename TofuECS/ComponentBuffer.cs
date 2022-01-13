@@ -224,7 +224,7 @@ namespace Tofunaut.TofuECS
         }
 
         internal int GetEntityAt(int index) => _entityAssignments[index];
-        internal TComponent GetAt(int index) => _buffer[index];
+        internal void GetAt(int index, out TComponent component) => component = _buffer[index];
         internal void ModifyAt(int index, ModifyDelegate<TComponent> modifyDelegate) =>
             modifyDelegate.Invoke(ref _buffer[index]);
         internal unsafe void ModifyAtUnsafe(int index, ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)

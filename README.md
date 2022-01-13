@@ -12,12 +12,14 @@ There is no "Entity" class in TofuECS. They're just integers. Literally, they ar
 ## Components
 Components contain the state of the `Simulation`. They are stored in a managed array and accessed via the `Simulation`. Currently, components must be `unmananaged` structs (see [MS docs for the Unmanaged type constraint](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-7.3/blittable)), i.e, structs with only fields of types `int`, `bool`, etc. This does require some creativity on the part of the developer in order to inject data from Unity (or some other engine) into the sim, as common types like `string` or managed arrays are not allowed.
 
-[Use the `fixed` keyword in your component structs when arrays are necessary](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code#fixed-size-buffers). A caveat here is that there is a limit to how big your structs can be, which is a limitation of the mono runtime. For example, a component containing a fixed bool array of more than 1,000,000 elements is sketchy. 
+[Use the `fixed` keyword in your component structs when arrays are necessary](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code#fixed-size-buffers). A caveat here is that there is a limit to how big your structs can be, which is a limitation of the mono runtime. For example, a component containing a fixed bool array of more than 1,000,000 elements is sketchy. Additionally, fixed buffers may not be resized at runtime.
 
 ## Systems
-Systems are ***stateless***  classes that implement `ISystem` and are passed into the constructor of a `Simulation` instance. They are initialized once when the sim is initialized, and processed once each time `Tick()` is called on the sim.
+Systems are ***stateless***  classes that implement `ISystem` and are passed into the constructor of a `Simulation` instance. They are initialized once when the sim is initialized, and processed once each time `Tick()` is called on the sim. This is where all logic for your ECS should exist (*it is possible to put logic in functions on your components, but that seems messy in my opinion*).
 
 It is extremely important to remember the term ***stateless***. While there's nothing stopping you from adding fields (state) to an implementation of `ISystem`, doing so will likely lead to inconsistent results when re-simulating frames during a rollback or replay, and goes against the spirit of an ECS. *Remember to store all data in components*.
+
+All functions in an `ISystem` implementation, besides the required ones (`Initialize` and `Process`), ought to be `static` ([see the docs](https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2015/code-quality/ca1822-mark-members-as-static?view=vs-2015&redirectedfrom=MSDN)). This gives minor performance improvements and also reminds the developer to keep the class ***stateless***. 
 
 # Other Notes...
 
@@ -30,20 +32,26 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 
 `ILogService` is a boarder-line utility that is there to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????");`.
 
-Q: *"How do I inject configuration data into the Simulation?"*  A: Use `Simulation.RegisterSingletonComponent<T>(T myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<T>(out T myConfigData);` in the `Initialize` method of one of your `ISystem` implementations.
+- Q: *"How do I inject configuration data into the Simulation?"*  A: Use `Simulation.RegisterSingletonComponent<T>(T myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<T>(out T myConfigData);` in the `Initialize` method of one of your `ISystem` implementations.
 
-Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise a regular C# `event` inside of an `ISystem` instance. You might want to considering queuing data and processing it after the simulation finishes the tick, since the state could still change if the view is updated mid-tick. Just a suggestion.
 
-Q: *"What does the update loop look like for the Simulation?"* A:
-```
-private void Update()
-{
-    _simulation.SystemEvent<MyInput>(_myInput); // not necessary if no input exists
-    _simulation.Tick();
-}
-```
-Note here that system events are useful both for processing simulation input and for communicating between systems.
+- Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise a regular C# `event` inside of an `ISystem` instance. You might want to considering queuing data and processing it after the simulation finishes the tick, since the state could still change if the view is updated mid-tick. Just a suggestion.
 
-Q: *"How do I rollback my simulation to a previous state?"* A: Use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state. Checkout the example in TofuECS.Tests, `RollbackTest()`.  
+
+- Q: *"What does the update loop look like for the Simulation?"* A:
+    ```
+    private void Update()
+    {
+        _simulation.SystemEvent<MyInput>(_myInput); // not necessary if no input exists
+        _simulation.Tick();
+    }
+    ```
+    Note here that system events are useful both for processing simulation input and for communicating between systems. Every instance of `ISystemEventListener<MyInput>` in your systems array will immediately receive a callback that allows you to respond to the data.
+
+
+- Q: *"How do I rollback my simulation to a previous state?"* A: Use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state. Look at `RollbackTest()` in TofuECS.Tests.  
+
+
+- Q: *"I keep getting `BufferFullExeption` when running my simulation, how do I resize my buffer when I run out of space?"* A: You don't, sorry. Increase the size of your buffer when registering the component or consider some fundamental change to the structure of your `Simulation`.
 
 *TofuECS is in development! Vegan friendly.*
