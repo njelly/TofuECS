@@ -21,19 +21,18 @@ It is extremely important to remember the term ***stateless***. While there's no
 
 # Other Notes...
 
-This ECS is about as barebones as it could be. It is intended to be compatible with multi-threaded applications, Physics engines, and rollback engines.
+This ECS is about as barebones as it could be. It is intended to be compatible with multi-threaded applications, Physics engines, and rollback engines. When using Unity, I recommend putting your ECS code inside an assembly definition that does not allow engine references (and allows unsafe code). The ECS ought to be Unity-agnostic, and because of the type constraints on your components, there's not any use for MonoBehaviours and GameObjects in your system logic anyway. 
 
-The utilities included in `TofuECS.Utilities` are simply there because I thought they'd be helpful for game developers.
+
+The utilities included in `TofuECS.Utilities` are simply there because I thought they'd be helpful for game developers:
 - `ArrayQuickSort`: An implementation of QuickSort that can be used for arrays.
 - `XorShiftRandom`: This can be used as a singleton component when psuedo-RNG is necessary.
 
-When using Unity, I recommend putting your ECS code inside an assembly definition that does not allow engine references (and allows unsafe code).
+`ILogService` is a boarder-line utility that is there to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????");`.
 
-`ILogService` is a boarder-line utility that is there to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????)`.
+Q: *"How do I inject configuration data into the Simulation?"*  A: Use `Simulation.RegisterSingletonComponent<T>(T myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<T>(out T myConfigData);` in the `Initialize` method of one of your `ISystem` implementations.
 
-Q: *"How do I inject configuration data into the Simulation?"*  A: Use `Simulation.RegisterSingletonComponent<T>(T myConfigData)` and from there you'll probably want to just access it in the `Initialize` method of one of your `ISystem` implementations.
-
-Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise an `event` inside of an `ISystem` instance.
+Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise a regular C# `event` inside of an `ISystem` instance. You might want to considering queuing data and processing it after the simulation finishes the tick, since the state could still change if the view is updated mid-tick. Just a suggestion.
 
 Q: *"What does the update loop look like for the Simulation?"* A:
 ```
@@ -44,6 +43,6 @@ private void Update()
 }
 ```
 
-Q: *How do I rollback my simulation to a previous state? A: use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state.
+Q: *"How do I rollback my simulation to a previous state?"* A: Use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state.
 
 *TofuECS is in development! Vegan friendly.*

@@ -131,22 +131,36 @@ namespace Tofunaut.TofuECS
 
         public void RaiseSystemEvent<TEvent>(in TEvent eventData) where TEvent : unmanaged
         {
+            var isImplemented = false;
             foreach (var system in _systems)
             {
-                if(system is ISystemEventListener<TEvent> systemEventListener)
-                    systemEventListener.OnSystemEvent(this, eventData);
+                if (!(system is ISystemEventListener<TEvent> systemEventListener)) 
+                    continue;
+                
+                isImplemented = true;
+                systemEventListener.OnSystemEvent(this, eventData);
             }
+
+            if (!isImplemented)
+                throw new NoSystemImplementsSystemEventException<TEvent>();
         }
 
         public void Debug(string s) => Log.Debug(s);
 
         public void ProcessInput<TInput>(in TInput input) where TInput : struct
         {
+            var isImplemented = false;
             foreach (var system in _systems)
             {
-                if(system is IInputEventListener<TInput> inputEventListener)
-                    inputEventListener.OnInputEvent(this, input);
+                if (!(system is IInputEventListener<TInput> inputEventListener)) 
+                    continue;
+                
+                isImplemented = true;
+                inputEventListener.OnInputEvent(this, input);
             }
+
+            if (!isImplemented)
+                throw new NoSystemImplementsInputEventException<TInput>();
         }
 
         public void Tick()
@@ -161,12 +175,12 @@ namespace Tofunaut.TofuECS
         }
     }
 
-    public class NoSystemImplementsInputEventException<TEvent> : Exception where TEvent : unmanaged
+    public class NoSystemImplementsInputEventException<TEvent> : Exception where TEvent : struct
     {
         public override string Message => $"No system listens to input event of type {typeof(TEvent)}";
     }
 
-    public class NoSystemImplementsSystemEventException<TEvent> : Exception where TEvent : unmanaged
+    public class NoSystemImplementsSystemEventException<TEvent> : Exception where TEvent : struct
     {
         public override string Message => $"No system listens to system event of type {typeof(TEvent)}";
     }

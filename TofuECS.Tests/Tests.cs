@@ -10,6 +10,53 @@ namespace TofuECS.Tests
     public class Tests
     {
         [Test]
+        public void RollbackTest()
+        {
+            var s = new Simulation(new TestLogService(), new ISystem[]
+            {
+                new SomeValueSystem(),
+            });
+            
+            s.RegisterSingletonComponent<SomeValueComponent>();
+            s.RegisterSingletonComponent(new XorShiftRandom(1234));
+
+            s.Initialize();
+
+            // just tick for a while, doesn't really matter
+            const int numTicks = 10;
+            for(var i = 0; i < numTicks; i++)
+                s.Tick();
+
+            // get the current state of the sim
+            var rollbackTickNumber = s.CurrentTick;
+            s.GetState<SomeValueComponent>(out var someValueState, out var someValueAssignments);
+            s.GetState<XorShiftRandom>(out var xorShiftRandomState, out var xorShiftAssignments);
+            
+            // tick once
+            s.Tick();
+
+            // this is the value we'll be verifying
+            var randValue = 0;
+            if (s.GetSingletonComponent<SomeValueComponent>(out var someValueComponent))
+                randValue = someValueComponent.RandomValue;
+
+            // now just keep ticking into the future, it shouldn't really matter how many times
+            for(var i = 0; i < numTicks; i++)
+                s.Tick();
+            
+            // ROLLBACK!
+            s.SetState(someValueState, someValueAssignments, rollbackTickNumber);
+            s.SetState(xorShiftRandomState, xorShiftAssignments, rollbackTickNumber);
+            
+            // Our sim ought to be deterministic, so we Tick once just like we did after we got the state, and all our
+            // values should be the same.
+            s.Tick();
+            
+            Assert.True(s.GetSingletonComponent(out someValueComponent));
+            Assert.True(someValueComponent.RandomValue == randValue);
+        }
+        
+        [Test]
         public void AddRemoveComponentTest()
         {
             var s = new Simulation(new TestLogService(), new ISystem[]
@@ -184,25 +231,11 @@ namespace TofuECS.Tests
 
         public class TestLogService : ILogService
         {
-            public void Info(string s)
-            {
-                Console.WriteLine($"[INFO] {s}");
-            }
-
-            public void Warn(string s)
-            {
-                Console.WriteLine($"[WARN] {s}");
-            }
-
-            public void Error(string s)
-            {
-                Console.WriteLine($"[ERROR] {s}");
-            }
-
-            public void Exception(Exception e)
-            {
-                Console.WriteLine($"[EXCEPTION] {e.Message}");
-            }
+            public void Debug(string s) => Console.WriteLine($"[DEBUG] {s}");
+            public void Info(string s) => Console.WriteLine($"[INFO] {s}");
+            public void Warn(string s) => Console.WriteLine($"[WARN] {s}");
+            public void Error(string s) => Console.WriteLine($"[ERROR] {s}");
+            public void Exception(Exception e) => throw e;
         }
 
         private struct IncrementValueSystemEvent

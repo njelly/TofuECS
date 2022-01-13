@@ -24,14 +24,11 @@ namespace Tofunaut.TofuECS.Utilities
         private const double DOUBLE_UNIT = 1.0 / (int.MaxValue + 1.0);
 
         // State Fields
-        public ulong StateX => x_;
-        public ulong StateY => y_;
-        private ulong x_;
-        private ulong y_;
-
+        public ulong XState;
+        public ulong YState;
         // Buffer for optimized bit generation.
-        private ulong buffer_;
-        private ulong bufferMask_;
+        public ulong BufferState;
+        public ulong BufferMaskState;
 
         #endregion
 
@@ -46,32 +43,20 @@ namespace Tofunaut.TofuECS.Utilities
         /// </param>
         public XorShiftRandom(ulong seed)
         {
-            buffer_ = default;
-            bufferMask_ = default;
-            x_ = seed << 3;
-            y_ = seed >> 3;
+            BufferState = default;
+            BufferMaskState = default;
+            XState = seed << 3;
+            YState = seed >> 3;
         }
 
-        public XorShiftRandom(ulong stateX, ulong stateY)
+        public XorShiftRandom(ulong xState, ulong yState, ulong bufferState, ulong bufferMaskState)
         {
-            buffer_ = default;
-            bufferMask_ = default;
-            x_ = stateX;
-            y_ = stateY;
+            BufferState = bufferState;
+            BufferMaskState = bufferMaskState;
+            XState = xState;
+            YState = yState;
         }
 
-        #endregion
-        
-        #region TofuECS Modifications
-
-        internal void CopyState(XorShiftRandom other)
-        {
-            x_ = other.x_;
-            y_ = other.y_;
-            buffer_ = other.buffer_;
-            bufferMask_ = other.bufferMask_;
-        }
-        
         #endregion
 
         #region Public Methods
@@ -85,24 +70,24 @@ namespace Tofunaut.TofuECS.Utilities
         public bool NextBoolean()
         {
             bool _;
-            if (bufferMask_ > 0)
+            if (BufferMaskState > 0)
             {
-                _ = (buffer_ & bufferMask_) == 0;
-                bufferMask_ >>= 1;
+                _ = (BufferState & BufferMaskState) == 0;
+                BufferMaskState >>= 1;
                 return _;
             }
 
             ulong temp_x, temp_y;
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            buffer_ = temp_y + y_;
-            x_ = temp_x;
-            y_ = temp_y;
+            BufferState = temp_y + YState;
+            XState = temp_x;
+            YState = temp_y;
 
-            bufferMask_ = 0x8000000000000000;
-            return (buffer_ & 0xF000000000000000) == 0;
+            BufferMaskState = 0x8000000000000000;
+            return (BufferState & 0xF000000000000000) == 0;
         }
 
         /// <summary>
@@ -113,25 +98,25 @@ namespace Tofunaut.TofuECS.Utilities
         /// </returns>
         public byte NextByte()
         {
-            if (bufferMask_ >= 8)
+            if (BufferMaskState >= 8)
             {
-                byte _ = (byte)buffer_;
-                buffer_ >>= 8;
-                bufferMask_ >>= 8;
+                byte _ = (byte)BufferState;
+                BufferState >>= 8;
+                BufferMaskState >>= 8;
                 return _;
             }
 
             ulong temp_x, temp_y;
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            buffer_ = temp_y + y_;
-            x_ = temp_x;
-            y_ = temp_y;
+            BufferState = temp_y + YState;
+            XState = temp_x;
+            YState = temp_y;
 
-            bufferMask_ = 0x8000000000000;
-            return (byte)(buffer_ >>= 8);
+            BufferMaskState = 0x8000000000000;
+            return (byte)(BufferState >>= 8);
         }
 
         /// <summary>
@@ -145,14 +130,14 @@ namespace Tofunaut.TofuECS.Utilities
             short _;
             ulong temp_x, temp_y;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            _ = (short)(temp_y + y_);
+            _ = (short)(temp_y + YState);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -168,14 +153,14 @@ namespace Tofunaut.TofuECS.Utilities
             ushort _;
             ulong temp_x, temp_y;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            _ = (ushort)(temp_y + y_);
+            _ = (ushort)(temp_y + YState);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -191,14 +176,14 @@ namespace Tofunaut.TofuECS.Utilities
             int _;
             ulong temp_x, temp_y;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            _ = (int)(temp_y + y_);
+            _ = (int)(temp_y + YState);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -214,14 +199,14 @@ namespace Tofunaut.TofuECS.Utilities
             uint _;
             ulong temp_x, temp_y;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            _ = (uint)(temp_y + y_);
+            _ = (uint)(temp_y + YState);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -237,14 +222,14 @@ namespace Tofunaut.TofuECS.Utilities
             long _;
             ulong temp_x, temp_y;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            _ = (long)(temp_y + y_);
+            _ = (long)(temp_y + YState);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -260,14 +245,14 @@ namespace Tofunaut.TofuECS.Utilities
             ulong _;
             ulong temp_x, temp_y;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            _ = (ulong)(temp_y + y_);
+            _ = (ulong)(temp_y + YState);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -284,15 +269,15 @@ namespace Tofunaut.TofuECS.Utilities
             double _;
             ulong temp_x, temp_y, temp_z;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            temp_z = temp_y + y_;
+            temp_z = temp_y + YState;
             _ = DOUBLE_UNIT * (0x7FFFFFFF & temp_z);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -310,11 +295,11 @@ namespace Tofunaut.TofuECS.Utilities
             int l, m, h;
             ulong temp_x, temp_y, temp_z;
 
-            temp_x = y_;
-            x_ ^= x_ << 23;
-            temp_y = x_ ^ y_ ^ (x_ >> 17) ^ (y_ >> 26);
+            temp_x = YState;
+            XState ^= XState << 23;
+            temp_y = XState ^ YState ^ (XState >> 17) ^ (YState >> 26);
 
-            temp_z = temp_y + y_;
+            temp_z = temp_y + YState;
 
             h = (int)(temp_z & 0x1FFFFFFF);
             m = (int)(temp_z >> 16);
@@ -322,8 +307,8 @@ namespace Tofunaut.TofuECS.Utilities
 
             _ = new decimal(l, m, h, false, 28);
 
-            x_ = temp_x;
-            y_ = temp_y;
+            XState = temp_x;
+            YState = temp_y;
 
             return _;
         }
@@ -337,7 +322,7 @@ namespace Tofunaut.TofuECS.Utilities
         public unsafe void NextBytes(byte[] buffer)
         {
             // Localize state for stack execution
-            ulong x = x_, y = y_, temp_x, temp_y, z;
+            ulong x = XState, y = YState, temp_x, temp_y, z;
 
             fixed (byte* pBuffer = buffer)
             {
@@ -372,8 +357,8 @@ namespace Tofunaut.TofuECS.Utilities
             }
 
             // Store modified state in fields.
-            x_ = x;
-            y_ = y;
+            XState = x;
+            YState = y;
         }
 
         #endregion

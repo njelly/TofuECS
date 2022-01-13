@@ -110,8 +110,8 @@ namespace Tofunaut.TofuECS
 
         internal void SetState(TComponent[] state, int[] entityAssignments)
         {
-            Array.Copy(_buffer, state, Math.Min(state.Length, _buffer.Length));
-            Array.Copy(_entityAssignments, entityAssignments,
+            Array.Copy(state, _buffer, Math.Min(state.Length, _buffer.Length));
+            Array.Copy(entityAssignments, _entityAssignments,
                 Math.Min(entityAssignments.Length, _entityAssignments.Length));
             
             _freeIndexes.Clear();
@@ -128,8 +128,10 @@ namespace Tofunaut.TofuECS
 
         internal void GetState(out TComponent[] state, out int[] entityAssignments)
         {
-            state = _buffer;
-            entityAssignments = _entityAssignments;
+            state = new TComponent[_buffer.Length];
+            entityAssignments = new int[_entityAssignments.Length];
+            Array.Copy(_buffer, state, _buffer.Length);
+            Array.Copy(_entityAssignments, entityAssignments, _entityAssignments.Length);
         }
 
         internal bool GetFirst(out TComponent component)
