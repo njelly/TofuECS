@@ -35,7 +35,7 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 - Q: *"How do I inject configuration data into the Simulation?"*  A: Use `Simulation.RegisterSingletonComponent<T>(T myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<T>(out T myConfigData);` in the `Initialize` method of one of your `ISystem` implementations.
 
 
-- Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise a regular C# `event` inside of an `ISystem` instance. You might want to considering queuing data and processing it after the simulation finishes the tick, since the state could still change if the view is updated mid-tick. Just a suggestion.
+- Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise a regular C# `event` inside of an `ISystem` instance. You might want to consider queuing data and processing it after the simulation finishes the tick, since the state could still change if the view is updated mid-tick. Just a suggestion.
 
 
 - Q: *"What does the update loop look like for the Simulation?"* A:
