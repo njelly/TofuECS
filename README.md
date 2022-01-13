@@ -43,6 +43,6 @@ private void Update()
 }
 ```
 
-Q: *"How do I rollback my simulation to a previous state?"* A: Use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state.
+Q: *"How do I rollback my simulation to a previous state?"* A: Use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state. Checkout the example in TofuECS.Tests, `RollbackTest()`.  
 
 *TofuECS is in development! Vegan friendly.*
