@@ -38,10 +38,11 @@ Q: *"What does the update loop look like for the Simulation?"* A:
 ```
 private void Update()
 {
-    _simulation.ProcessInput<MyInput>(_myInput); // not necessary if no input exists
+    _simulation.SystemEvent<MyInput>(_myInput); // not necessary if no input exists
     _simulation.Tick();
 }
 ```
+Note here that system events are useful both for processing simulation input and for communicating between systems.
 
 Q: *"How do I rollback my simulation to a previous state?"* A: Use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state. Checkout the example in TofuECS.Tests, `RollbackTest()`.  
 

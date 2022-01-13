@@ -75,9 +75,9 @@ namespace TofuECS.Tests
             
             s.Tick();
             
-            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out var theFirstComponent) && theFirstComponent.IncrementingValue == 1);
+            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out var someValueComponent) && someValueComponent.IncrementingValue == 1);
             Assert.True(s.Buffer<SomeValueComponent>().Remove(e));
-            Assert.False(s.Buffer<SomeValueComponent>().Get(e, out _));
+            Assert.False(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent));
             
             s.Tick();
             
@@ -85,7 +85,7 @@ namespace TofuECS.Tests
             
             s.Tick();
             
-            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out var theSecondComponent) && theSecondComponent.IncrementingValue == 1);
+            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent) && someValueComponent.IncrementingValue == 1);
         }
 
         [Test]
@@ -105,33 +105,6 @@ namespace TofuECS.Tests
 
             Assert.IsTrue(ecs.GetSingletonComponent(out SomeValueComponent someValueComponent) &&
                           someValueComponent.EventIncrementingValue == numTicks);
-        }
-        
-        [Test]
-        public void InputEventTest()
-        {
-            var ecs = new Simulation(new TestLogService(), new ISystem[]
-            {
-                new InputTestSystem(),
-            });
-            
-            ecs.RegisterComponent<SomeValueComponent>(1);
-            ecs.Initialize();
-
-            const int incrementAmount = 5;
-            
-            ecs.ProcessInput(new InputTest
-            {
-                SomeInputValue = incrementAmount,
-            });
-            
-            ecs.Tick();
-
-            var iterator = ecs.Buffer<SomeValueComponent>().GetIterator();
-            while (iterator.Next())
-            {
-                Assert.True(iterator.Current.IncrementingValue == incrementAmount);
-            }
         }
 
         [Test]
@@ -195,7 +168,7 @@ namespace TofuECS.Tests
                 var someValueIterator = s.Buffer<SomeValueComponent>().GetIterator();
                 while (someValueIterator.Next())
                 {
-                    s.RaiseSystemEvent(new IncrementValueSystemEvent
+                    s.SystemEvent(new IncrementValueSystemEvent
                     {
                         EntityId = someValueIterator.CurrentEntity,
                     });
@@ -206,26 +179,6 @@ namespace TofuECS.Tests
             {
                 simulation.Buffer<SomeValueComponent>().GetAndModify(data.EntityId,
                     (ref SomeValueComponent someValueComponent) => { someValueComponent.EventIncrementingValue++; });
-            }
-        }
-
-        private class InputTestSystem : ISystem, IInputEventListener<InputTest>
-        {
-            public void Initialize(Simulation s) { }
-
-            public void Process(Simulation s) { }
-
-            public void OnInputEvent(Simulation s, in InputTest input)
-            {
-                var iterator = s.Buffer<SomeValueComponent>().GetIterator();
-                var someInputValue = input.SomeInputValue;
-                while (iterator.Next())
-                {
-                    iterator.ModifyCurrent((ref SomeValueComponent component) =>
-                    {
-                        component.IncrementingValue += someInputValue;
-                    });
-                }
             }
         }
 
@@ -247,7 +200,5 @@ namespace TofuECS.Tests
         {
             public int SomeInputValue;
         }
-        
-        private struct TestExternalEvent { }
     }
 }

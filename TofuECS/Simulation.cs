@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 
 namespace Tofunaut.TofuECS
 {
-    public delegate void ExternalEventDelegate<TEventData>(in TEventData data) where TEventData : struct;
-    
     public class Simulation
     {
         public const int InvalidEntityId = 0;
@@ -16,6 +13,7 @@ namespace Tofunaut.TofuECS
         
         private readonly ISystem[] _systems;
         private readonly Dictionary<Type, object> _typeToComponentBuffer;
+        private readonly Dictionary<Type, ISystem[]> _typeToSystemEventListeners;
         private int _entityIdCounter;
 
         public Simulation(ILogService logService, ISystem[] systems)
@@ -23,6 +21,7 @@ namespace Tofunaut.TofuECS
             Log = logService;
             _systems = systems;
             _typeToComponentBuffer = new Dictionary<Type, object>();
+            _typeToSystemEventListeners = new Dictionary<Type, ISystem[]>();
         }
 
         public void RegisterComponent<TComponent>(int bufferSize) where TComponent : unmanaged
@@ -104,7 +103,13 @@ namespace Tofunaut.TofuECS
 
             return componentBuffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
         }
-
+        
+        /// <summary>
+        /// Gets the entire state of the buffer.
+        /// </summary>
+        /// <param name="components">An array of <typeparam name="TComponent"></typeparam>> representing the current state of the buffer.</param>
+        /// <param name="entityAssignments">An array of integers representing entity assignments at each buffer index.</param>
+        /// <exception cref="ComponentNotRegisteredException{TComponent}">Will be thrown if the component has not been registered.</exception>
         public void GetState<TComponent>(out TComponent[] components, out int[] entityAssignments) 
             where TComponent : unmanaged
         {
@@ -115,6 +120,13 @@ namespace Tofunaut.TofuECS
             componentBuffer.GetState(out components, out entityAssignments);
         }
 
+        /// <summary>
+        /// Overwrites the entire state of the buffer.
+        /// </summary>
+        /// <param name="components">An array of <typeparam name="TComponent"></typeparam>> that will become the new state of the buffer.</param>
+        /// <param name="entityAssignments">An array of integers representing entity assignments at each buffer index.</param>
+        /// <param name="currentTick">Sets the current tick value.</param>
+        /// <exception cref="ComponentNotRegisteredException{TComponent}">Will be thrown if the component has not been registered.</exception>
         public void SetState<TComponent>(TComponent[] components, int[] entityAssignments, int currentTick) where TComponent : unmanaged
         {
             if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
@@ -129,38 +141,22 @@ namespace Tofunaut.TofuECS
             componentBuffer.SetState(components, entityAssignments);
         }
 
-        public void RaiseSystemEvent<TEvent>(in TEvent eventData) where TEvent : unmanaged
-        {
-            var isImplemented = false;
-            foreach (var system in _systems)
-            {
-                if (!(system is ISystemEventListener<TEvent> systemEventListener)) 
-                    continue;
-                
-                isImplemented = true;
-                systemEventListener.OnSystemEvent(this, eventData);
-            }
-
-            if (!isImplemented)
-                throw new NoSystemImplementsSystemEventException<TEvent>();
-        }
-
+        // TODO: no op on release builds?
         public void Debug(string s) => Log.Debug(s);
 
-        public void ProcessInput<TInput>(in TInput input) where TInput : struct
+        public void SystemEvent<TEvent>(in TEvent eventData) where TEvent : struct
         {
-            var isImplemented = false;
-            foreach (var system in _systems)
+            if (!_typeToSystemEventListeners.TryGetValue(typeof(TEvent), out var systemEventListeners))
             {
-                if (!(system is IInputEventListener<TInput> inputEventListener)) 
-                    continue;
-                
-                isImplemented = true;
-                inputEventListener.OnInputEvent(this, input);
+                systemEventListeners = _systems.Where(x => x is ISystemEventListener<TEvent>).ToArray();
+                _typeToSystemEventListeners.Add(typeof(TEvent), systemEventListeners);
             }
 
-            if (!isImplemented)
-                throw new NoSystemImplementsInputEventException<TInput>();
+            if (systemEventListeners.Length == 0)
+                throw new NoSystemImplementsSystemEventException<TEvent>();
+            
+            foreach(var system in systemEventListeners)
+                ((ISystemEventListener<TEvent>) system).OnSystemEvent(this, eventData);
         }
 
         public void Tick()
@@ -173,11 +169,6 @@ namespace Tofunaut.TofuECS
             foreach (var system in _systems)
                 system.Process(this);
         }
-    }
-
-    public class NoSystemImplementsInputEventException<TEvent> : Exception where TEvent : struct
-    {
-        public override string Message => $"No system listens to input event of type {typeof(TEvent)}";
     }
 
     public class NoSystemImplementsSystemEventException<TEvent> : Exception where TEvent : struct
