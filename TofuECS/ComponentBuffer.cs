@@ -193,34 +193,12 @@ namespace Tofunaut.TofuECS
             return false;
         }
         
-        internal bool ModifyFirst(ModifyDelegate<TComponent> modifyDelegate)
+        internal void ModifyFirst(ModifyDelegate<TComponent> modifyDelegate) => modifyDelegate(ref _buffer[0]);
+
+        internal unsafe void ModifyFirstUnsafe(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
         {
-            for (var i = 0; i < _buffer.Length; i++)
-            {
-                if (_entityAssignments[i] == Simulation.InvalidEntityId) 
-                    continue;
-
-                modifyDelegate(ref _buffer[i]);
-                return true;
-            }
-
-            return false;
-        }
-
-        internal unsafe bool ModifyFirstUnsafe(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
-        {
-            for (var i = 0; i < _buffer.Length; i++)
-            {
-                if (_entityAssignments[i] == Simulation.InvalidEntityId) 
-                    continue;
-
-                fixed (TComponent* ptr = &_buffer[i])
-                    modifyDelegateUnsafe(ptr);
-                
-                return true;
-            }
-
-            return false;
+            fixed (TComponent* ptr = &_buffer[0])
+                modifyDelegateUnsafe(ptr);
         }
 
         internal int GetEntityAt(int index) => _entityAssignments[index];

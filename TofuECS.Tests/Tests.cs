@@ -153,6 +153,7 @@ namespace TofuECS.Tests
                     {
                         component.IncrementingValue++;
                         var randValue = 0;
+                        // THIS IS NOT VALID: s.ModifySingletonComponent((ref XorShiftRandom r) => component.RandomValue = r.NextInt32())
                         s.ModifySingletonComponent((ref XorShiftRandom random) =>
                         {
                             randValue = random.NextInt32();
@@ -198,11 +199,6 @@ namespace TofuECS.Tests
         private struct IncrementValueSystemEvent
         {
             public int EntityId;
-        }
-
-        private struct InputTest
-        {
-            public int SomeInputValue;
         }
     }
 }

@@ -72,18 +72,18 @@ namespace Tofunaut.TofuECS
             return buffer.GetFirst(out component);
         }
 
-        public bool ModifySingletonComponent<TComponent>(ModifyDelegate<TComponent> modifyDelegate)
+        public void ModifySingletonComponent<TComponent>(ModifyDelegate<TComponent> modifyDelegate)
             where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            return buffer.ModifyFirst(modifyDelegate);
+            buffer.ModifyFirst(modifyDelegate);
         }
 
-        public bool ModifySingletonComponentUnsafe<TComponent>(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
+        public void ModifySingletonComponentUnsafe<TComponent>(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
             where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            return buffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
+            buffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
         }
 
         /// <summary>
