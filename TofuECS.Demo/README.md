@@ -1,5 +1,7 @@
 ﻿# Demos
 
+**Note:** This demo (unlike the rest of the project) targets .NET 6
+
 Currently there are 2 demos
 
 1. The simplest "Hello World" showcasing how to register systems and components
