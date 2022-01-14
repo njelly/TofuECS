@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Tofunaut.TofuECS
 {
     public class ComponentQuery
     {
-        private readonly IComponentBuffer[] _buffers;
+        private readonly IComponentBuffer _buffer;
         private readonly Simulation _simulation;
         private readonly Dictionary<Type, ComponentQuery> _typeToChildren;
         private readonly HashSet<int> _entities;
@@ -15,41 +14,58 @@ namespace Tofunaut.TofuECS
         internal ComponentQuery(Simulation simulation, IComponentBuffer buffer)
         {
             _simulation = simulation;
-            _buffers = new [] { buffer };
+            _buffer = buffer;
             _typeToChildren = new Dictionary<Type, ComponentQuery>();
-
-            buffer.OnComponentAdded += OnComponentAdded;
-            buffer.OnComponentRemoved += OnComponentRemoved;
-
             _parent = null;
             
             _entities = new HashSet<int>(buffer.GetEntities());
+
+            buffer.OnComponentAdded += OnComponentAdded;
+            buffer.OnComponentRemoved += OnComponentRemoved;
         }
 
-        private ComponentQuery(ComponentQuery parent, IComponentBuffer newBuffer)
+        private ComponentQuery(ComponentQuery parent, IComponentBuffer buffer)
         {
             _simulation = parent._simulation;
+            _buffer = buffer;
             _typeToChildren = new Dictionary<Type, ComponentQuery>();
-            _buffers = new IComponentBuffer[parent._buffers.Length + 1];
-            Array.Copy(parent._buffers, _buffers, parent._buffers.Length);
-            _buffers[_buffers.Length - 1] = newBuffer;
-            _entities = new HashSet<int>(parent._entities.Intersect(newBuffer.GetEntities()));
-
             _parent = parent;
 
-            newBuffer.OnComponentAdded += OnComponentAdded;
-            newBuffer.OnComponentRemoved += OnComponentRemoved;
+            _entities = new HashSet<int>();
+            foreach(var entity in parent._entities)
+                if (buffer.HasEntityAssignment(entity))
+                    _entities.Add(entity);
+
+            buffer.OnComponentAdded += OnComponentAdded;
+            buffer.OnComponentRemoved += OnComponentRemoved;
         }
 
         private void OnComponentAdded(object sender, EntityEventArgs args)
         {
-            if (_buffers.Where(x => x != sender).Any(x => !x.HasEntityAssignment(args.Entity)))
-                return;
-
+            var p = _parent;
+            while (p != null)
+            {
+                if (!p._buffer.HasEntityAssignment(args.Entity))
+                    return;
+                
+                p = p._parent;
+            }
+            
             _entities.Add(args.Entity);
             
             foreach (var kvp in _typeToChildren)
-                kvp.Value.OnComponentAdded(sender, args);
+                kvp.Value.OnComponentAddedInternal(args.Entity);
+        }
+
+        private void OnComponentAddedInternal(int entity)
+        {
+            if (!_buffer.HasEntityAssignment(entity))
+                return;
+            
+            _entities.Add(entity);
+            
+            foreach (var kvp in _typeToChildren)
+                kvp.Value.OnComponentAddedInternal(entity);
         }
 
         private void OnComponentRemoved(object sender, EntityEventArgs args)

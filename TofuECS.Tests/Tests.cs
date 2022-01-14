@@ -163,7 +163,7 @@ namespace TofuECS.Tests
                 return i;
             }
 
-            void validate(IEnumerator<int> e)
+            void validateEntitiesHaveComponents(IEnumerator<int> e)
             {
                 while (e.MoveNext())
                 {
@@ -172,26 +172,37 @@ namespace TofuECS.Tests
                 }
             }
 
+            void validate()
+            {
+                var aFirst = s.Query<TestComponentA>().And<TestComponentB>();
+                var bFirst = s.Query<TestComponentB>().And<TestComponentA>();
+                
+                validateEntitiesHaveComponents(aFirst.GetEnumerator());
+                validateEntitiesHaveComponents(bFirst.GetEnumerator());
+                
+                Assert.True(count(aFirst.GetEnumerator()) == count(bFirst.GetEnumerator()));
+            }
+
             var aAndB = s.Query<TestComponentA>().And<TestComponentB>();
             
             // remove the entities from the buffers
             Assert.True(count(aAndB.GetEnumerator()) == 2);
-            validate(aAndB.GetEnumerator());
+            validate();
             s.Buffer<TestComponentA>().Remove(entityA);
             Assert.True(count(aAndB.GetEnumerator()) == 1);
-            validate(aAndB.GetEnumerator());
+            validate();
             s.Buffer<TestComponentB>().Remove(entityB);
             Assert.True(count(aAndB.GetEnumerator()) == 0);
-            validate(aAndB.GetEnumerator());
+            validate();
             
             
             // add them back
             s.Buffer<TestComponentB>().Set(entityB);
             Assert.True(count(aAndB.GetEnumerator()) == 1);
-            validate(aAndB.GetEnumerator());
+            validate();
             s.Buffer<TestComponentA>().Set(entityA);
             Assert.True(count(aAndB.GetEnumerator()) == 2);
-            validate(aAndB.GetEnumerator());
+            validate();
         }
 
         private struct SomeValueComponent
