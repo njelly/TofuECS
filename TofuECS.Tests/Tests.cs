@@ -141,8 +141,8 @@ namespace TofuECS.Tests
             {
             });
             
-            s.RegisterComponent<TestComponentA>(10);
-            s.RegisterComponent<TestComponentB>(10);
+            s.RegisterComponent<TestComponentA>(2);
+            s.RegisterComponent<TestComponentB>(2);
             
             s.Initialize();
 
@@ -153,22 +153,13 @@ namespace TofuECS.Tests
             s.Buffer<TestComponentB>().Set(entityA);
             s.Buffer<TestComponentA>().Set(entityB);
             s.Buffer<TestComponentB>().Set(entityB);
-            
-            int count(IEnumerator e)
-            {
-                var i = 0;
-                while (e.MoveNext())
-                    i++;
 
-                return i;
-            }
-
-            void validateEntitiesHaveComponents(IEnumerator<int> e)
+            void validateEntitiesHaveComponents(ComponentQuery query)
             {
-                while (e.MoveNext())
+                foreach (var entity in query.Entities)
                 {
-                    Assert.True(s.Buffer<TestComponentA>().Get(e.Current, out _));
-                    Assert.True(s.Buffer<TestComponentB>().Get(e.Current, out _));
+                    Assert.True(s.Buffer<TestComponentA>().Get(entity, out _));
+                    Assert.True(s.Buffer<TestComponentB>().Get(entity, out _));
                 }
             }
 
@@ -177,31 +168,31 @@ namespace TofuECS.Tests
                 var aFirst = s.Query<TestComponentA>().And<TestComponentB>();
                 var bFirst = s.Query<TestComponentB>().And<TestComponentA>();
                 
-                validateEntitiesHaveComponents(aFirst.GetEnumerator());
-                validateEntitiesHaveComponents(bFirst.GetEnumerator());
+                validateEntitiesHaveComponents(aFirst);
+                validateEntitiesHaveComponents(bFirst);
                 
-                Assert.True(count(aFirst.GetEnumerator()) == count(bFirst.GetEnumerator()));
+                Assert.True(aFirst.Entities.Count == bFirst.Entities.Count);
             }
 
             var aAndB = s.Query<TestComponentA>().And<TestComponentB>();
             
             // remove the entities from the buffers
-            Assert.True(count(aAndB.GetEnumerator()) == 2);
+            Assert.True(aAndB.Entities.Count == 2);
             validate();
             s.Buffer<TestComponentA>().Remove(entityA);
-            Assert.True(count(aAndB.GetEnumerator()) == 1);
+            Assert.True(aAndB.Entities.Count == 1);
             validate();
             s.Buffer<TestComponentB>().Remove(entityB);
-            Assert.True(count(aAndB.GetEnumerator()) == 0);
+            Assert.True(aAndB.Entities.Count == 0);
             validate();
             
             
             // add them back
             s.Buffer<TestComponentB>().Set(entityB);
-            Assert.True(count(aAndB.GetEnumerator()) == 1);
+            Assert.True(aAndB.Entities.Count == 1);
             validate();
             s.Buffer<TestComponentA>().Set(entityA);
-            Assert.True(count(aAndB.GetEnumerator()) == 2);
+            Assert.True(aAndB.Entities.Count == 2);
             validate();
         }
 

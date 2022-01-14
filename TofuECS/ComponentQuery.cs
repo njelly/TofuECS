@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Tofunaut.TofuECS
 {
     public class ComponentQuery
     {
+        public IReadOnlyCollection<int> Entities => _entities;
+
         private readonly IComponentBuffer _buffer;
         private readonly Simulation _simulation;
         private readonly Dictionary<Type, ComponentQuery> _typeToChildren;
@@ -88,10 +91,5 @@ namespace Tofunaut.TofuECS
             _typeToChildren.Add(typeof(TComponent), componentQuery);
             return componentQuery;
         }
-
-        /// <summary>
-        /// Create an enumerator for all the entities that share components with the desired types.
-        /// </summary>
-        public IEnumerator<int> GetEnumerator() => _entities.GetEnumerator();
     }
 }
