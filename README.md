@@ -57,6 +57,6 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 
 - Q: *"How to I get all entities that share a set of components?"* A: use `s.Query<Foo>().And<Bar>().GetEnumerator();` to get all entities that with the components `Foo` and `Bar`. You can even curry together `And<TComponent>()` as many times as you'd like! Queries are cached and automatically updated as components are added to or removed from entities. 
 
-  - Note: you should always access identical queries using the same order of types. For example, `s.Query<Foo>().And<Bar>();` and `s.Query<Bar>().And<Foo>();` will create two separate objects that contain identical data.
+  - Note: you should always access identical queries using the same order of types. The reason for this is `ComponentQuery` is a tree data structure, with more specific instances as children. Therefore, `s.Query<Foo>().And<Bar>();` and `s.Query<Bar>().And<Foo>();` will create and cache two separate objects (technically 4 total), even though they contain identical data.
 
 *TofuECS is in development! Vegan friendly.*
