@@ -50,7 +50,7 @@ namespace TofuECS.Tests
         //    s.Initialize();
         //    s.Tick();
 //
-        //    var iterator = s.Buffer<BigStruct>().GetIterator();
+        //    var iterator = s.Buffer<BigStruct>().GetEnumerator();
         //    while (iterator.Next()) 
         //    {
         //        iterator.ModifyUnsafe(component =>

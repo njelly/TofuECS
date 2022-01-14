@@ -10,8 +10,10 @@ namespace Tofunaut.TofuECS
     /// A buffer containing the state information for the ECS.
     /// </summary>
     /// <typeparam name="TComponent">An unmanaged component type.</typeparam>
-    public class ComponentBuffer<TComponent> where TComponent : unmanaged
+    public class ComponentBuffer<TComponent> : IComponentBuffer where TComponent : unmanaged
     {
+        public event EventHandler<EntityEventArgs> OnComponentAdded;
+        public event EventHandler<EntityEventArgs> OnComponentRemoved; 
         public int Size => _buffer.Length;
 
         private readonly TComponent[] _buffer;
@@ -105,6 +107,7 @@ namespace Tofunaut.TofuECS
             _entityToIndex.Add(entityId, componentIndex);
             _entityAssignments[componentIndex] = entityId;
             _buffer[componentIndex] = component;
+            OnComponentAdded?.Invoke(this, new EntityEventArgs(entityId));
         }
 
         /// <summary>
@@ -127,6 +130,7 @@ namespace Tofunaut.TofuECS
             _entityToIndex.Add(entityId, componentIndex);
             _entityAssignments[componentIndex] = entityId;
             _buffer[componentIndex] = new TComponent();
+            OnComponentAdded?.Invoke(this, new EntityEventArgs(entityId));
         }
 
         /// <summary>
@@ -143,6 +147,7 @@ namespace Tofunaut.TofuECS
             _freeIndexes.Enqueue(componentIndex);
             _entityAssignments[componentIndex] = Simulation.InvalidEntityId;
             _entityToIndex.Remove(entityId);
+            OnComponentRemoved?.Invoke(this, new EntityEventArgs(entityId));
             return true;
         }
 
@@ -210,6 +215,9 @@ namespace Tofunaut.TofuECS
             fixed (TComponent* ptr = &_buffer[index])
                 modifyDelegateUnsafe(ptr);
         }
+
+        public IEnumerable<int> GetEntities() => _entityToIndex.Keys;
+        public bool HasEntityAssignment(int entity) => _entityToIndex.ContainsKey(entity);
     }
 
     public class BufferFullException<TComponent> : Exception where TComponent : unmanaged

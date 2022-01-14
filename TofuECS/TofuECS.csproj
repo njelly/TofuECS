@@ -41,6 +41,8 @@
     <ItemGroup>
         <Compile Include="ComponentBuffer.cs" />
         <Compile Include="ComponentIterator.cs" />
+        <Compile Include="ComponentQuery.cs" />
+        <Compile Include="IComponentBuffer.cs" />
         <Compile Include="Simulation.cs" />
         <Compile Include="ILogService.cs" />
         <Compile Include="ISystem.cs" />

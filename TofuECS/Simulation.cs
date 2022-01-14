@@ -12,16 +12,18 @@ namespace Tofunaut.TofuECS
         public ILogService Log { get; }
         
         private readonly ISystem[] _systems;
-        private readonly Dictionary<Type, object> _typeToComponentBuffer;
+        private readonly Dictionary<Type, IComponentBuffer> _typeToComponentBuffer;
         private readonly Dictionary<Type, ISystem[]> _typeToSystemEventListeners;
+        private readonly Dictionary<Type, ComponentQuery> _typeToQueries;
         private int _entityIdCounter;
 
         public Simulation(ILogService logService, ISystem[] systems)
         {
             Log = logService;
             _systems = systems;
-            _typeToComponentBuffer = new Dictionary<Type, object>();
+            _typeToComponentBuffer = new Dictionary<Type, IComponentBuffer>();
             _typeToSystemEventListeners = new Dictionary<Type, ISystem[]>();
+            _typeToQueries = new Dictionary<Type, ComponentQuery>();
         }
 
         public void RegisterComponent<TComponent>(int bufferSize) where TComponent : unmanaged
@@ -112,6 +114,9 @@ namespace Tofunaut.TofuECS
 
             CurrentTick = currentTick;
             buffer.SetState(components, entityAssignments);
+            
+            // need to clear the queries, they're no longer valid
+            _typeToQueries.Clear();
         }
 
         // TODO: no op on release builds?
@@ -155,8 +160,19 @@ namespace Tofunaut.TofuECS
             if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
                 !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
                 throw new ComponentNotRegisteredException<TComponent>();
-
+ 
             buffer = componentBuffer;
+        }
+
+        public ComponentQuery Query<TComponent>() where TComponent : unmanaged
+        {
+            if (_typeToQueries.TryGetValue(typeof(TComponent), out var componentQuery)) 
+                return componentQuery;
+            
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            componentQuery = new ComponentQuery(this, new IComponentBuffer[] { buffer });
+            _typeToQueries.Add(typeof(TComponent), componentQuery);
+            return componentQuery;
         }
     }
 

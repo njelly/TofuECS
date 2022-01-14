@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Tofunaut.TofuECS;
@@ -133,11 +134,76 @@ namespace TofuECS.Tests
                 Assert.IsTrue(arr[i] > arr[i - 1]);
         }
 
+        [Test]
+        public void QueryTest()
+        {            
+            var s = new Simulation(new TestLogService(), new ISystem[] 
+            {
+            });
+            
+            s.RegisterComponent<TestComponentA>(10);
+            s.RegisterComponent<TestComponentB>(10);
+            
+            s.Initialize();
+
+            var entityA = s.CreateEntity();
+            var entityB = s.CreateEntity();
+            
+            s.Buffer<TestComponentA>().Set(entityA);
+            s.Buffer<TestComponentB>().Set(entityA);
+            s.Buffer<TestComponentA>().Set(entityB);
+            s.Buffer<TestComponentB>().Set(entityB);
+            
+            int Count(IEnumerator e)
+            {
+                var i = 0;
+                while (e.MoveNext())
+                    i++;
+
+                return i;
+            }
+
+            void validate(IEnumerator<int> e)
+            {
+                while (e.MoveNext())
+                {
+                    Assert.True(s.Buffer<TestComponentA>().Get(e.Current, out _));
+                    Assert.True(s.Buffer<TestComponentB>().Get(e.Current, out _));
+                }
+            }
+
+            var aAndB = s.Query<TestComponentA>().And<TestComponentB>();
+            
+            Assert.True(Count(aAndB.GetEnumerator()) == 2);
+            validate(aAndB.GetEnumerator());
+            s.Buffer<TestComponentA>().Remove(entityA);
+            Assert.True(Count(aAndB.GetEnumerator()) == 1);
+            validate(aAndB.GetEnumerator());
+            s.Buffer<TestComponentB>().Remove(entityB);
+            Assert.True(Count(aAndB.GetEnumerator()) == 0);
+            validate(aAndB.GetEnumerator());
+            
+            
+            // add them back
+            s.Buffer<TestComponentA>().Set(entityA);
+            s.Buffer<TestComponentB>().Set(entityB);
+            Assert.True(Count(aAndB.GetEnumerator()) == 2);
+            validate(aAndB.GetEnumerator());
+        }
+
         private struct SomeValueComponent
         {
             public int IncrementingValue;
             public int RandomValue;
             public int EventIncrementingValue;
+        }
+
+        private struct TestComponentA
+        {
+        }
+
+        private struct TestComponentB
+        {
         }
         
         private class SomeValueSystem : ISystem
