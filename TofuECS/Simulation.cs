@@ -11,13 +11,13 @@ namespace Tofunaut.TofuECS
         public bool IsInitialized { get; private set; }
         public ILogService Log { get; }
         
-        private readonly IList<ISystem> _systems;
+        private readonly ISystem[] _systems;
         private readonly Dictionary<Type, IComponentBuffer> _typeToComponentBuffer;
         private readonly Dictionary<Type, ISystem[]> _typeToSystemEventListeners;
         private readonly Dictionary<Type, ComponentQuery> _typeToQueries;
         private int _entityIdCounter;
 
-        public Simulation(ILogService logService, IList<ISystem> systems)
+        public Simulation(ILogService logService, ISystem[] systems)
         {
             Log = logService;
             _systems = systems;
