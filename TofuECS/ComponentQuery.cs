@@ -10,24 +10,35 @@ namespace Tofunaut.TofuECS
         private readonly Simulation _simulation;
         private readonly Dictionary<Type, ComponentQuery> _typeToChildren;
         private readonly HashSet<int> _entities;
+        private readonly ComponentQuery _parent;
 
-        internal ComponentQuery(Simulation simulation, IComponentBuffer[] buffers)
+        internal ComponentQuery(Simulation simulation, IComponentBuffer buffer)
         {
             _simulation = simulation;
-            _buffers = buffers;
+            _buffers = new [] { buffer };
             _typeToChildren = new Dictionary<Type, ComponentQuery>();
 
-            foreach (var buffer in _buffers)
-            {
-                buffer.OnComponentAdded += OnComponentAdded;
-                buffer.OnComponentRemoved += OnComponentRemoved;
-            }
-            
-            var entities = _buffers[0].GetEntities();
-            for (var i = 1; i < _buffers.Length; i++)
-                entities = entities.Intersect(_buffers[i].GetEntities());
+            buffer.OnComponentAdded += OnComponentAdded;
+            buffer.OnComponentRemoved += OnComponentRemoved;
 
-            _entities = new HashSet<int>(entities);
+            _parent = null;
+            
+            _entities = new HashSet<int>(buffer.GetEntities());
+        }
+
+        private ComponentQuery(ComponentQuery parent, IComponentBuffer newBuffer)
+        {
+            _simulation = parent._simulation;
+            _typeToChildren = new Dictionary<Type, ComponentQuery>();
+            _buffers = new IComponentBuffer[parent._buffers.Length + 1];
+            Array.Copy(parent._buffers, _buffers, parent._buffers.Length);
+            _buffers[_buffers.Length - 1] = newBuffer;
+            _entities = new HashSet<int>(parent._entities.Intersect(newBuffer.GetEntities()));
+
+            _parent = parent;
+
+            newBuffer.OnComponentAdded += OnComponentAdded;
+            newBuffer.OnComponentRemoved += OnComponentRemoved;
         }
 
         private void OnComponentAdded(object sender, EntityEventArgs args)
@@ -36,9 +47,18 @@ namespace Tofunaut.TofuECS
                 return;
 
             _entities.Add(args.Entity);
+            
+            foreach (var kvp in _typeToChildren)
+                kvp.Value.OnComponentAdded(sender, args);
         }
-        
-        private void OnComponentRemoved(object sender, EntityEventArgs args) => _entities.Remove(args.Entity);
+
+        private void OnComponentRemoved(object sender, EntityEventArgs args)
+        {
+            _entities.Remove(args.Entity);
+
+            foreach (var kvp in _typeToChildren)
+                kvp.Value.OnComponentRemoved(sender, args);
+        }
 
         /// <summary>
         /// Access a more specific query for entities that share each component.
@@ -48,10 +68,7 @@ namespace Tofunaut.TofuECS
             if (_typeToChildren.TryGetValue(typeof(TComponent), out var componentQuery)) 
                 return componentQuery;
             
-            var buffers = new IComponentBuffer[_buffers.Length + 1];
-            Array.Copy(_buffers, buffers, _buffers.Length);
-            buffers[_buffers.Length] = _simulation.Buffer<TComponent>();
-            componentQuery = new ComponentQuery(_simulation, buffers);
+            componentQuery = new ComponentQuery(this, _simulation.Buffer<TComponent>());
             _typeToChildren.Add(typeof(TComponent), componentQuery);
             return componentQuery;
         }

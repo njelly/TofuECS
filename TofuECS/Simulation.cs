@@ -11,13 +11,13 @@ namespace Tofunaut.TofuECS
         public bool IsInitialized { get; private set; }
         public ILogService Log { get; }
         
-        private readonly ISystem[] _systems;
+        private readonly IList<ISystem> _systems;
         private readonly Dictionary<Type, IComponentBuffer> _typeToComponentBuffer;
         private readonly Dictionary<Type, ISystem[]> _typeToSystemEventListeners;
         private readonly Dictionary<Type, ComponentQuery> _typeToQueries;
         private int _entityIdCounter;
 
-        public Simulation(ILogService logService, ISystem[] systems)
+        public Simulation(ILogService logService, IList<ISystem> systems)
         {
             Log = logService;
             _systems = systems;
@@ -164,13 +164,16 @@ namespace Tofunaut.TofuECS
             buffer = componentBuffer;
         }
 
+        /// <summary>
+        /// Get a query for all entities with a component.
+        /// </summary>
         public ComponentQuery Query<TComponent>() where TComponent : unmanaged
         {
             if (_typeToQueries.TryGetValue(typeof(TComponent), out var componentQuery)) 
                 return componentQuery;
             
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            componentQuery = new ComponentQuery(this, new IComponentBuffer[] { buffer });
+            componentQuery = new ComponentQuery(this, buffer);
             _typeToQueries.Add(typeof(TComponent), componentQuery);
             return componentQuery;
         }

@@ -54,4 +54,9 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 
 - Q: *"I keep getting `BufferFullException` when running my simulation, how do I resize my buffer when I run out of space?"* A: You don't, sorry. Increase the size of your buffer when registering the component or consider some fundamental change to the structure of your `Simulation`.
 
+
+- Q: *"How to I get all entities that share a set of components?"* A: use `s.Query<Foo>().And<Bar>().GetEnumerator();` to get all entities that with the components `Foo` and `Bar`. You can even curry together `And<TComponent>()` as many times as you'd like! Queries are cached and automatically updated as components are added to or removed from entities. 
+
+  - Note: you should always access identical queries using the same order of types. For example, `s.Query<Foo>().And<Bar>();` and `s.Query<Bar>().And<Foo>();` will create two separate objects that contain identical data.
+
 *TofuECS is in development! Vegan friendly.*
