@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TofuECS.Demo": {
+      "commandName": "Project",
+      "commandLineArgs": "multi"
+    }
+  }
+}
