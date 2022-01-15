@@ -216,19 +216,22 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public class Iterator
         {
+            /// <summary>
+            /// The current index for accessing data in the buffer. NOT the entity.
+            /// </summary>
+            public int Current { get; private set; }
             
             /// <summary>
             /// The Entity assigned to the component at the current index.
             /// </summary>
-            public int Entity => _buffer._entityAssignments[_current];
-            
+            public int Entity => _buffer._entityAssignments[Current];
+
             private readonly ComponentBuffer<TComponent> _buffer;
-            private int _current;
 
             internal Iterator(ComponentBuffer<TComponent> buffer)
             {
                 _buffer = buffer;
-                _current = -1;
+                Current = -1;
             }
 
             /// <summary>
@@ -236,15 +239,13 @@ namespace Tofunaut.TofuECS
             /// </summary>
             public bool Next()
             {
-                _current++;
-                while (_current < _buffer._entityAssignments.Length &&
-                       _buffer._entityAssignments[_current] == Simulation.InvalidEntityId)
-                    _current++;
+                Current++;
+                while (Current < _buffer._entityAssignments.Length &&
+                       _buffer._entityAssignments[Current] == Simulation.InvalidEntityId)
+                    Current++;
 
-                return _current < _buffer._entityAssignments.Length;
+                return Current < _buffer._entityAssignments.Length;
             }
-
-            public static implicit operator int(Iterator iterator) => iterator._current;
         }
     }
 

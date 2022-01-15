@@ -220,10 +220,11 @@ namespace TofuECS.Tests
                 {
                     while (i.Next())
                     {
-                        buffer[i].IncrementingValue++;
+                        var index = i.Current;
+                        buffer[index].IncrementingValue++;
                         s.ModifySingletonComponent((ref XorShiftRandom random) =>
                         {
-                            buffer[i].RandomValue = random.NextInt32();
+                            buffer[index].RandomValue = random.NextInt32();
                         });
                     }
                 });
@@ -234,7 +235,7 @@ namespace TofuECS.Tests
         {
             public void Initialize(Simulation s) { }
 
-            public unsafe void Process(Simulation s)
+            public void Process(Simulation s)
             {
                 var entities = s.Buffer<SomeValueComponent>().GetEntities();
                 foreach (var e in entities)

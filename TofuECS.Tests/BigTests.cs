@@ -97,8 +97,9 @@ namespace TofuECS.Tests
                 {
                     while (i.Next())
                     {
-                        buffer[i].X++;
-                        buffer[i].Y++;
+                        var index = i.Current;
+                        buffer[index].X++;
+                        buffer[index].Y++;
                     }
                 });
             }
