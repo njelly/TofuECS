@@ -5,6 +5,8 @@ namespace Tofunaut.TofuECS
 {
     public delegate void ModifyDelegate<TComponent>(ref TComponent component) where TComponent : unmanaged;
     public unsafe delegate void ModifyDelegateUnsafe<TComponent>(TComponent* component) where TComponent : unmanaged;
+    public unsafe delegate void ModifyWithIteratorDelegateUnsafe<TComponent>(
+        ComponentBuffer<TComponent>.Iterator iterator, TComponent* component) where TComponent : unmanaged;
     
     /// <summary>
     /// A buffer containing the state information for the ECS.
@@ -150,12 +152,6 @@ namespace Tofunaut.TofuECS
             OnComponentRemoved?.Invoke(this, new EntityEventArgs(entityId));
             return true;
         }
-
-        /// <summary>
-        /// Creates a new iterator to loop through the buffer.
-        /// </summary>
-        /// <returns>An instance of ComponentIterator.</returns>
-        public ComponentIterator<TComponent> GetIterator() => new ComponentIterator<TComponent>(this);
         
         internal void SetState(TComponent[] state, int[] entityAssignments)
         {
@@ -206,18 +202,58 @@ namespace Tofunaut.TofuECS
                 modifyDelegateUnsafe(ptr);
         }
 
-        internal int GetEntityAt(int index) => _entityAssignments[index];
-        internal void GetAt(int index, out TComponent component) => component = _buffer[index];
-        internal void ModifyAt(int index, ModifyDelegate<TComponent> modifyDelegate) =>
-            modifyDelegate.Invoke(ref _buffer[index]);
-        internal unsafe void ModifyAtUnsafe(int index, ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
-        {
-            fixed (TComponent* ptr = &_buffer[index])
-                modifyDelegateUnsafe(ptr);
-        }
-
         public IEnumerable<int> GetEntities() => _entityToIndex.Keys;
         public bool HasEntityAssignment(int entity) => _entityToIndex.ContainsKey(entity);
+
+        /// <summary>
+        /// Use an iterator to modify the buffer directly via a fixed pointer.
+        /// </summary>
+        /// <param name="modifyDelegate"></param>
+        public unsafe void ModifyUnsafe(ModifyWithIteratorDelegateUnsafe<TComponent> modifyDelegate)
+        {
+            var iterator = new Iterator(this);
+            fixed (TComponent* ptr = _buffer)
+                modifyDelegate.Invoke(iterator, ptr);
+        }
+        
+        /// <summary>
+        /// Allows iterating safely over a pointer to the buffer data directly.
+        /// </summary>
+        public class Iterator
+        {
+            /// <summary>
+            /// The current index of the iterator used to access a component value from the buffer. NOT the entity.
+            /// </summary>
+            public int Current { get; private set; }
+            
+            /// <summary>
+            /// The Entity assigned to the component at the current index.
+            /// </summary>
+            public int Entity => _buffer._entityAssignments[Current];
+            
+            private readonly ComponentBuffer<TComponent> _buffer;
+
+            internal Iterator(ComponentBuffer<TComponent> buffer)
+            {
+                _buffer = buffer;
+                Current = -1;
+            }
+
+            /// <summary>
+            /// Returns true as long as there are more components assigned to entities in the buffer.
+            /// </summary>
+            public bool Next()
+            {
+                Current++;
+                while (Current < _buffer._entityAssignments.Length &&
+                       _buffer._entityAssignments[Current] == Simulation.InvalidEntityId)
+                    Current++;
+
+                return Current < _buffer._entityAssignments.Length;
+            }
+
+            public static implicit operator int(Iterator iterator) => iterator.Current;
+        }
     }
 
     public class BufferFullException<TComponent> : Exception where TComponent : unmanaged

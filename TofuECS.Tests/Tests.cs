@@ -215,23 +215,19 @@ namespace TofuECS.Tests
         {
             public void Initialize(Simulation s) { }
 
-            public void Process(Simulation s)
+            public unsafe void Process(Simulation s)
             {
-                var someValueIterator = s.Buffer<SomeValueComponent>().GetIterator();
-                while (someValueIterator.Next())
+                s.Buffer<SomeValueComponent>().ModifyUnsafe((i, buffer) =>
                 {
-                    someValueIterator.Modify((ref SomeValueComponent component) =>
+                    while (i.Next())
                     {
-                        component.IncrementingValue++;
-                        var randValue = 0;
-                        // THIS IS NOT VALID: s.ModifySingletonComponent((ref XorShiftRandom r) => component.RandomValue = r.NextInt32())
+                        buffer[i].IncrementingValue++;
                         s.ModifySingletonComponent((ref XorShiftRandom random) =>
                         {
-                            randValue = random.NextInt32();
+                            buffer[i].RandomValue = random.NextInt32();
                         });
-                        component.RandomValue = randValue;
-                    });
-                }
+                    }
+                });
             }
         }
 
@@ -239,14 +235,14 @@ namespace TofuECS.Tests
         {
             public void Initialize(Simulation s) { }
 
-            public void Process(Simulation s)
+            public unsafe void Process(Simulation s)
             {
-                var someValueIterator = s.Buffer<SomeValueComponent>().GetIterator();
-                while (someValueIterator.Next())
+                var entities = s.Buffer<SomeValueComponent>().GetEntities();
+                foreach (var e in entities)
                 {
                     s.SystemEvent(new IncrementValueSystemEvent
                     {
-                        EntityId = someValueIterator.Entity,
+                        EntityId = e,
                     });
                 }
             }

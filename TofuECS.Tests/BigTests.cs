@@ -29,12 +29,13 @@ namespace TofuECS.Tests
             while(s.CurrentTick < numTicks)
                 s.Tick();
 
-            var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
-            while (coordinateIterator.Next())
+            var buffer = s.Buffer<Coordinate>();
+            var coordinateEntities = s.Query<Coordinate>().Entities;
+            foreach (var e in coordinateEntities)
             {
-                coordinateIterator.Get(out var component);
-                Assert.IsTrue(component.X == component.StartX + numTicks);
-                Assert.IsTrue(component.Y == component.StartY + numTicks);
+                Assert.IsTrue(buffer.Get(e, out var c) 
+                              && c.X == c.StartX + numTicks
+                              && c.Y == c.StartY + numTicks);
             }
         }
 
@@ -78,65 +79,56 @@ namespace TofuECS.Tests
                 {
                     var x = i % width; 
                     var y = i / width;
-                    try
-                    {
-                        var e = s.CreateEntity();
-                        var coordinateBuffer = s.Buffer<Coordinate>();
-                        coordinateBuffer.Set(e, new Coordinate
-                        {
-                            StartX = x,
-                            StartY = y,
-                            X = x,
-                            Y = y,
-                        });
-                    }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine(exception);
-                        throw;
-                    }
-                }
-            }
-
-            public void Process(Simulation s)
-            {
-                var coordinateIterator = s.Buffer<Coordinate>().GetIterator();
-                while (coordinateIterator.Next())
-                {
-                    coordinateIterator.Modify((ref Coordinate coordinate) =>
-                    {
-                        coordinate.X++;
-                        coordinate.Y++;
-                    });
-                }
-            }
-        }
-
-        private class ManyBigStructsSystem : ISystem
-        {
-            public void Initialize(Simulation s)
-            {
-                var buffer = s.Buffer<BigStruct>();
-                for (var i = 0; i < numBigStructs; i++)
-                {
                     var e = s.CreateEntity();
-                    buffer.Set(e);
+                    var coordinateBuffer = s.Buffer<Coordinate>();
+                    coordinateBuffer.Set(e, new Coordinate
+                    {
+                        StartX = x,
+                        StartY = y,
+                        X = x,
+                        Y = y,
+                    });
                 }
             }
 
             public unsafe void Process(Simulation s)
             {
-                var iterator = s.Buffer<BigStruct>().GetIterator();
-                while (iterator.Next())
+                s.Buffer<Coordinate>().ModifyUnsafe((i, buffer) =>
                 {
-                    iterator.ModifyUnsafe(bigStruct =>
+                    while (i.Next())
                     {
-                        bigStruct->SomeState[0] = true;
-                        //bigStruct->SomeState[BigStruct.MaxArraySize - 1] = true;
-                    });
-                }
+                        buffer[i].X++;
+                        buffer[i].Y++;
+                    }
+                });
             }
         }
+
+        //private class ManyBigStructsSystem : ISystem
+        //{
+        //    public void Initialize(Simulation s)
+        //    {
+        //        var buffer = s.Buffer<BigStruct>();
+        //        for (var i = 0; i < numBigStructs; i++)
+        //        {
+        //            var e = s.CreateEntity();
+        //            buffer.Set(e);
+        //        }
+        //    }
+//
+        //    public unsafe void Process(Simulation s)
+        //    {
+        //        var iterator = s.Buffer<BigStruct>().GetIterator();
+        //        while (iterator.Next())
+        //        {
+        //            iterator.ModifyUnsafe(bigStruct =>
+        //            {
+        //                bigStruct->SomeState[0] = true;
+        //                //bigStruct->SomeState[BigStruct.MaxArraySize - 1] = true;
+        //            });
+        //        }
+        //    }
+        //}
 
         public unsafe struct BigStruct
         {
