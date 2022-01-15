@@ -179,36 +179,31 @@ namespace Tofunaut.TofuECS
             Array.Copy(_entityAssignments, entityAssignments, _entityAssignments.Length);
         }
 
-        internal bool GetFirst(out TComponent component)
-        {
-            for (var i = 0; i < _buffer.Length; i++)
-            {
-                if (_entityAssignments[i] == Simulation.InvalidEntityId) 
-                    continue;
-                
-                component = _buffer[i];
-                return true;
-            }
-
-            component = default;
-            return false;
-        }
-        
+        internal void GetFirst(out TComponent component) => component = _buffer[0];
         internal void ModifyFirst(ModifyDelegate<TComponent> modifyDelegate) => modifyDelegate(ref _buffer[0]);
-
         internal unsafe void ModifyFirstUnsafe(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
         {
             fixed (TComponent* ptr = &_buffer[0])
                 modifyDelegateUnsafe(ptr);
         }
 
+        /// <summary>
+        /// Access all the entities assigned to the buffer.
+        /// </summary>
         public IEnumerable<int> GetEntities() => _entityToIndex.Keys;
-        public bool HasEntityAssignment(int entity) => _entityToIndex.ContainsKey(entity);
+        
+        /// <summary>
+        /// Is the entity assigned to some component in the buffer.
+        /// </summary>
+        /// <param name="entityId">A unique entity identifier.</param>
+        /// <returns></returns>
+        public bool HasEntityAssignment(int entityId) => _entityToIndex.ContainsKey(entityId);
 
         /// <summary>
-        /// Use an iterator to modify the buffer directly via a fixed pointer.
+        /// Use an iterator to modify the buffer directly via a fixed pointer. This is the fastest way of iterating
+        /// through a component buffer.
         /// </summary>
-        /// <param name="modifyDelegate"></param>
+        /// <param name="modifyDelegate">A delegate that provides an iterator and access to the raw buffer data.</param>
         public unsafe void ModifyUnsafe(ModifyWithIteratorDelegateUnsafe<TComponent> modifyDelegate)
         {
             var iterator = new Iterator(this);
@@ -256,6 +251,9 @@ namespace Tofunaut.TofuECS
         }
     }
 
+    /// <summary>
+    /// Thrown when the buffer is full and no more entities can be assigned.
+    /// </summary>
     public class BufferFullException<TComponent> : Exception where TComponent : unmanaged
     {
         public override string Message =>

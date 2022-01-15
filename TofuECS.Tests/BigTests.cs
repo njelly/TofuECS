@@ -130,10 +130,10 @@ namespace TofuECS.Tests
         //    }
         //}
 
-        public unsafe struct BigStruct
-        {
-            public const int MaxArraySize = 1028040; // literally the largest possible bool array size
-            public fixed bool SomeState[MaxArraySize];
-        }
+        //public unsafe struct BigStruct
+        //{
+        //    public const int MaxArraySize = 1028040; // literally the largest possible bool array size
+        //    public fixed bool SomeState[MaxArraySize];
+        //}
     }
 }

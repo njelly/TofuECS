@@ -26,6 +26,11 @@ namespace Tofunaut.TofuECS
             _typeToQueries = new Dictionary<Type, ComponentQuery>();
         }
 
+        /// <summary>
+        /// Register a component for use in the Simulation.
+        /// </summary>
+        /// <param name="bufferSize">The size of the buffer, i.e, how many entities can be assigned a component at once.
+        /// This cannot be changed after the buffer is created.</param>
         public void RegisterComponent<TComponent>(int bufferSize) where TComponent : unmanaged
         {
             if (IsInitialized)
@@ -33,22 +38,36 @@ namespace Tofunaut.TofuECS
 
             if (_typeToComponentBuffer.ContainsKey(typeof(TComponent)))
                 throw new ComponentAlreadyRegisteredException<TComponent>();
+
+            if (bufferSize < 1)
+                throw new InvalidBufferSizeException<TComponent>(bufferSize);
             
             _typeToComponentBuffer.Add(typeof(TComponent), new ComponentBuffer<TComponent>(bufferSize));
         }
 
+        /// <summary>
+        /// Register a singleton component for the Simulation (really, just a buffer of size 1).
+        /// </summary>
         public void RegisterSingletonComponent<TComponent>() where TComponent : unmanaged
         {
             RegisterComponent<TComponent>(1);
             Buffer<TComponent>().Set(CreateEntity());
         }
 
+        /// <summary>
+        /// Register a singleton component for the Simulation (really, just a buffer of size 1). Allows the value of the
+        /// component to be set at the time the buffer is created.
+        /// </summary>
         public void RegisterSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
         {
             RegisterComponent<TComponent>(1);
             Buffer<TComponent>().Set(CreateEntity(), component);
         }
 
+        /// <summary>
+        /// Initialize the Simulation. This calls Initialize on all systems sequentially, prevents any more components
+        /// from being registered, and allows Tick() to be called.
+        /// </summary>
         public void Initialize()
         {
             if (IsInitialized)
@@ -62,18 +81,27 @@ namespace Tofunaut.TofuECS
 
         public int CreateEntity() => ++_entityIdCounter;
 
+        /// <summary>
+        /// Gets a buffer of the specified type.
+        /// </summary>
         public ComponentBuffer<TComponent> Buffer<TComponent>() where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
             return buffer;
         }
 
-        public bool GetSingletonComponent<TComponent>(out TComponent component) where TComponent : unmanaged
+        /// <summary>
+        /// Gets the value of a singleton component.
+        /// </summary>
+        public void GetSingletonComponent<TComponent>(out TComponent component) where TComponent : unmanaged
         {
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            return buffer.GetFirst(out component);
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer); 
+            buffer.GetFirst(out component);
         }
 
+        /// <summary>
+        /// Modify the value of a singleton component via a delegate.
+        /// </summary>
         public void ModifySingletonComponent<TComponent>(ModifyDelegate<TComponent> modifyDelegate)
             where TComponent : unmanaged
         {
@@ -81,6 +109,9 @@ namespace Tofunaut.TofuECS
             buffer.ModifyFirst(modifyDelegate);
         }
 
+        /// <summary>
+        /// Modify the value of a singleton component via an unsafe delegate.
+        /// </summary>
         public void ModifySingletonComponentUnsafe<TComponent>(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
             where TComponent : unmanaged
         {
@@ -120,8 +151,14 @@ namespace Tofunaut.TofuECS
         }
 
         // TODO: no op on release builds?
+        /// <summary>
+        /// Equivalent to Log.Debug(s).
+        /// </summary>
         public void Debug(string s) => Log.Debug(s);
 
+        /// <summary>
+        /// Raise a system event. All ISystemEventListeners will immediately receive a callback with the event data.
+        /// </summary>
         public void SystemEvent<TEvent>(in TEvent eventData) where TEvent : struct
         {
             if (!IsInitialized)
@@ -141,6 +178,23 @@ namespace Tofunaut.TofuECS
                 ((ISystemEventListener<TEvent>) system).OnSystemEvent(this, eventData);
         }
 
+        /// <summary>
+        /// Get a query for all entities with a component.
+        /// </summary>
+        public ComponentQuery Query<TComponent>() where TComponent : unmanaged
+        {
+            if (_typeToQueries.TryGetValue(typeof(TComponent), out var componentQuery)) 
+                return componentQuery;
+            
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            componentQuery = new ComponentQuery(this, buffer);
+            _typeToQueries.Add(typeof(TComponent), componentQuery);
+            return componentQuery;
+        }
+
+        /// <summary>
+        /// Increments the value of CurrentTick and calls Process() on all Systems.
+        /// </summary>
         public void Tick()
         {
             // TODO: remove check in release builds?
@@ -163,22 +217,8 @@ namespace Tofunaut.TofuECS
  
             buffer = componentBuffer;
         }
-
-        /// <summary>
-        /// Get a query for all entities with a component.
-        /// </summary>
-        public ComponentQuery Query<TComponent>() where TComponent : unmanaged
-        {
-            if (_typeToQueries.TryGetValue(typeof(TComponent), out var componentQuery)) 
-                return componentQuery;
-            
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            componentQuery = new ComponentQuery(this, buffer);
-            _typeToQueries.Add(typeof(TComponent), componentQuery);
-            return componentQuery;
-        }
     }
-
+    
     public class NoSystemImplementsSystemEventException<TEvent> : Exception where TEvent : struct
     {
         public override string Message => $"No system listens to system event of type {typeof(TEvent)}";
@@ -202,5 +242,15 @@ namespace Tofunaut.TofuECS
     public class ComponentAlreadyRegisteredException<TComponent> : Exception where TComponent : unmanaged
     {
         public override string Message => $"The component of type {typeof(TComponent)} is already registered.";
+    }
+
+    public class InvalidBufferSizeException<TComponent> : Exception where TComponent : unmanaged
+    {
+        public override string Message => $"The size {_size} for buffer of type {typeof(TComponent)} is invalid.";
+        private readonly int _size;
+        public InvalidBufferSizeException(int size)
+        {
+            _size = size;
+        }
     }
 }

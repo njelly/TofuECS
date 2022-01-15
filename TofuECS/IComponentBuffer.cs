@@ -8,7 +8,7 @@ namespace Tofunaut.TofuECS
         event EventHandler<EntityEventArgs> OnComponentAdded;
         event EventHandler<EntityEventArgs> OnComponentRemoved;
         IEnumerable<int> GetEntities();
-        bool HasEntityAssignment(int entity);
+        bool HasEntityAssignment(int entityId);
     }
 
     public class EntityEventArgs : EventArgs
