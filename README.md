@@ -5,6 +5,8 @@ This is an entity component system (ECS) framework written in C# that can be eas
 ***If you just want to get started quickly by looking at some examples, here's a list of other repos using TofuECS:***
 - [TofuECS_CGOL](https://github.com/njelly/TofuECS_CGOL): An implementation of Conway's Game of Life showcasing a basic Unity project setup.
 
+---
+
 This repo contains a solution with three projects: TofuECS, TofuECS.Utilities, and TofuECS.Tests. TofuECS is the main dll you will want to include in your project, while TofuECS.Utilities contains some other useful classes that aren't strictly necessary. TofuECS.Tests should not be included, but showcases how to start and run a simulation and how you can use this framework.
 
 ECS frameworks are fun to code in and offer performance benefits against the typical GameObject/MonoBehaviour Unity workflow, all while presenting a clear separation of logic from views (for example: your GameObjects, Meshes, Sprites, etc.). They solve a problem that is very common in game development: messy class hierarchies that make it difficult to share code between two unrelated classes. Essentially, an ECS is a data structure containing the entire state of your game (or simulation) at every moment, with rules on how to alter that data over time.
