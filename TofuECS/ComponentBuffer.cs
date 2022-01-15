@@ -6,7 +6,7 @@ namespace Tofunaut.TofuECS
     public delegate void ModifyDelegate<TComponent>(ref TComponent component) where TComponent : unmanaged;
     public unsafe delegate void ModifyDelegateUnsafe<TComponent>(TComponent* component) where TComponent : unmanaged;
     public unsafe delegate void ModifyWithIteratorDelegateUnsafe<TComponent>(
-        ComponentBuffer<TComponent>.Iterator iterator, TComponent* component) where TComponent : unmanaged;
+        ComponentBuffer<TComponent>.Iterator i, TComponent* buffer) where TComponent : unmanaged;
     
     /// <summary>
     /// A buffer containing the state information for the ECS.
@@ -216,22 +216,19 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public class Iterator
         {
-            /// <summary>
-            /// The current index of the iterator used to access a component value from the buffer. NOT the entity.
-            /// </summary>
-            public int Current { get; private set; }
             
             /// <summary>
             /// The Entity assigned to the component at the current index.
             /// </summary>
-            public int Entity => _buffer._entityAssignments[Current];
+            public int Entity => _buffer._entityAssignments[_current];
             
             private readonly ComponentBuffer<TComponent> _buffer;
+            private int _current;
 
             internal Iterator(ComponentBuffer<TComponent> buffer)
             {
                 _buffer = buffer;
-                Current = -1;
+                _current = -1;
             }
 
             /// <summary>
@@ -239,15 +236,15 @@ namespace Tofunaut.TofuECS
             /// </summary>
             public bool Next()
             {
-                Current++;
-                while (Current < _buffer._entityAssignments.Length &&
-                       _buffer._entityAssignments[Current] == Simulation.InvalidEntityId)
-                    Current++;
+                _current++;
+                while (_current < _buffer._entityAssignments.Length &&
+                       _buffer._entityAssignments[_current] == Simulation.InvalidEntityId)
+                    _current++;
 
-                return Current < _buffer._entityAssignments.Length;
+                return _current < _buffer._entityAssignments.Length;
             }
 
-            public static implicit operator int(Iterator iterator) => iterator.Current;
+            public static implicit operator int(Iterator iterator) => iterator._current;
         }
     }
 

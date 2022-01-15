@@ -37,9 +37,8 @@ namespace TofuECS.Tests
             s.Tick();
 
             // this is the value we'll be verifying
-            var randValue = 0;
-            if (s.GetSingletonComponent<SomeValueComponent>(out var someValueComponent))
-                randValue = someValueComponent.RandomValue;
+            s.GetSingletonComponent<SomeValueComponent>(out var someValueComponent);
+            var randValue = someValueComponent.RandomValue;
 
             // now just keep ticking into the future, it shouldn't really matter how many times
             for(var i = 0; i < numTicks; i++)
@@ -53,7 +52,7 @@ namespace TofuECS.Tests
             // values should be the same.
             s.Tick();
             
-            Assert.True(s.GetSingletonComponent(out someValueComponent));
+            s.GetSingletonComponent(out someValueComponent);
             Assert.True(someValueComponent.RandomValue == randValue);
         }
         
@@ -92,20 +91,20 @@ namespace TofuECS.Tests
         [Test]
         public void SystemEventTests()
         {
-            var ecs = new Simulation(new TestLogService(), new ISystem[]
+            var s = new Simulation(new TestLogService(), new ISystem[]
             {
                 new SystemEventTestSystem(),
             });
             
-            ecs.RegisterSingletonComponent<SomeValueComponent>();
-            ecs.Initialize();
+            s.RegisterSingletonComponent<SomeValueComponent>();
+            s.Initialize();
 
             const int numTicks = 10;
             for (var i = 0; i < numTicks; i++)
-                ecs.Tick();
+                s.Tick();
 
-            Assert.IsTrue(ecs.GetSingletonComponent(out SomeValueComponent someValueComponent) &&
-                          someValueComponent.EventIncrementingValue == numTicks);
+            s.GetSingletonComponent(out SomeValueComponent someValueComponent);
+            Assert.IsTrue(someValueComponent.EventIncrementingValue == numTicks);
         }
 
         [Test]
