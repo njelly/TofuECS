@@ -30,8 +30,12 @@ namespace TofuECS.Tests
 
                 // get the current state of the sim
                 var rollbackTickNumber = s.CurrentTick;
-                s.GetState<SomeValueComponent>(out var someValueState, out var someValueAssignments);
-                s.GetState<XorShiftRandom>(out var xorShiftRandomState, out var xorShiftAssignments);
+                var xorShiftState = s.GetSingletonComponent<XorShiftRandom>();
+                var someValueComponentBuffer = s.Buffer<SomeValueComponent>();
+                var someValueComponentState = new SomeValueComponent[someValueComponentBuffer.Size];
+                var someValueComponentAssignments = new int[someValueComponentBuffer.Size];
+                someValueComponentBuffer.GetState(someValueComponentState);
+                someValueComponentBuffer.GetEntityAssignments(someValueComponentAssignments);
             
                 // tick once
                 s.Tick();
@@ -45,8 +49,8 @@ namespace TofuECS.Tests
                     s.Tick();
             
                 // ROLLBACK!
-                s.SetState(someValueState, someValueAssignments, rollbackTickNumber);
-                s.SetState(xorShiftRandomState, xorShiftAssignments, rollbackTickNumber);
+                s.SetSingletonComponent(xorShiftState);
+                s.SetState(someValueComponentState, someValueComponentAssignments, rollbackTickNumber);
             
                 // Our sim ought to be deterministic, so we Tick once just like we did after we got the state, and all our
                 // values should be the same.

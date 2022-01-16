@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnsafeCollections.Collections.Unsafe;
 
 namespace Tofunaut.TofuECS
 {
@@ -108,14 +109,11 @@ namespace Tofunaut.TofuECS
             return buffer.GetAtUnsafe(0);
         }
 
-        /// <summary>
-        /// Gets the entire state of the buffer.
-        /// </summary>
-        /// <param name="components">An array of <typeparam name="TComponent"></typeparam>> representing the current state of the buffer.</param>
-        /// <param name="entityAssignments">An array of integers representing entity assignments at each buffer index.</param>
-        /// <exception cref="ComponentNotRegisteredException{TComponent}">Will be thrown if the component has not been registered.</exception>
-        public void GetState<TComponent>(out TComponent[] components, out int[] entityAssignments)
-            where TComponent : unmanaged => Buffer<TComponent>().GetState(out components, out entityAssignments);
+        public void SetSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
+        {
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            buffer.SetAt(0, component);
+        }
 
         /// <summary>
         /// Overwrites the entire state of the buffer.

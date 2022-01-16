@@ -114,6 +114,11 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
+        /// Sets a value directly at the index of the buffer.
+        /// </summary>
+        public void SetAt(int bufferIndex, in TComponent component) => UnsafeArray.Set(_arr, bufferIndex, component);
+
+        /// <summary>
         /// Removes an association between the entity and a component in the buffer, and allows a new entity to be
         /// associated with that component.
         /// </summary>
@@ -151,16 +156,21 @@ namespace Tofunaut.TofuECS
             }
         }
 
-        internal void GetState(out TComponent[] state, out int[] entityAssignments)
+        /// <summary>
+        /// Copies the state of the buffer to the given array (use cached array to avoid extra gc alloc).
+        /// </summary>
+        public void GetState(TComponent[] state)
         {
-            state = new TComponent[Size];
-            
-            fixed(TComponent* statePtr = state)
+            fixed (TComponent* statePtr = state)
                 _arr->CopyTo<TComponent>(statePtr, 0);
-            
-            entityAssignments = new int[_entityAssignments.Length];
-            Array.Copy(_entityAssignments, entityAssignments, _entityAssignments.Length);
         }
+
+        /// <summary>
+        /// Copies the array of entity assignments to the given array (use cached array ot avoid extra gc alloc).
+        /// </summary>
+        /// <param name="entityAssignments"></param>
+        public void GetEntityAssignments(int[] entityAssignments) =>
+            Array.Copy(_entityAssignments, entityAssignments, _entityAssignments.Length);
         
         public TComponent GetAt(int bufferIndex) => UnsafeArray.Get<TComponent>(_arr, bufferIndex);
         public TComponent* GetAtUnsafe(int bufferIndex) => UnsafeArray.GetPtr<TComponent>(_arr, bufferIndex);
