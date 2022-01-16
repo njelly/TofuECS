@@ -14,7 +14,13 @@ namespace Tofunaut.TofuECS
     {
         public event EventHandler<EntityEventArgs> OnComponentAdded;
         public event EventHandler<EntityEventArgs> OnComponentRemoved;
-        public int Size => UnsafeArray.GetLength(_arr);
+        
+        public int Size { get; }
+        
+        /// <summary>
+        /// The number of components that have been assigned to entities.
+        /// </summary>
+        public int NumAssignedComponents => Size - _freeIndexes.Count;
 
         private readonly UnsafeArray* _arr;
         private readonly int[] _entityAssignments;
@@ -23,6 +29,7 @@ namespace Tofunaut.TofuECS
 
         internal ComponentBuffer(int size)
         {
+            Size = size;
             _arr = UnsafeArray.Allocate<TComponent>(size);
             _entityAssignments = new int[size];
             _freeIndexes = new Queue<int>(size);
@@ -39,7 +46,7 @@ namespace Tofunaut.TofuECS
         /// Get the component associated with the entity id.
         /// </summary>
         /// <param name="entityId">A unique entity identifier.</param>
-        /// <param name="component">The component associated with the entity.</param>
+        /// <param name="component">The value of the component associated with the entity.</param>
         /// <returns>Returns false if no component is associated with the entity.</returns>
         public bool Get(int entityId, out TComponent component)
         {
@@ -53,6 +60,12 @@ namespace Tofunaut.TofuECS
             return false;
         }
 
+        /// <summary>
+        /// Get a pointer to the component associated with the entity id.
+        /// </summary>
+        /// <param name="entityId">A unique entity identifier.</param>
+        /// <param name="component">A pointer to the component associated with the entity.</param>
+        /// <returns>Returns false if no component is associated with the entity.</returns>
         public bool GetUnsafe(int entityId, out TComponent* component)
         {
             if (_entityToIndex.TryGetValue(entityId, out var componentIndex))
@@ -114,11 +127,6 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
-        /// Sets a value directly at the index of the buffer.
-        /// </summary>
-        public void SetAt(int bufferIndex, in TComponent component) => UnsafeArray.Set(_arr, bufferIndex, component);
-
-        /// <summary>
         /// Removes an association between the entity and a component in the buffer, and allows a new entity to be
         /// associated with that component.
         /// </summary>
@@ -172,8 +180,20 @@ namespace Tofunaut.TofuECS
         public void GetEntityAssignments(int[] entityAssignments) =>
             Array.Copy(_entityAssignments, entityAssignments, _entityAssignments.Length);
         
+        /// <summary>
+        /// Get the value of the buffer at the index. Not recommended unless you know exactly what you're doing. 
+        /// </summary>
         public TComponent GetAt(int bufferIndex) => UnsafeArray.Get<TComponent>(_arr, bufferIndex);
+        
+        /// <summary>
+        /// Get a pointer to the buffer at the index. Not recommended unless you know exactly what you're doing. 
+        /// </summary>
         public TComponent* GetAtUnsafe(int bufferIndex) => UnsafeArray.GetPtr<TComponent>(_arr, bufferIndex);
+
+        /// <summary>
+        /// Sets a value directly at the index of the buffer. Not recommended unless you know exactly what you're doing.
+        /// </summary>
+        public void SetAt(int bufferIndex, in TComponent component) => UnsafeArray.Set(_arr, bufferIndex, component);
 
         /// <summary>
         /// Access all the entities assigned to the buffer.
@@ -188,50 +208,53 @@ namespace Tofunaut.TofuECS
         public bool HasEntityAssignment(int entityId) => _entityToIndex.ContainsKey(entityId);
 
         /// <summary>
-        /// Creates a new instance of Iterator that allows safe access to all assigned components in the buffer.
+        /// Iterate over the buffer without creating garbage.
         /// </summary>
-        public Iterator GetIterator() => new Iterator(this);
+        /// <param name="i">The iterator to use.</param>
+        /// <param name="entityId">The next valid entity assignment.</param>
+        /// <param name="component">The next valid component value.</param>
+        /// <returns>Returns true as long as there exists another valid entity-component assignment.</returns>
+        public bool Next(ref int i, out int entityId, out TComponent component)
+        {
+            while (i < Size && _entityAssignments[i] == Simulation.InvalidEntityId)
+                i++;
+
+            if (i >= Size)
+            {
+                entityId = Simulation.InvalidEntityId;
+                component = default;
+                return false;
+            }
+
+            entityId = _entityAssignments[i];
+            component = GetAt(i);
+            i++;
+            return true;
+        }
         
         /// <summary>
-        /// Allows iterating safely over a pointer to the buffer data directly.
+        /// Iterate over the buffer without creating garbage (unsafe).
         /// </summary>
-        public class Iterator
+        /// <param name="i">The iterator to use.</param>
+        /// <param name="entityId">The next valid entity assignment.</param>
+        /// <param name="component">A pointer to the next valid component.</param>
+        /// <returns>Returns true as long as there exists another valid entity-component assignment.</returns>
+        public bool NextUnsafe(ref int i, out int entityId, out TComponent* component)
         {
-            /// <summary>
-            /// The Entity assigned to the component at the current index.
-            /// </summary>
-            public int Entity => _buffer._entityAssignments[_currentIndex];
-            
-            /// <summary>
-            /// A pointer to the current component.
-            /// </summary>
-            public TComponent* CurrentUnsafe => UnsafeArray.GetPtr<TComponent>(_buffer._arr, _currentIndex);
-            
-            /// <summary>
-            /// The value of the current component.
-            /// </summary>
-            public TComponent Current => UnsafeArray.Get<TComponent>(_buffer._arr, _currentIndex);
+            while (i < Size && _entityAssignments[i] == Simulation.InvalidEntityId)
+                i++;
 
-            private readonly ComponentBuffer<TComponent> _buffer;
-            private int _currentIndex;
-
-            internal Iterator(ComponentBuffer<TComponent> buffer)
+            if (i >= Size)
             {
-                _buffer = buffer;
-                _currentIndex = -1;
+                entityId = Simulation.InvalidEntityId;
+                component = default;
+                return false;
             }
 
-            /// <summary>
-            /// Returns true as long as there are more components assigned to entities in the buffer.
-            /// </summary>
-            public bool Next()
-            {
-                _currentIndex++;
-                while (_currentIndex < _buffer._entityAssignments.Length && _buffer._entityAssignments[_currentIndex] == Simulation.InvalidEntityId)
-                    _currentIndex++;
-
-                return _currentIndex < _buffer._entityAssignments.Length;
-            }
+            entityId = _entityAssignments[i];
+            component = GetAtUnsafe(i);
+            i++;
+            return true;
         }
 
         public void Dispose()

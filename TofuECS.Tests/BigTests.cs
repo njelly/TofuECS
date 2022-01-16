@@ -87,10 +87,10 @@ namespace TofuECS.Tests
 
             public unsafe void Process(Simulation s)
             {
-                var i = s.Buffer<Coordinate>().GetIterator();
-                while (i.Next())
+                var buffer = s.Buffer<Coordinate>();
+                var i = 0;
+                while (buffer.NextUnsafe(ref i, out _, out var coordinate))
                 {
-                    var coordinate = i.CurrentUnsafe;
                     coordinate->X++;
                     coordinate->Y++;
                 }

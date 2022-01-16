@@ -102,15 +102,22 @@ namespace TofuECS.Tests
                        new SystemEventTestSystem(),
                    }))
             {
-                s.RegisterSingletonComponent<SomeValueComponent>();
+                const int numTicks = 10;
+                const int numComponents = 10;
+
+                s.RegisterComponent<SomeValueComponent>(numComponents);
                 s.Initialize();
 
-                const int numTicks = 10;
+                var buffer = s.Buffer<SomeValueComponent>();
+                for(var i = 0; i < numComponents; i++)
+                    buffer.Set(s.CreateEntity());
+
                 for (var i = 0; i < numTicks; i++)
                     s.Tick();
 
-                var someValueComponent = s.GetSingletonComponent<SomeValueComponent>();
-                Assert.IsTrue(someValueComponent.EventIncrementingValue == numTicks);
+                var j = 0;
+                while(buffer.Next(ref j, out _, out var someValueComponent))
+                    Assert.IsTrue(someValueComponent.EventIncrementingValue == numTicks);
             }
         }
 
@@ -222,12 +229,13 @@ namespace TofuECS.Tests
 
             public unsafe void Process(Simulation s)
             {
-                var i = s.Buffer<SomeValueComponent>().GetIterator();
+                var buffer = s.Buffer<SomeValueComponent>();
                 var r = s.GetSingletonComponentUnsafe<XorShiftRandom>();
-                while (i.Next())
+                var i = 0;
+                while (buffer.NextUnsafe(ref i, out _, out var someValueComponent))
                 {
-                    i.CurrentUnsafe->IncrementingValue++;
-                    i.CurrentUnsafe->RandomValue = r->NextInt32();
+                    someValueComponent->IncrementingValue++;
+                    someValueComponent->RandomValue = r->NextInt32();
                 }
             }
         }
@@ -238,14 +246,13 @@ namespace TofuECS.Tests
 
             public void Process(Simulation s)
             {
-                var entities = s.Buffer<SomeValueComponent>().GetEntities();
-                foreach (var e in entities)
-                {
+                var buffer = s.Buffer<SomeValueComponent>();
+                var i = 0;
+                while(buffer.Next(ref i, out var entityId, out _))
                     s.SystemEvent(new IncrementValueSystemEvent
                     {
-                        EntityId = e,
+                        EntityId = entityId,
                     });
-                }
             }
             
             public unsafe void OnSystemEvent(Simulation s, in IncrementValueSystemEvent data)

@@ -47,22 +47,22 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
-        /// Register a singleton component for the Simulation (really, just a buffer of size 1).
+        /// Register a singleton component for the Simulation (really, just a buffer of size 1). Does not create an entity.
         /// </summary>
         public void RegisterSingletonComponent<TComponent>() where TComponent : unmanaged
         {
             RegisterComponent<TComponent>(1);
-            Buffer<TComponent>().Set(CreateEntity());
+            Buffer<TComponent>().SetAt(0, default);
         }
 
         /// <summary>
         /// Register a singleton component for the Simulation (really, just a buffer of size 1). Allows the value of the
-        /// component to be set at the time the buffer is created.
+        /// component to be set at the time the buffer is created. Does not create an entity.
         /// </summary>
         public void RegisterSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
         {
             RegisterComponent<TComponent>(1);
-            Buffer<TComponent>().Set(CreateEntity(), component);
+            Buffer<TComponent>().SetAt(0, component);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
-        /// Modify the value of a singleton component via a delegate.
+        /// Get a pointer to the value of a singleton component.
         /// </summary>
         public unsafe TComponent* GetSingletonComponentUnsafe<TComponent>() where TComponent : unmanaged
         {
@@ -109,6 +109,9 @@ namespace Tofunaut.TofuECS
             return buffer.GetAtUnsafe(0);
         }
 
+        /// <summary>
+        /// Set the value of a singleton component.
+        /// </summary>
         public void SetSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
