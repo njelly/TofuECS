@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    internal interface IComponentBuffer
+    internal interface IComponentBuffer : IDisposable
     {
         event EventHandler<EntityEventArgs> OnComponentAdded;
         event EventHandler<EntityEventArgs> OnComponentRemoved;

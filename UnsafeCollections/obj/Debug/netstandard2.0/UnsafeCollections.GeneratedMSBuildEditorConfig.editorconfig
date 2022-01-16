@@ -1,0 +1,3 @@
+is_global = true
+build_property.RootNamespace = UnsafeCollections
+build_property.ProjectDir = /Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/UnsafeCollections/

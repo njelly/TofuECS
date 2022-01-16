@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Y1AnAVcHZndoEtCgygydSwrVWNyydEAVtoRkJPJFCqLxo1T6uiAn6TMHO5s6KIiYM45l+bQmnIBdsIH6jKkTAw==",
+  "success": true,
+  "projectFilePath": "/Users/nathaniel/GIT_ROOT/Tofunaut/TofuECS/UnsafeCollections/UnsafeCollections.csproj",
+  "expectedPackageFiles": [
+    "/Users/nathaniel/.nuget/packages/microsoft.netcore.platforms/1.1.0/microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "/Users/nathaniel/.nuget/packages/netstandard.library/2.0.3/netstandard.library.2.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

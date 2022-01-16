@@ -16,26 +16,20 @@ namespace TofuECS.Tests
         {
             // This test simply creates a large number of entities and components, modifies them with a system, and confirms
             // the results.
-            var s = new Simulation(new Tests.TestLogService(), new ISystem[]
+            using (var s = new Simulation(new Tests.TestLogService(), new ISystem[] { new CoordinateSystem() }))
             {
-                new CoordinateSystem(),
-            });
-
-            s.RegisterComponent<Coordinate>(numCoordinates);
+                s.RegisterComponent<Coordinate>(numCoordinates);
             
-            s.Initialize();
+                s.Initialize();
 
-            const int numTicks = 10;
-            while(s.CurrentTick < numTicks)
-                s.Tick();
+                const int numTicks = 10;
+                while(s.CurrentTick < numTicks)
+                    s.Tick();
 
-            var buffer = s.Buffer<Coordinate>();
-            var coordinateEntities = s.Query<Coordinate>().Entities;
-            foreach (var e in coordinateEntities)
-            {
-                Assert.IsTrue(buffer.Get(e, out var c) 
-                              && c.X == c.StartX + numTicks
-                              && c.Y == c.StartY + numTicks);
+                var buffer = s.Buffer<Coordinate>();
+                var coordinateEntities = s.Query<Coordinate>().Entities;
+                foreach (var e in coordinateEntities)
+                    Assert.True(buffer.Get(e, out var c) && c.X == c.StartX + numTicks && c.Y == c.StartY + numTicks);
             }
         }
 
@@ -79,8 +73,8 @@ namespace TofuECS.Tests
                 {
                     var x = i % width; 
                     var y = i / width;
-                    var e = s.CreateEntity();
                     var coordinateBuffer = s.Buffer<Coordinate>();
+                    var e = s.CreateEntity();
                     coordinateBuffer.Set(e, new Coordinate
                     {
                         StartX = x,
@@ -93,15 +87,13 @@ namespace TofuECS.Tests
 
             public unsafe void Process(Simulation s)
             {
-                s.Buffer<Coordinate>().ModifyUnsafe((i, buffer) =>
+                var i = s.Buffer<Coordinate>().GetIterator();
+                while (i.Next())
                 {
-                    while (i.Next())
-                    {
-                        var index = i.Current;
-                        buffer[index].X++;
-                        buffer[index].Y++;
-                    }
-                });
+                    var coordinate = i.CurrentUnsafe;
+                    coordinate->X++;
+                    coordinate->Y++;
+                }
             }
         }
 

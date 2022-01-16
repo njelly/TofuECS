@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TofuECS.Utilities", "TofuEC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TofuECS.Tests", "TofuECS.Tests\TofuECS.Tests.csproj", "{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnsafeCollections", "UnsafeCollections\UnsafeCollections.csproj", "{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,5 +25,8 @@ Global
 		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

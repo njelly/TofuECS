@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Tofunaut.TofuECS
 {
-    public class Simulation
+    public class Simulation : IDisposable
     {
         public const int InvalidEntityId = 0;
         public int CurrentTick { get; private set; }
@@ -93,30 +93,19 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// Gets the value of a singleton component.
         /// </summary>
-        public void GetSingletonComponent<TComponent>(out TComponent component) where TComponent : unmanaged
+        public TComponent GetSingletonComponent<TComponent>() where TComponent : unmanaged
         {
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer); 
-            buffer.GetFirst(out component);
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            return buffer.GetAt(0);
         }
 
         /// <summary>
         /// Modify the value of a singleton component via a delegate.
         /// </summary>
-        public void ModifySingletonComponent<TComponent>(ModifyDelegate<TComponent> modifyDelegate)
-            where TComponent : unmanaged
+        public unsafe TComponent* GetSingletonComponentUnsafe<TComponent>() where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            buffer.ModifyFirst(modifyDelegate);
-        }
-
-        /// <summary>
-        /// Modify the value of a singleton component via an unsafe delegate.
-        /// </summary>
-        public void ModifySingletonComponentUnsafe<TComponent>(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
-            where TComponent : unmanaged
-        {
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            buffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
+            return buffer.GetAtUnsafe(0);
         }
 
         /// <summary>
@@ -216,6 +205,12 @@ namespace Tofunaut.TofuECS
                 throw new ComponentNotRegisteredException<TComponent>();
  
             buffer = componentBuffer;
+        }
+
+        public void Dispose()
+        {
+            foreach(var kvp in _typeToComponentBuffer)
+                kvp.Value.Dispose();
         }
     }
     
