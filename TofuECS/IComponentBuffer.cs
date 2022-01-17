@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
@@ -7,7 +6,6 @@ namespace Tofunaut.TofuECS
     {
         event EventHandler<EntityEventArgs> OnComponentAdded;
         event EventHandler<EntityEventArgs> OnComponentRemoved;
-        IEnumerable<int> GetEntities();
         bool HasEntityAssignment(int entityId);
     }
 

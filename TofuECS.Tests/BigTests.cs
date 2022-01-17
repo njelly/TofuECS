@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Tofunaut.TofuECS;
 
 namespace TofuECS.Tests

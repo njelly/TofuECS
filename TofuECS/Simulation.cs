@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnsafeCollections.Collections.Unsafe;
 
 namespace Tofunaut.TofuECS
 {
@@ -177,7 +176,13 @@ namespace Tofunaut.TofuECS
                 return componentQuery;
             
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            componentQuery = new ComponentQuery(this, buffer);
+
+            var entities = new HashSet<int>();
+            var i = 0;
+            while (buffer.Next(ref i, out var entity, out _))
+                entities.Add(entity);
+            
+            componentQuery = new ComponentQuery(this, buffer, entities);
             _typeToQueries.Add(typeof(TComponent), componentQuery);
             return componentQuery;
         }

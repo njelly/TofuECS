@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnsafeCollections.Collections.Native;
 using UnsafeCollections.Collections.Unsafe;
 
 namespace Tofunaut.TofuECS
@@ -194,11 +192,6 @@ namespace Tofunaut.TofuECS
         /// Sets a value directly at the index of the buffer. Not recommended unless you know exactly what you're doing.
         /// </summary>
         public void SetAt(int bufferIndex, in TComponent component) => UnsafeArray.Set(_arr, bufferIndex, component);
-
-        /// <summary>
-        /// Access all the entities assigned to the buffer.
-        /// </summary>
-        public IEnumerable<int> GetEntities() => _entityToIndex.Keys;
         
         /// <summary>
         /// Is the entity assigned to some component in the buffer.

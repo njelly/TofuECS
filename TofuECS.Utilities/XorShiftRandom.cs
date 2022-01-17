@@ -6,8 +6,6 @@
  * Additional modifications for use in TofuECS
  */
 
-using System;
-
 namespace Tofunaut.TofuECS.Utilities
 {
 

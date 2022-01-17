@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace Tofunaut.TofuECS
 {
     public class ComponentQuery
     {
+        /// <summary>
+        /// Returns the HashSet of Entity IDs in the Query as an IReadOnlyCollection.
+        /// </summary>
         public IReadOnlyCollection<int> Entities => _entities;
 
         private readonly IComponentBuffer _buffer;
@@ -14,14 +16,13 @@ namespace Tofunaut.TofuECS
         private readonly HashSet<int> _entities;
         private readonly ComponentQuery _parent;
 
-        internal ComponentQuery(Simulation simulation, IComponentBuffer buffer)
+        internal ComponentQuery(Simulation simulation, IComponentBuffer buffer, HashSet<int> entities)
         {
             _simulation = simulation;
             _buffer = buffer;
             _typeToChildren = new Dictionary<Type, ComponentQuery>();
             _parent = null;
-            
-            _entities = new HashSet<int>(buffer.GetEntities());
+            _entities = entities;
 
             buffer.OnComponentAdded += OnComponentAdded;
             buffer.OnComponentRemoved += OnComponentRemoved;
