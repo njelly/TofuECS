@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnsafeCollections.Collections.Unsafe;
 
 namespace Tofunaut.TofuECS
 {
-    public class Simulation
+    public class Simulation : IDisposable
     {
         public const int InvalidEntityId = 0;
         public int CurrentTick { get; private set; }
@@ -46,22 +47,22 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
-        /// Register a singleton component for the Simulation (really, just a buffer of size 1).
+        /// Register a singleton component for the Simulation (really, just a buffer of size 1). Does not create an entity.
         /// </summary>
         public void RegisterSingletonComponent<TComponent>() where TComponent : unmanaged
         {
             RegisterComponent<TComponent>(1);
-            Buffer<TComponent>().Set(CreateEntity());
+            Buffer<TComponent>().SetAt(0, default);
         }
 
         /// <summary>
         /// Register a singleton component for the Simulation (really, just a buffer of size 1). Allows the value of the
-        /// component to be set at the time the buffer is created.
+        /// component to be set at the time the buffer is created. Does not create an entity.
         /// </summary>
         public void RegisterSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
         {
             RegisterComponent<TComponent>(1);
-            Buffer<TComponent>().Set(CreateEntity(), component);
+            Buffer<TComponent>().SetAt(0, component);
         }
 
         /// <summary>
@@ -93,40 +94,29 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// Gets the value of a singleton component.
         /// </summary>
-        public void GetSingletonComponent<TComponent>(out TComponent component) where TComponent : unmanaged
-        {
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer); 
-            buffer.GetFirst(out component);
-        }
-
-        /// <summary>
-        /// Modify the value of a singleton component via a delegate.
-        /// </summary>
-        public void ModifySingletonComponent<TComponent>(ModifyDelegate<TComponent> modifyDelegate)
-            where TComponent : unmanaged
+        public TComponent GetSingletonComponent<TComponent>() where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            buffer.ModifyFirst(modifyDelegate);
+            return buffer.GetAt(0);
         }
 
         /// <summary>
-        /// Modify the value of a singleton component via an unsafe delegate.
+        /// Get a pointer to the value of a singleton component.
         /// </summary>
-        public void ModifySingletonComponentUnsafe<TComponent>(ModifyDelegateUnsafe<TComponent> modifyDelegateUnsafe)
-            where TComponent : unmanaged
+        public unsafe TComponent* GetSingletonComponentUnsafe<TComponent>() where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
-            buffer.ModifyFirstUnsafe(modifyDelegateUnsafe);
+            return buffer.GetAtUnsafe(0);
         }
 
         /// <summary>
-        /// Gets the entire state of the buffer.
+        /// Set the value of a singleton component.
         /// </summary>
-        /// <param name="components">An array of <typeparam name="TComponent"></typeparam>> representing the current state of the buffer.</param>
-        /// <param name="entityAssignments">An array of integers representing entity assignments at each buffer index.</param>
-        /// <exception cref="ComponentNotRegisteredException{TComponent}">Will be thrown if the component has not been registered.</exception>
-        public void GetState<TComponent>(out TComponent[] components, out int[] entityAssignments)
-            where TComponent : unmanaged => Buffer<TComponent>().GetState(out components, out entityAssignments);
+        public void SetSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
+        {
+            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            buffer.SetAt(0, component);
+        }
 
         /// <summary>
         /// Overwrites the entire state of the buffer.
@@ -216,6 +206,12 @@ namespace Tofunaut.TofuECS
                 throw new ComponentNotRegisteredException<TComponent>();
  
             buffer = componentBuffer;
+        }
+
+        public void Dispose()
+        {
+            foreach(var kvp in _typeToComponentBuffer)
+                kvp.Value.Dispose();
         }
     }
     

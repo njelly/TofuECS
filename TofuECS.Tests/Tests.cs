@@ -13,98 +13,112 @@ namespace TofuECS.Tests
         [Test]
         public void RollbackTest()
         {
-            var s = new Simulation(new TestLogService(), new ISystem[]
+            using (var s = new Simulation(new TestLogService(), new ISystem[]
+                {
+                    new SomeValueSystem(),
+                }))
             {
-                new SomeValueSystem(),
-            });
+                s.RegisterSingletonComponent<SomeValueComponent>();
+                s.RegisterSingletonComponent(new XorShiftRandom(1234));
+
+                s.Initialize();
+
+                // just tick for a while, doesn't really matter
+                const int numTicks = 10;
+                for(var i = 0; i < numTicks; i++)
+                    s.Tick();
+
+                // get the current state of the sim
+                var rollbackTickNumber = s.CurrentTick;
+                var xorShiftState = s.GetSingletonComponent<XorShiftRandom>();
+                var someValueComponentBuffer = s.Buffer<SomeValueComponent>();
+                var someValueComponentState = new SomeValueComponent[someValueComponentBuffer.Size];
+                var someValueComponentAssignments = new int[someValueComponentBuffer.Size];
+                someValueComponentBuffer.GetState(someValueComponentState);
+                someValueComponentBuffer.GetEntityAssignments(someValueComponentAssignments);
             
-            s.RegisterSingletonComponent<SomeValueComponent>();
-            s.RegisterSingletonComponent(new XorShiftRandom(1234));
-
-            s.Initialize();
-
-            // just tick for a while, doesn't really matter
-            const int numTicks = 10;
-            for(var i = 0; i < numTicks; i++)
+                // tick once
                 s.Tick();
 
-            // get the current state of the sim
-            var rollbackTickNumber = s.CurrentTick;
-            s.GetState<SomeValueComponent>(out var someValueState, out var someValueAssignments);
-            s.GetState<XorShiftRandom>(out var xorShiftRandomState, out var xorShiftAssignments);
+                // this is the value we'll be verifying
+                var someValueComponent = s.GetSingletonComponent<SomeValueComponent>();
+                var randValue = someValueComponent.RandomValue;
+
+                // now just keep ticking into the future, it shouldn't really matter how many times
+                for(var i = 0; i < numTicks; i++)
+                    s.Tick();
             
-            // tick once
-            s.Tick();
-
-            // this is the value we'll be verifying
-            s.GetSingletonComponent<SomeValueComponent>(out var someValueComponent);
-            var randValue = someValueComponent.RandomValue;
-
-            // now just keep ticking into the future, it shouldn't really matter how many times
-            for(var i = 0; i < numTicks; i++)
+                // ROLLBACK!
+                s.SetSingletonComponent(xorShiftState);
+                s.SetState(someValueComponentState, someValueComponentAssignments, rollbackTickNumber);
+            
+                // Our sim ought to be deterministic, so we Tick once just like we did after we got the state, and all our
+                // values should be the same.
                 s.Tick();
             
-            // ROLLBACK!
-            s.SetState(someValueState, someValueAssignments, rollbackTickNumber);
-            s.SetState(xorShiftRandomState, xorShiftAssignments, rollbackTickNumber);
-            
-            // Our sim ought to be deterministic, so we Tick once just like we did after we got the state, and all our
-            // values should be the same.
-            s.Tick();
-            
-            s.GetSingletonComponent(out someValueComponent);
-            Assert.True(someValueComponent.RandomValue == randValue);
+                someValueComponent = s.GetSingletonComponent<SomeValueComponent>();
+                Assert.True(someValueComponent.RandomValue == randValue);
+            }
         }
         
         [Test]
         public void AddRemoveComponentTest()
         {
-            var s = new Simulation(new TestLogService(), new ISystem[]
+            using (var s = new Simulation(new TestLogService(), new ISystem[]
+                   {
+                       new SomeValueSystem(),
+                   }))
             {
-                new SomeValueSystem(),
-            });
-            
-            s.RegisterSingletonComponent<XorShiftRandom>();
-            s.RegisterComponent<SomeValueComponent>(16);
+                s.RegisterSingletonComponent<XorShiftRandom>();
+                s.RegisterComponent<SomeValueComponent>(16);
 
-            s.Initialize();
+                s.Initialize();
 
-            var e = s.CreateEntity();
+                var e = s.CreateEntity();
             
-            s.Buffer<SomeValueComponent>().Set(e);
+                s.Buffer<SomeValueComponent>().Set(e);
             
-            s.Tick();
+                s.Tick();
             
-            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out var someValueComponent) && someValueComponent.IncrementingValue == 1);
-            Assert.True(s.Buffer<SomeValueComponent>().Remove(e));
-            Assert.False(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent));
+                Assert.True(s.Buffer<SomeValueComponent>().Get(e, out var someValueComponent) && someValueComponent.IncrementingValue == 1);
+                Assert.True(s.Buffer<SomeValueComponent>().Remove(e));
+                Assert.False(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent));
             
-            s.Tick();
+                s.Tick();
             
-            s.Buffer<SomeValueComponent>().Set(e);
+                s.Buffer<SomeValueComponent>().Set(e);
             
-            s.Tick();
+                s.Tick();
             
-            Assert.True(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent) && someValueComponent.IncrementingValue == 1);
+                Assert.True(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent) && someValueComponent.IncrementingValue == 1);
+            }
         }
 
         [Test]
         public void SystemEventTests()
         {
-            var s = new Simulation(new TestLogService(), new ISystem[]
+            using (var s = new Simulation(new TestLogService(), new ISystem[]
+                   {
+                       new SystemEventTestSystem(),
+                   }))
             {
-                new SystemEventTestSystem(),
-            });
-            
-            s.RegisterSingletonComponent<SomeValueComponent>();
-            s.Initialize();
+                const int numTicks = 10;
+                const int numComponents = 10;
 
-            const int numTicks = 10;
-            for (var i = 0; i < numTicks; i++)
-                s.Tick();
+                s.RegisterComponent<SomeValueComponent>(numComponents);
+                s.Initialize();
 
-            s.GetSingletonComponent(out SomeValueComponent someValueComponent);
-            Assert.IsTrue(someValueComponent.EventIncrementingValue == numTicks);
+                var buffer = s.Buffer<SomeValueComponent>();
+                for(var i = 0; i < numComponents; i++)
+                    buffer.Set(s.CreateEntity());
+
+                for (var i = 0; i < numTicks; i++)
+                    s.Tick();
+
+                var j = 0;
+                while(buffer.Next(ref j, out _, out var someValueComponent))
+                    Assert.IsTrue(someValueComponent.EventIncrementingValue == numTicks);
+            }
         }
 
         [Test]
@@ -135,64 +149,63 @@ namespace TofuECS.Tests
 
         [Test]
         public void QueryTest()
-        {            
-            var s = new Simulation(new TestLogService(), new ISystem[] 
+        {
+            using (var s = new Simulation(new TestLogService(), new ISystem[] { }))
             {
-            });
-            
-            s.RegisterComponent<TestComponentA>(2);
-            s.RegisterComponent<TestComponentB>(2);
-            
-            s.Initialize();
+                s.RegisterComponent<TestComponentA>(2);
+                s.RegisterComponent<TestComponentB>(2);
+                
+                s.Initialize();
 
-            var entityA = s.CreateEntity();
-            var entityB = s.CreateEntity();
-            
-            s.Buffer<TestComponentA>().Set(entityA);
-            s.Buffer<TestComponentB>().Set(entityA);
-            s.Buffer<TestComponentA>().Set(entityB);
-            s.Buffer<TestComponentB>().Set(entityB);
+                var entityA = s.CreateEntity();
+                var entityB = s.CreateEntity();
+                
+                s.Buffer<TestComponentA>().Set(entityA);
+                s.Buffer<TestComponentB>().Set(entityA);
+                s.Buffer<TestComponentA>().Set(entityB);
+                s.Buffer<TestComponentB>().Set(entityB);
 
-            void validateEntitiesHaveComponents(ComponentQuery query)
-            {
-                foreach (var entity in query.Entities)
+                void validateEntitiesHaveComponents(ComponentQuery query)
                 {
-                    Assert.True(s.Buffer<TestComponentA>().Get(entity, out _));
-                    Assert.True(s.Buffer<TestComponentB>().Get(entity, out _));
+                    foreach (var entity in query.Entities)
+                    {
+                        Assert.True(s.Buffer<TestComponentA>().Get(entity, out _));
+                        Assert.True(s.Buffer<TestComponentB>().Get(entity, out _));
+                    }
                 }
-            }
 
-            void validate()
-            {
-                var aFirst = s.Query<TestComponentA>().And<TestComponentB>();
-                var bFirst = s.Query<TestComponentB>().And<TestComponentA>();
-                
-                validateEntitiesHaveComponents(aFirst);
-                validateEntitiesHaveComponents(bFirst);
-                
-                Assert.True(aFirst.Entities.Count == bFirst.Entities.Count);
-            }
+                void validate()
+                {
+                    var aFirst = s.Query<TestComponentA>().And<TestComponentB>();
+                    var bFirst = s.Query<TestComponentB>().And<TestComponentA>();
+                    
+                    validateEntitiesHaveComponents(aFirst);
+                    validateEntitiesHaveComponents(bFirst);
+                    
+                    Assert.True(aFirst.Entities.Count == bFirst.Entities.Count);
+                }
 
-            var aAndB = s.Query<TestComponentA>().And<TestComponentB>();
-            
-            // remove the entities from the buffers
-            Assert.True(aAndB.Entities.Count == 2);
-            validate();
-            s.Buffer<TestComponentA>().Remove(entityA);
-            Assert.True(aAndB.Entities.Count == 1);
-            validate();
-            s.Buffer<TestComponentB>().Remove(entityB);
-            Assert.True(aAndB.Entities.Count == 0);
-            validate();
-            
-            
-            // add them back
-            s.Buffer<TestComponentB>().Set(entityB);
-            Assert.True(aAndB.Entities.Count == 1);
-            validate();
-            s.Buffer<TestComponentA>().Set(entityA);
-            Assert.True(aAndB.Entities.Count == 2);
-            validate();
+                var aAndB = s.Query<TestComponentA>().And<TestComponentB>();
+                
+                // remove the entities from the buffers
+                Assert.True(aAndB.Entities.Count == 2);
+                validate();
+                s.Buffer<TestComponentA>().Remove(entityA);
+                Assert.True(aAndB.Entities.Count == 1);
+                validate();
+                s.Buffer<TestComponentB>().Remove(entityB);
+                Assert.True(aAndB.Entities.Count == 0);
+                validate();
+                
+                
+                // add them back
+                s.Buffer<TestComponentB>().Set(entityB);
+                Assert.True(aAndB.Entities.Count == 1);
+                validate();
+                s.Buffer<TestComponentA>().Set(entityA);
+                Assert.True(aAndB.Entities.Count == 2);
+                validate();
+            }
         }
 
         private struct SomeValueComponent
@@ -216,18 +229,14 @@ namespace TofuECS.Tests
 
             public unsafe void Process(Simulation s)
             {
-                s.Buffer<SomeValueComponent>().ModifyUnsafe((i, buffer) =>
+                var buffer = s.Buffer<SomeValueComponent>();
+                var r = s.GetSingletonComponentUnsafe<XorShiftRandom>();
+                var i = 0;
+                while (buffer.NextUnsafe(ref i, out _, out var someValueComponent))
                 {
-                    while (i.Next())
-                    {
-                        var index = i.Current;
-                        buffer[index].IncrementingValue++;
-                        s.ModifySingletonComponent((ref XorShiftRandom random) =>
-                        {
-                            buffer[index].RandomValue = random.NextInt32();
-                        });
-                    }
-                });
+                    someValueComponent->IncrementingValue++;
+                    someValueComponent->RandomValue = r->NextInt32();
+                }
             }
         }
 
@@ -237,20 +246,21 @@ namespace TofuECS.Tests
 
             public void Process(Simulation s)
             {
-                var entities = s.Buffer<SomeValueComponent>().GetEntities();
-                foreach (var e in entities)
-                {
+                var buffer = s.Buffer<SomeValueComponent>();
+                var i = 0;
+                while(buffer.Next(ref i, out var entityId, out _))
                     s.SystemEvent(new IncrementValueSystemEvent
                     {
-                        EntityId = e,
+                        EntityId = entityId,
                     });
-                }
             }
             
-            public void OnSystemEvent(Simulation simulation, in IncrementValueSystemEvent data)
+            public unsafe void OnSystemEvent(Simulation s, in IncrementValueSystemEvent data)
             {
-                simulation.Buffer<SomeValueComponent>().GetAndModify(data.EntityId,
-                    (ref SomeValueComponent someValueComponent) => { someValueComponent.EventIncrementingValue++; });
+                if (!s.Buffer<SomeValueComponent>().GetUnsafe(data.EntityId, out var someValueComponent))
+                    return;
+
+                someValueComponent->EventIncrementingValue++;
             }
         }
 

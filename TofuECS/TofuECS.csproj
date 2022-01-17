@@ -48,6 +48,12 @@
         <Compile Include="ISystemEventListener.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\UnsafeCollections\UnsafeCollections.csproj">
+        <Project>{8aa5c12f-f5ca-4ba0-bc55-d9f4480dd447}</Project>
+        <Name>UnsafeCollections</Name>
+      </ProjectReference>
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.
