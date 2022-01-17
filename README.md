@@ -29,8 +29,9 @@ All functions in an `ISystem` implementation, besides the required ones (`Initia
 
 # Other Notes...
 
-This ECS is about as bare-bones as it could be. It is intended to be compatible with multi-threaded applications, physics engines, and rollback engines. When using Unity, I recommend putting your ECS code inside an assembly definition that does not allow engine references (and allows unsafe code). The ECS ought to be Unity-agnostic, and because of the type constraints on your components, there's not any use for MonoBehaviours and GameObjects in your system logic anyway. 
+This ECS is about as bare-bones as it could be. It is intended to be compatible with multi-threaded applications, physics engines, and rollback engines. When using Unity, I recommend putting your ECS code inside an assembly definition that does not allow engine references (and allows unsafe code). The ECS ought to be Unity-agnostic, and because of the type constraints on your components, there's not any use for MonoBehaviours and GameObjects in your system logic anyway.
 
+[You can view the repo for UnsafeCollections here](https://github.com/DennisCorvers/UnsafeCollections). It was very helpful for getting TofuECS to it's current form, so thanks to the developer and for @juliolitwin for bringing it to my attention. :)
 
 The utilities included in `TofuECS.Utilities` are simply there because I thought they'd be helpful for game developers:
 - `ArrayQuickSort`: An implementation of QuickSort that can be used for arrays.
@@ -65,4 +66,4 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 
   - Note: You should always access identical queries using the same order of types. The reason for this is `ComponentQuery` is a tree data structure, with more specific instances as children. Therefore, `s.Query<Foo>().And<Bar>();` and `s.Query<Bar>().And<Foo>();` will create and cache two separate objects (technically 4 total), even though they contain identical data.
 
-*TofuECS is in development! Vegan friendly.*
+*TofuECS is in development, and may change drastically from time to time! Vegan friendly.*
