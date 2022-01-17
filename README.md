@@ -39,7 +39,8 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 
 `ILogService` is a boarder-line utility that is there to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????");`.
 
-- Q: *"How do I inject configuration data into the Simulation?"*  A: Use `Simulation.RegisterSingletonComponent<T>(T myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<T>(out T myConfigData);` in the `Initialize` method of one of your `ISystem` implementations.
+- Q: *"How do I inject configuration data into the Simulation?"*  A: Use `RegisterSingletonComponent<TComponent>(myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<TComponent>();` in the `Initialize` method of one of your `ISystem` implementations.
+  - Note: Singleton components are created without any entity associated with them. They do not tick up the entity counter like `CreateEnttiy()` does.
 
 
 - Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise a regular C# `event` inside of an `ISystem` instance. You might want to consider queuing data and processing it after the simulation finishes the tick, since the state could still change if the view is updated mid-tick. Just a suggestion.
