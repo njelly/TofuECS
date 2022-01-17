@@ -15,7 +15,7 @@ namespace Tofunaut.TofuECS
     {
         public readonly int Entity;
 
-        internal EntityEventArgs(int entity)
+        public EntityEventArgs(int entity)
         {
             Entity = entity;
         }
