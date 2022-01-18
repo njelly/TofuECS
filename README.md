@@ -17,6 +17,8 @@ ECS frameworks are fun to code in and offer performance benefits against the typ
 ## Entities
 There is no "Entity" class in TofuECS. They're just integers. Literally, they are keys for dictionaries when looking for component indexes in `ComponentBuffers`. There is no extra data associated with them whatsoever. The integer `3` can be a key that points to multiple components, and that is how you can associate components together. `CreateEntity()` just ticks up and returns an integer value, and is simply useful to ensure the same number is not used twice.
 
+Unlike other frameworks, there is no API for "destroying" entities, by design. To "destroy" entities, just remove all components from the associated entity id.
+
 ## Components
 Components contain the state of the `Simulation`. They are stored in a managed array and accessed via the `Simulation`. Currently, components must be `unmananaged` structs (see [MS docs for the Unmanaged type constraint](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-7.3/blittable)), i.e, structs with only fields of types `int`, `bool`, etc. This does require some creativity on the part of the developer in order to inject data from Unity (or some other engine) into the sim, as common types like `string` or managed arrays are not allowed.
 
@@ -42,7 +44,7 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 `ILogService` is a boarder-line utility that is there to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????");`.
 
 - Q: *"How do I inject configuration data into the Simulation?"*  A: Use `RegisterSingletonComponent<TComponent>(myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<TComponent>();` in the `Initialize` method of one of your `ISystem` implementations.
-  - Note: Singleton components are created without any entity associated with them. They do not tick up the entity counter like `CreateEnttiy()` does.
+  - Note: Singleton components are created without any entity associated with them. They do not tick up the entity counter like `CreateEntity()` does.
 
 
 - Q: *"How do I respond to state changes inside the Simulation (in Unity, for example)?"* A: Raise a regular C# `event` inside of an `ISystem` instance. You might want to consider queuing data and processing it after the simulation finishes the tick, since the state could still change if the view is updated mid-tick. Just a suggestion.
