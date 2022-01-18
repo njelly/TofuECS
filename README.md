@@ -17,7 +17,7 @@ ECS frameworks are fun to code in and offer performance benefits against the typ
 ## Entities
 There is no "Entity" class in TofuECS. They're just integers. Literally, they are keys for dictionaries when looking for component indexes in `ComponentBuffers`. There is no extra data associated with them whatsoever. The integer `3` can be a key that points to multiple components, and that is how you can associate components together. `CreateEntity()` just ticks up and returns an integer value, and is simply useful to ensure the same number is not used twice.
 
-Unlike other frameworks, there is no API for "destroying" entities, and that is by design. To "destroy" entities, just remove all components from the associated entity id.
+Unlike other frameworks, there is no API for "destroying" entities, and that is by design. To "destroy" an entity, just remove all components from the associated entity id.
 
 ## Components
 Components contain the state of the `Simulation`. They are stored in a managed array and accessed via the `Simulation`. Currently, components must be `unmananaged` structs (see [MS docs for the Unmanaged type constraint](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-7.3/blittable)), i.e, structs with only fields of type `int`, `bool`, etc. This does require some creativity on the part of the developer in order to inject data from Unity (or some other engine) into the sim, as common types like `string` or managed arrays are not allowed.
