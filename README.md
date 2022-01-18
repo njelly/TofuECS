@@ -1,6 +1,6 @@
 ![tofuecs_logo](https://user-images.githubusercontent.com/8916588/139094266-3e2db942-4842-4f0d-b1da-8e694ee3578c.png)
 
-This is an entity component system (ECS) framework written in C# that can be easily added to a Unity project as a managed plugin (dll) — although I suppose there's no reason you couldn't use it for some other non-Unity purpose. Licensed under MIT.
+This is an entity component system (ECS) framework written in C# that can be easily added to a Unity project as a managed plugin (dll) — although there's no reason you couldn't use it for some other non-Unity purpose. Licensed under MIT.
 
 ***If you just want to get started quickly by looking at some examples, here's a list of other repos using TofuECS:***
 - [TofuECS_CGOL](https://github.com/njelly/TofuECS_CGOL): An implementation of Conway's Game of Life showcasing a basic Unity project setup.
@@ -17,10 +17,10 @@ ECS frameworks are fun to code in and offer performance benefits against the typ
 ## Entities
 There is no "Entity" class in TofuECS. They're just integers. Literally, they are keys for dictionaries when looking for component indexes in `ComponentBuffers`. There is no extra data associated with them whatsoever. The integer `3` can be a key that points to multiple components, and that is how you can associate components together. `CreateEntity()` just ticks up and returns an integer value, and is simply useful to ensure the same number is not used twice.
 
-Unlike other frameworks, there is no API for "destroying" entities, by design. To "destroy" entities, just remove all components from the associated entity id.
+Unlike other frameworks, there is no API for "destroying" entities, and that is by design. To "destroy" entities, just remove all components from the associated entity id.
 
 ## Components
-Components contain the state of the `Simulation`. They are stored in a managed array and accessed via the `Simulation`. Currently, components must be `unmananaged` structs (see [MS docs for the Unmanaged type constraint](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-7.3/blittable)), i.e, structs with only fields of types `int`, `bool`, etc. This does require some creativity on the part of the developer in order to inject data from Unity (or some other engine) into the sim, as common types like `string` or managed arrays are not allowed.
+Components contain the state of the `Simulation`. They are stored in a managed array and accessed via the `Simulation`. Currently, components must be `unmananaged` structs (see [MS docs for the Unmanaged type constraint](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-7.3/blittable)), i.e, structs with only fields of type `int`, `bool`, etc. This does require some creativity on the part of the developer in order to inject data from Unity (or some other engine) into the sim, as common types like `string` or managed arrays are not allowed.
 
 [Use the `fixed` keyword in your component structs when arrays are necessary](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code#fixed-size-buffers). A caveat here is that there is a limit to how big your structs can be, which is a limitation of the mono runtime. For example, a component containing a fixed bool array of more than 1,000,000 elements is sketchy. Additionally, fixed buffers may not be resized at runtime.
 
