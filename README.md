@@ -6,6 +6,8 @@ This is an entity component system (ECS) framework written in C# that can be eas
 - [TofuECS_CGOL](https://github.com/njelly/TofuECS_CGOL): An implementation of Conway's Game of Life showcasing a basic Unity project setup.
 - [TofuECS_Rogue](https://github.com/njelly/TofuECS_Rogue): A rogue-like I may work on from time to time as a practical example of a project using TofuECS.
 
+*If you are using this framework and would like to mention your open-source project here, please open an issue on this repo!*
+
 ---
 
 This repo contains a solution with four projects: TofuECS, TofuECS.Utilities, and TofuECS.Tests, and UnsafeCollections. TofuECS and UnsafeCollections are required. TofuECS.Utilities contains some classes I thought would be useful for game developers, such as a implementation of a very fast RNG. TofuECS.Tests contains unit tests.
