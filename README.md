@@ -10,7 +10,7 @@ This is an entity component system (ECS) framework written in C# that can be eas
 
 ---
 
-This repo contains a solution with four projects: TofuECS, TofuECS.Utilities, and TofuECS.Tests, and UnsafeCollections. TofuECS and UnsafeCollections are required. TofuECS.Utilities contains some classes I thought would be useful for game developers, such as a implementation of a very fast RNG. TofuECS.Tests contains unit tests.
+This repo contains a solution with four projects: TofuECS, TofuECS.Utilities, and TofuECS.Tests, and UnsafeCollections. TofuECS and UnsafeCollections are required. TofuECS.Utilities contains some classes I thought would be useful for game developers, such as an implementation of a very fast RNG. TofuECS.Tests contains unit tests.
 
 ECS frameworks are fun to code in and offer performance benefits against the typical GameObject/MonoBehaviour Unity workflow, all while presenting a clear separation of logic from views (for example: your GameObjects, Meshes, Sprites, etc.). They solve a problem that is very common in game development: messy class hierarchies that make it difficult to share code between two unrelated classes. ***Essentially, an ECS is a data structure containing the entire state of your game (or simulation) at every moment, with rules on how to alter that data over time.***
 
