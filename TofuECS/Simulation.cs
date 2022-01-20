@@ -12,18 +12,22 @@ namespace Tofunaut.TofuECS
         public ILogService Log { get; }
         
         private readonly ISystem[] _systems;
-        private readonly Dictionary<Type, IComponentBuffer> _typeToComponentBuffer;
+        private readonly Dictionary<Type, int> _typeToSingletonComponentsIndexes;
+        private readonly List<IAnonymousComponentBuffer> _anonymousComponentBuffers;
+        private readonly Dictionary<Type, IEntityComponentBuffer> _typeToComponentBuffers;
         private readonly Dictionary<Type, ISystem[]> _typeToSystemEventListeners;
-        private readonly Dictionary<Type, ComponentQuery> _typeToQueries;
+        private readonly Dictionary<Type, EntityComponentQuery> _typeToQueries;
         private int _entityIdCounter;
 
         public Simulation(ILogService logService, ISystem[] systems)
         {
             Log = logService;
             _systems = systems;
-            _typeToComponentBuffer = new Dictionary<Type, IComponentBuffer>();
+            _typeToSingletonComponentsIndexes = new Dictionary<Type, int>();
+            _anonymousComponentBuffers = new List<IAnonymousComponentBuffer>();
+            _typeToComponentBuffers = new Dictionary<Type, IEntityComponentBuffer>();
             _typeToSystemEventListeners = new Dictionary<Type, ISystem[]>();
-            _typeToQueries = new Dictionary<Type, ComponentQuery>();
+            _typeToQueries = new Dictionary<Type, EntityComponentQuery>();
         }
 
         /// <summary>
@@ -36,33 +40,58 @@ namespace Tofunaut.TofuECS
             if (IsInitialized)
                 throw new SimulationAlreadyInitializedException();
 
-            if (_typeToComponentBuffer.ContainsKey(typeof(TComponent)))
+            if (_typeToComponentBuffers.ContainsKey(typeof(TComponent)))
                 throw new ComponentAlreadyRegisteredException<TComponent>();
 
             if (bufferSize < 1)
                 throw new InvalidBufferSizeException<TComponent>(bufferSize);
             
-            _typeToComponentBuffer.Add(typeof(TComponent), new ComponentBuffer<TComponent>(bufferSize));
+            _typeToComponentBuffers.Add(typeof(TComponent), new EntityComponentBuffer<TComponent>(bufferSize));
         }
 
         /// <summary>
         /// Register a singleton component for the Simulation (really, just a buffer of size 1). Does not create an entity.
         /// </summary>
-        public void RegisterSingletonComponent<TComponent>() where TComponent : unmanaged
-        {
-            RegisterComponent<TComponent>(1);
-            Buffer<TComponent>().SetAt(0, default);
-        }
-
+        public void RegisterSingletonComponent<TComponent>() where TComponent : unmanaged =>
+            RegisterSingletonComponent<TComponent>(default);
+        
         /// <summary>
         /// Register a singleton component for the Simulation (really, just a buffer of size 1). Allows the value of the
         /// component to be set at the time the buffer is created. Does not create an entity.
         /// </summary>
         public void RegisterSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
         {
-            RegisterComponent<TComponent>(1);
-            Buffer<TComponent>().SetAt(0, component);
+            if (IsInitialized)
+                throw new SimulationAlreadyInitializedException();
+            
+            var index = RegisterAnonymousComponent(new [] {component});
+            _typeToSingletonComponentsIndexes.Add(typeof(TComponent), index);
         }
+
+        /// <summary>
+        /// Register an anonymous component with copied data from the passed-in array.
+        /// </summary>
+        /// <param name="components"></param>
+        /// <typeparam name="TComponent"></typeparam>
+        /// <returns>The index of the anonymous component.</returns>
+        /// <exception cref="SimulationAlreadyInitializedException"></exception>
+        public int RegisterAnonymousComponent<TComponent>(TComponent[] components) where TComponent : unmanaged
+        {
+            if (IsInitialized)
+                throw new SimulationAlreadyInitializedException();
+            
+            _anonymousComponentBuffers.Add(new AnonymousBuffer<TComponent>(components));
+            return _anonymousComponentBuffers.Count - 1;
+        }
+
+        /// <summary>
+        /// Register an anonymous component (just an array, not associated with entities).
+        /// </summary>
+        /// <typeparam name="TComponent"></typeparam>
+        /// <returns>The index of the anonymous component. Use this to reference the buffer while the sim is running.</returns>
+        /// <exception cref="SimulationAlreadyInitializedException"></exception>
+        public int RegisterAnonymousComponent<TComponent>(int bufferSize) where TComponent : unmanaged =>
+            RegisterAnonymousComponent(new TComponent[bufferSize]);
 
         /// <summary>
         /// Initialize the Simulation. This calls Initialize on all systems sequentially, prevents any more components
@@ -84,9 +113,19 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// Gets a buffer of the specified type.
         /// </summary>
-        public ComponentBuffer<TComponent> Buffer<TComponent>() where TComponent : unmanaged
+        public EntityComponentBuffer<TComponent> Buffer<TComponent>() where TComponent : unmanaged
         {
             ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            return buffer;
+        }
+
+        /// <summary>
+        /// Gets an anonymous (not associated with entities) buffer of the specified type.
+        /// </summary>
+        /// <param name="index">The index of the buffer. This was created when the buffer was registered.</param>
+        public AnonymousBuffer<TComponent> AnonymousBuffer<TComponent>(int index) where TComponent : unmanaged
+        {
+            ThrowIfAnonymousBufferDoesntExist<TComponent>(index, out var buffer);
             return buffer;
         }
 
@@ -95,7 +134,7 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public TComponent GetSingletonComponent<TComponent>() where TComponent : unmanaged
         {
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            ThrowIfSingletonComponentDoesntExist<TComponent>(out var buffer);
             return buffer.GetAt(0);
         }
 
@@ -104,7 +143,7 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public unsafe TComponent* GetSingletonComponentUnsafe<TComponent>() where TComponent : unmanaged
         {
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            ThrowIfSingletonComponentDoesntExist<TComponent>(out var buffer);
             return buffer.GetAtUnsafe(0);
         }
 
@@ -113,7 +152,7 @@ namespace Tofunaut.TofuECS
         /// </summary>
         public void SetSingletonComponent<TComponent>(in TComponent component) where TComponent : unmanaged
         {
-            ThrowIfBufferDoesntExist<TComponent>(out var buffer);
+            ThrowIfSingletonComponentDoesntExist<TComponent>(out var buffer);
             buffer.SetAt(0, component);
         }
 
@@ -170,7 +209,7 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// Get a query for all entities with a component.
         /// </summary>
-        public ComponentQuery Query<TComponent>() where TComponent : unmanaged
+        public EntityComponentQuery Query<TComponent>() where TComponent : unmanaged
         {
             if (_typeToQueries.TryGetValue(typeof(TComponent), out var componentQuery)) 
                 return componentQuery;
@@ -182,7 +221,7 @@ namespace Tofunaut.TofuECS
             while (buffer.Next(ref i, out var entity, out _))
                 entities.Add(entity);
             
-            componentQuery = new ComponentQuery(this, buffer, entities);
+            componentQuery = new EntityComponentQuery(this, buffer, entities);
             _typeToQueries.Add(typeof(TComponent), componentQuery);
             return componentQuery;
         }
@@ -202,21 +241,41 @@ namespace Tofunaut.TofuECS
                 system.Process(this);
         }
 
-        private void ThrowIfBufferDoesntExist<TComponent>(out ComponentBuffer<TComponent> buffer)
+        private void ThrowIfBufferDoesntExist<TComponent>(out EntityComponentBuffer<TComponent> buffer)
             where TComponent : unmanaged
         {
             // TODO: remove check in release builds?
-            if (!_typeToComponentBuffer.TryGetValue(typeof(TComponent), out var bufferObj) ||
-                !(bufferObj is ComponentBuffer<TComponent> componentBuffer))
+            if (!_typeToComponentBuffers.TryGetValue(typeof(TComponent), out var bufferObj) ||
+                !(bufferObj is EntityComponentBuffer<TComponent> componentBuffer))
                 throw new ComponentNotRegisteredException<TComponent>();
  
             buffer = componentBuffer;
         }
+        
+        private void ThrowIfAnonymousBufferDoesntExist<TComponent>(int index, out AnonymousBuffer<TComponent> buffer) where TComponent : unmanaged
+        {
+            if (index < 0 || index > _anonymousComponentBuffers.Count)
+                throw new AnonymousComponentBufferDoesntExistException(index);
+
+            buffer = (AnonymousBuffer<TComponent>) _anonymousComponentBuffers[index];
+        }
+
+        private void ThrowIfSingletonComponentDoesntExist<TComponent>(out AnonymousBuffer<TComponent> buffer)
+            where TComponent : unmanaged
+        {
+            if (!_typeToSingletonComponentsIndexes.TryGetValue(typeof(TComponent), out var bufferIndex))
+                throw new ComponentNotRegisteredException<TComponent>();
+            
+            ThrowIfAnonymousBufferDoesntExist(bufferIndex, out buffer);
+        }
 
         public void Dispose()
         {
-            foreach(var kvp in _typeToComponentBuffer)
+            foreach(var kvp in _typeToComponentBuffers)
                 kvp.Value.Dispose();
+            
+            foreach(var anonymousBuffer in _anonymousComponentBuffers)
+                anonymousBuffer.Dispose();
         }
     }
     
@@ -252,6 +311,16 @@ namespace Tofunaut.TofuECS
         public InvalidBufferSizeException(int size)
         {
             _size = size;
+        }
+    }
+    
+    public class AnonymousComponentBufferDoesntExistException : Exception
+    {
+        public override string Message => $"The anonymous component buffer at index {_index} does not exist";
+        private readonly int _index;
+        public AnonymousComponentBufferDoesntExistException(int index)
+        {
+            _index = index;
         }
     }
 }

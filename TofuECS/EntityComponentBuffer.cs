@@ -8,7 +8,7 @@ namespace Tofunaut.TofuECS
     /// A buffer containing the state information for the ECS.
     /// </summary>
     /// <typeparam name="TComponent">An unmanaged component type.</typeparam>
-    public unsafe class ComponentBuffer<TComponent> : IComponentBuffer where TComponent : unmanaged
+    public unsafe class EntityComponentBuffer<TComponent> : IEntityComponentBuffer where TComponent : unmanaged
     {
         public event EventHandler<EntityEventArgs> OnComponentAdded;
         public event EventHandler<EntityEventArgs> OnComponentRemoved;
@@ -25,7 +25,7 @@ namespace Tofunaut.TofuECS
         private readonly Queue<int> _freeIndexes;
         private readonly Dictionary<int, int> _entityToIndex;
 
-        internal ComponentBuffer(int size)
+        internal EntityComponentBuffer(int size)
         {
             Size = size;
             _arr = UnsafeArray.Allocate<TComponent>(size);
@@ -179,21 +179,6 @@ namespace Tofunaut.TofuECS
             Array.Copy(_entityAssignments, entityAssignments, _entityAssignments.Length);
         
         /// <summary>
-        /// Get the value of the buffer at the index. Not recommended unless you know exactly what you're doing. 
-        /// </summary>
-        public TComponent GetAt(int bufferIndex) => UnsafeArray.Get<TComponent>(_arr, bufferIndex);
-        
-        /// <summary>
-        /// Get a pointer to the buffer at the index. Not recommended unless you know exactly what you're doing. 
-        /// </summary>
-        public TComponent* GetAtUnsafe(int bufferIndex) => UnsafeArray.GetPtr<TComponent>(_arr, bufferIndex);
-
-        /// <summary>
-        /// Sets a value directly at the index of the buffer. Not recommended unless you know exactly what you're doing.
-        /// </summary>
-        public void SetAt(int bufferIndex, in TComponent component) => UnsafeArray.Set(_arr, bufferIndex, component);
-        
-        /// <summary>
         /// Is the entity assigned to some component in the buffer.
         /// </summary>
         /// <param name="entityId">A unique entity identifier.</param>
@@ -220,7 +205,7 @@ namespace Tofunaut.TofuECS
             }
 
             entityId = _entityAssignments[i];
-            component = GetAt(i);
+            component = UnsafeArray.Get<TComponent>(_arr, i);
             i++;
             return true;
         }
@@ -245,7 +230,7 @@ namespace Tofunaut.TofuECS
             }
 
             entityId = _entityAssignments[i];
-            component = GetAtUnsafe(i);
+            component = UnsafeArray.GetPtr<TComponent>(_arr, i);
             i++;
             return true;
         }

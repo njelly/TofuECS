@@ -3,24 +3,24 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
-    public class ComponentQuery
+    public class EntityComponentQuery
     {
         /// <summary>
         /// Returns the HashSet of Entity IDs in the Query as an IReadOnlyCollection.
         /// </summary>
         public IReadOnlyCollection<int> Entities => _entities;
 
-        private readonly IComponentBuffer _buffer;
+        private readonly IEntityComponentBuffer _buffer;
         private readonly Simulation _simulation;
-        private readonly Dictionary<Type, ComponentQuery> _typeToChildren;
+        private readonly Dictionary<Type, EntityComponentQuery> _typeToChildren;
         private readonly HashSet<int> _entities;
-        private readonly ComponentQuery _parent;
+        private readonly EntityComponentQuery _parent;
 
-        internal ComponentQuery(Simulation simulation, IComponentBuffer buffer, HashSet<int> entities)
+        internal EntityComponentQuery(Simulation simulation, IEntityComponentBuffer buffer, HashSet<int> entities)
         {
             _simulation = simulation;
             _buffer = buffer;
-            _typeToChildren = new Dictionary<Type, ComponentQuery>();
+            _typeToChildren = new Dictionary<Type, EntityComponentQuery>();
             _parent = null;
             _entities = entities;
 
@@ -28,11 +28,11 @@ namespace Tofunaut.TofuECS
             buffer.OnComponentRemoved += OnComponentRemoved;
         }
 
-        private ComponentQuery(ComponentQuery parent, IComponentBuffer buffer)
+        private EntityComponentQuery(EntityComponentQuery parent, IEntityComponentBuffer buffer)
         {
             _simulation = parent._simulation;
             _buffer = buffer;
-            _typeToChildren = new Dictionary<Type, ComponentQuery>();
+            _typeToChildren = new Dictionary<Type, EntityComponentQuery>();
             _parent = parent;
 
             _entities = new HashSet<int>();
@@ -83,12 +83,12 @@ namespace Tofunaut.TofuECS
         /// <summary>
         /// Access a more specific query for entities that share each component.
         /// </summary>
-        public ComponentQuery And<TComponent>() where TComponent : unmanaged
+        public EntityComponentQuery And<TComponent>() where TComponent : unmanaged
         {
             if (_typeToChildren.TryGetValue(typeof(TComponent), out var componentQuery)) 
                 return componentQuery;
             
-            componentQuery = new ComponentQuery(this, _simulation.Buffer<TComponent>());
+            componentQuery = new EntityComponentQuery(this, _simulation.Buffer<TComponent>());
             _typeToChildren.Add(typeof(TComponent), componentQuery);
             return componentQuery;
         }

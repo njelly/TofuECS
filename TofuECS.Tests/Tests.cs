@@ -16,10 +16,13 @@ namespace TofuECS.Tests
                     new SomeValueSystem(),
                 }))
             {
-                s.RegisterSingletonComponent<SomeValueComponent>();
+                s.RegisterComponent<SomeValueComponent>(1);
                 s.RegisterSingletonComponent(new XorShiftRandom(1234));
 
                 s.Initialize();
+
+                var entity = s.CreateEntity();
+                s.Buffer<SomeValueComponent>().Set(entity);
 
                 // just tick for a while, doesn't really matter
                 const int numTicks = 10;
@@ -39,7 +42,7 @@ namespace TofuECS.Tests
                 s.Tick();
 
                 // this is the value we'll be verifying
-                var someValueComponent = s.GetSingletonComponent<SomeValueComponent>();
+                s.Buffer<SomeValueComponent>().Get(entity, out var someValueComponent);
                 var randValue = someValueComponent.RandomValue;
 
                 // now just keep ticking into the future, it shouldn't really matter how many times
@@ -54,7 +57,7 @@ namespace TofuECS.Tests
                 // values should be the same.
                 s.Tick();
             
-                someValueComponent = s.GetSingletonComponent<SomeValueComponent>();
+                Assert.True(s.Buffer<SomeValueComponent>().Get(entity, out someValueComponent));
                 Assert.True(someValueComponent.RandomValue == randValue);
             }
         }
@@ -163,7 +166,7 @@ namespace TofuECS.Tests
                 s.Buffer<TestComponentA>().Set(entityB);
                 s.Buffer<TestComponentB>().Set(entityB);
 
-                void validateEntitiesHaveComponents(ComponentQuery query)
+                void validateEntitiesHaveComponents(EntityComponentQuery query)
                 {
                     foreach (var entity in query.Entities)
                     {
