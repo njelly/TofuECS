@@ -43,7 +43,7 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 - `ArrayQuickSort`: An implementation of QuickSort that can be used for arrays.
 - `XorShiftRandom`: A very-lightly modified implementation of a super-fast RNG. It can, for example, be used as a singleton component when pseudo-RNG is necessary.
 
-`ILogService` is a boarder-line utility that is there to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????");`.
+`ILogService` is a borderline utility that exists to pass logs from the simulation to whatever your implementation of it might be. I thought it would be easier to just write `s.Debug("wtf why is this happening????");`.
 
 - Q: *"How do I inject configuration data into the Simulation?"*  A: Use `RegisterSingletonComponent<TComponent>(myConfigData)` and from there you'll probably want to just access it via `s.GetSingletonComponent<TComponent>();` in the `Initialize` method of one of your `ISystem` implementations.
   - Note: Singleton components are created without any entity associated with them. They do not tick up the entity counter like `CreateEntity()` does.
