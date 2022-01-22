@@ -24,7 +24,7 @@ Components contain the state of the `Simulation`. They are stored in an unmanage
 
 [Use the `fixed` keyword in your component structs when arrays are necessary](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/unsafe-code#fixed-size-buffers). A caveat here is that there is a limit to how big your structs can be, which is a limitation of the mono runtime. For example, a component containing a fixed bool array of more than 1,000,000 elements is sketchy. Additionally, fixed buffers may not be resized at runtime.
 
-Alternatively, use an `AnonymousBuffer` when you need to store an array of data. `AnonymousBuffer`s do not have entity associations and can be much faster if entities are not need for a set of components. You can create multiple `AnonymousBuffer`s with the same component type, as they are accessed via an index rather than their type.
+Alternatively, use an `AnonymousBuffer` when you need to store an array of data. `AnonymousBuffer`s do not have entity associations, can be as large as you need, and can be much faster if entities are not needed for a set of components. You can create multiple `AnonymousBuffer`s with the same component type, as they are accessed via an index rather than their type.
 
 ## Systems
 Systems are ***stateless***  classes that implement `ISystem` and are passed into the constructor of a `Simulation` instance. They are initialized once when the sim is initialized, and processed sequentially once each time `Tick()` is called on the sim. This is where all logic for your ECS should exist (*it is possible to put logic in functions on your components, but that seems messy in my opinion*).
