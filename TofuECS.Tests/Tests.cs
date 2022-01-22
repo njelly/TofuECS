@@ -16,10 +16,13 @@ namespace TofuECS.Tests
                     new SomeValueSystem(),
                 }))
             {
-                s.RegisterSingletonComponent<SomeValueComponent>();
+                s.RegisterComponent<SomeValueComponent>(1);
                 s.RegisterSingletonComponent(new XorShiftRandom(1234));
 
                 s.Initialize();
+
+                var entity = s.CreateEntity();
+                s.Buffer<SomeValueComponent>().Set(entity);
 
                 // just tick for a while, doesn't really matter
                 const int numTicks = 10;
@@ -39,7 +42,7 @@ namespace TofuECS.Tests
                 s.Tick();
 
                 // this is the value we'll be verifying
-                var someValueComponent = s.GetSingletonComponent<SomeValueComponent>();
+                s.Buffer<SomeValueComponent>().Get(entity, out var someValueComponent);
                 var randValue = someValueComponent.RandomValue;
 
                 // now just keep ticking into the future, it shouldn't really matter how many times
@@ -54,7 +57,7 @@ namespace TofuECS.Tests
                 // values should be the same.
                 s.Tick();
             
-                someValueComponent = s.GetSingletonComponent<SomeValueComponent>();
+                Assert.True(s.Buffer<SomeValueComponent>().Get(entity, out someValueComponent));
                 Assert.True(someValueComponent.RandomValue == randValue);
             }
         }
@@ -163,7 +166,7 @@ namespace TofuECS.Tests
                 s.Buffer<TestComponentA>().Set(entityB);
                 s.Buffer<TestComponentB>().Set(entityB);
 
-                void validateEntitiesHaveComponents(ComponentQuery query)
+                void validateEntitiesHaveComponents(EntityComponentQuery query)
                 {
                     foreach (var entity in query.Entities)
                     {
@@ -205,6 +208,48 @@ namespace TofuECS.Tests
                 validate();
             }
         }
+        
+        [Test]
+        public void AnonymousBufferTest()
+        {
+            const int numCoordinates = 1000000;
+            
+            // This test simply creates a large number of components in an anonymous buffer, modifies them with a system, and confirms
+            // the results.
+            using (var s = new Simulation(new Tests.TestLogService(), new ISystem[] { new CoordinateSystem() }))
+            {
+                var index = s.RegisterAnonymousComponent<Coordinate>(numCoordinates);
+                s.RegisterSingletonComponent(new CoordinateBufferData
+                {
+                    Index = index,
+                });
+                s.Initialize();
+
+                const int numTicks = 10;
+                while(s.CurrentTick < numTicks)
+                    s.Tick();
+
+                var buffer = s.AnonymousBuffer<Coordinate>(index);
+                var i = 0;
+                while(buffer.Next(ref i, out var c))
+                    Assert.True(c.X == c.StartX + numTicks && c.Y == c.StartY + numTicks);
+            }
+        }
+
+        #region Test Components
+        
+        private struct Coordinate
+        {
+            public int StartX;
+            public int StartY;
+            public int X;
+            public int Y;
+        }
+
+        private struct CoordinateBufferData
+        {
+            public int Index;
+        }
 
         private struct SomeValueComponent
         {
@@ -220,6 +265,10 @@ namespace TofuECS.Tests
         private struct TestComponentB
         {
         }
+        
+        #endregion Test Components
+        
+        #region Test Systems
         
         private class SomeValueSystem : ISystem
         {
@@ -261,6 +310,38 @@ namespace TofuECS.Tests
                 someValueComponent->EventIncrementingValue++;
             }
         }
+
+        private class CoordinateSystem : ISystem
+        {
+            public unsafe void Initialize(Simulation s)
+            {
+                const int width = 1000;
+                var index = s.GetSingletonComponent<CoordinateBufferData>().Index;
+                var coordinates = s.AnonymousBuffer<Coordinate>(index);
+                var i = 0;
+                while (coordinates.NextUnsafe(ref i, out var coordinate))
+                {
+                    coordinate->X = i % width;
+                    coordinate->Y = i / width;
+                    coordinate->StartX = coordinate->X;
+                    coordinate->StartY = coordinate->Y;
+                }
+            }
+
+            public unsafe void Process(Simulation s)
+            {
+                var index = s.GetSingletonComponent<CoordinateBufferData>().Index;
+                var coordinates = s.AnonymousBuffer<Coordinate>(index);
+                var i = 0;
+                while (coordinates.NextUnsafe(ref i, out var coordinate))
+                {
+                    coordinate->X++;
+                    coordinate->Y++;
+                }
+            }
+        }
+        
+        #endregion Test Systems
 
         public class TestLogService : ILogService
         {

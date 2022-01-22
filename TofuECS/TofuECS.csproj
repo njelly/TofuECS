@@ -39,9 +39,11 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="ComponentBuffer.cs" />
-        <Compile Include="ComponentQuery.cs" />
-        <Compile Include="IComponentBuffer.cs" />
+        <Compile Include="AnonymousBuffer.cs" />
+        <Compile Include="EntityComponentBuffer.cs" />
+        <Compile Include="EntityComponentQuery.cs" />
+        <Compile Include="IAnonymousComponentBuffer.cs" />
+        <Compile Include="IEntityComponentBuffer.cs" />
         <Compile Include="Simulation.cs" />
         <Compile Include="ILogService.cs" />
         <Compile Include="ISystem.cs" />

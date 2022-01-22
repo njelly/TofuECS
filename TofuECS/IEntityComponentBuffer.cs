@@ -2,7 +2,7 @@ using System;
 
 namespace Tofunaut.TofuECS
 {
-    internal interface IComponentBuffer : IDisposable
+    internal interface IEntityComponentBuffer : IDisposable
     {
         event EventHandler<EntityEventArgs> OnComponentAdded;
         event EventHandler<EntityEventArgs> OnComponentRemoved;
