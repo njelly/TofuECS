@@ -208,6 +208,48 @@ namespace TofuECS.Tests
                 validate();
             }
         }
+        
+        [Test]
+        public void AnonymousBufferTest()
+        {
+            const int numCoordinates = 1000000;
+            
+            // This test simply creates a large number of components in an anonymous buffer, modifies them with a system, and confirms
+            // the results.
+            using (var s = new Simulation(new Tests.TestLogService(), new ISystem[] { new CoordinateSystem() }))
+            {
+                var index = s.RegisterAnonymousComponent<Coordinate>(numCoordinates);
+                s.RegisterSingletonComponent(new CoordinateBufferData
+                {
+                    Index = index,
+                });
+                s.Initialize();
+
+                const int numTicks = 10;
+                while(s.CurrentTick < numTicks)
+                    s.Tick();
+
+                var buffer = s.AnonymousBuffer<Coordinate>(index);
+                var i = 0;
+                while(buffer.Next(ref i, out var c))
+                    Assert.True(c.X == c.StartX + numTicks && c.Y == c.StartY + numTicks);
+            }
+        }
+
+        #region Test Components
+        
+        private struct Coordinate
+        {
+            public int StartX;
+            public int StartY;
+            public int X;
+            public int Y;
+        }
+
+        private struct CoordinateBufferData
+        {
+            public int Index;
+        }
 
         private struct SomeValueComponent
         {
@@ -223,6 +265,10 @@ namespace TofuECS.Tests
         private struct TestComponentB
         {
         }
+        
+        #endregion Test Components
+        
+        #region Test Systems
         
         private class SomeValueSystem : ISystem
         {
@@ -264,6 +310,38 @@ namespace TofuECS.Tests
                 someValueComponent->EventIncrementingValue++;
             }
         }
+
+        private class CoordinateSystem : ISystem
+        {
+            public unsafe void Initialize(Simulation s)
+            {
+                const int width = 1000;
+                var index = s.GetSingletonComponent<CoordinateBufferData>().Index;
+                var coordinates = s.AnonymousBuffer<Coordinate>(index);
+                var i = 0;
+                while (coordinates.NextUnsafe(ref i, out var coordinate))
+                {
+                    coordinate->X = i % width;
+                    coordinate->Y = i / width;
+                    coordinate->StartX = coordinate->X;
+                    coordinate->StartY = coordinate->Y;
+                }
+            }
+
+            public unsafe void Process(Simulation s)
+            {
+                var index = s.GetSingletonComponent<CoordinateBufferData>().Index;
+                var coordinates = s.AnonymousBuffer<Coordinate>(index);
+                var i = 0;
+                while (coordinates.NextUnsafe(ref i, out var coordinate))
+                {
+                    coordinate->X++;
+                    coordinate->Y++;
+                }
+            }
+        }
+        
+        #endregion Test Systems
 
         public class TestLogService : ILogService
         {

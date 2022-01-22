@@ -69,11 +69,11 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
-        /// Register an anonymous component with copied data from the passed-in array.
+        /// Register an anonymous component with copied data from the passed-in array. (i.e., just an array, no entity associations).
         /// </summary>
         /// <param name="components"></param>
         /// <typeparam name="TComponent"></typeparam>
-        /// <returns>The index of the anonymous component.</returns>
+        /// <returns>The index of the anonymous buffer. Use this to reference the buffer while the sim is running.</returns>
         /// <exception cref="SimulationAlreadyInitializedException"></exception>
         public int RegisterAnonymousComponent<TComponent>(TComponent[] components) where TComponent : unmanaged
         {
@@ -85,10 +85,10 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
-        /// Register an anonymous component (just an array, not associated with entities).
+        /// Register an anonymous component by creating an anonymous buffer (i.e., just an array, no entity associations).
         /// </summary>
         /// <typeparam name="TComponent"></typeparam>
-        /// <returns>The index of the anonymous component. Use this to reference the buffer while the sim is running.</returns>
+        /// <returns>The index of the anonymous buffer. Use this to reference the buffer while the sim is running.</returns>
         /// <exception cref="SimulationAlreadyInitializedException"></exception>
         public int RegisterAnonymousComponent<TComponent>(int bufferSize) where TComponent : unmanaged =>
             RegisterAnonymousComponent(new TComponent[bufferSize]);
