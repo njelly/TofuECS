@@ -5,13 +5,12 @@ namespace Tofunaut.TofuECS
 {
     public unsafe class AnonymousBuffer<TComponent> : IAnonymousComponentBuffer where TComponent : unmanaged
     {
-        public int Size { get; }
+        public int Size => UnsafeArray.GetLength(_arr);
 
         private readonly UnsafeArray* _arr;
 
         internal AnonymousBuffer(int size)
         {
-            Size = size;
             _arr = UnsafeArray.Allocate<TComponent>(size);
         }
 
