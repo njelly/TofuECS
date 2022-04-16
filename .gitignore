@@ -13,3 +13,6 @@ TofuECS.sln.DotSettings.user
 packages/
 UnsafeCollections/obj/
 UnsafeCollections/bin
+TofuECS.Utilities/bin/
+TofuECS.Utilities/bin/
+TofuECS/bin/

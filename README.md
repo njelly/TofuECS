@@ -39,6 +39,8 @@ All functions in an `ISystem` implementation, besides the required ones (`Initia
 
 When using Unity, I recommend putting your ECS code inside an assembly definition that does not allow engine references (and allows unsafe code). The ECS ought to be Unity-agnostic, and because of the type constraints on your components, there's not any use for MonoBehaviours and GameObjects in your system logic anyway.
 
+When building the dlls to use in Unity, I recommend building UnsafeCollections with the Unity configuration, and making sure the path to the UnityEngine.dll is setup correctly for you machine in the UnsafeCollections.csproj file. This provides some optimizations. When running the provided unit tests, you may need to set UnsafeCollections back to the Debug or Release_NoUnity configurations.
+
 [You can view the repo for UnsafeCollections here](https://github.com/DennisCorvers/UnsafeCollections). It was very helpful for getting TofuECS to it's current form, so thanks to the developer and for @juliolitwin for bringing it to my attention. :)
 
 The utilities included in `TofuECS.Utilities` are simply there because I thought they'd be helpful for game developers:

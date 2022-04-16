@@ -249,19 +249,39 @@ namespace TofuECS.Tests
                 s.Buffer<SomeValueComponent>().Set(e);
                 s.Tick();
                 
-                Assert.IsTrue(s.Buffer<SomeValueComponent>().Get(e, out var someValueComponent));
+                var someValueComponent = s.Buffer<SomeValueComponent>().Get(e);
+                unsafe
+                {
+                    s.Buffer<SomeValueComponent>().GetUnsafe(e);
+                }
+                
                 Assert.IsTrue(someValueComponent.IncrementingValue == 1);
                 
                 s.Destroy(e);
                 
-                Assert.IsFalse(s.Buffer<SomeValueComponent>().Get(e, out _));
+                Assert.Throws<EntityNotAssignedException<SomeValueComponent>>(() =>
+                {
+                    s.Buffer<SomeValueComponent>().Get(e);
+                });
+                
+                Assert.Throws<EntityNotAssignedException<SomeValueComponent>>(() =>
+                {
+                    unsafe
+                    {
+                        s.Buffer<SomeValueComponent>().GetUnsafe(e);
+                    }
+                });
 
                 e = s.CreateEntity();
                 s.Buffer<SomeValueComponent>().Set(e);
                 
                 s.Tick();
                 
-                Assert.IsTrue(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent));
+                someValueComponent = s.Buffer<SomeValueComponent>().Get(e);
+                unsafe
+                {
+                    s.Buffer<SomeValueComponent>().GetUnsafe(e);
+                }
                 Assert.IsTrue(someValueComponent.IncrementingValue == 1);
             } 
         }

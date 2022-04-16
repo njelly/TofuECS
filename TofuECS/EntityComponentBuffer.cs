@@ -59,6 +59,24 @@ namespace Tofunaut.TofuECS
         }
 
         /// <summary>
+        /// Gets the component assigned to the entity.
+        /// </summary>
+        /// <param name="entityId"></param>
+        /// <returns></returns>
+        /// <exception cref="EntityNotAssignedException{TComponent}">Thrown if the assignment does not exist.</exception>
+        public TComponent Get(int entityId)
+        {
+            try
+            {
+                return UnsafeArray.Get<TComponent>(_arr, _entityToIndex[entityId]);
+            }
+            catch
+            {
+                throw new EntityNotAssignedException<TComponent>(entityId);
+            }
+        }
+
+        /// <summary>
         /// Get a pointer to the component associated with the entity id.
         /// </summary>
         /// <param name="entityId">A unique entity identifier.</param>
@@ -74,6 +92,24 @@ namespace Tofunaut.TofuECS
 
             component = null;
             return false;
+        }
+        
+        /// <summary>
+        /// Gets a pointer to the component assigned to the entity.
+        /// </summary>
+        /// <param name="entityId"></param>
+        /// <returns></returns>
+        /// <exception cref="EntityNotAssignedException{TComponent}">Thrown if the assignment does not exist.</exception>
+        public TComponent* GetUnsafe(int entityId)
+        {
+            try
+            {
+                return UnsafeArray.GetPtr<TComponent>(_arr, _entityToIndex[entityId]);
+            }
+            catch
+            {
+                throw new EntityNotAssignedException<TComponent>(entityId);
+            }
         }
 
         /// <summary>
@@ -248,5 +284,16 @@ namespace Tofunaut.TofuECS
     {
         public override string Message =>
             $"Unable to complete the operation, the buffer of type {typeof(TComponent)} is full.";
+    }
+
+    public class EntityNotAssignedException<TComponent> : Exception where TComponent : unmanaged
+    {
+        public override string Message =>
+            $"The component {typeof(TComponent)} is not assigned to the entity {_entityId}";
+        private readonly int _entityId;
+        public EntityNotAssignedException(int entityId)
+        {
+            _entityId = entityId;
+        }
     }
 }
