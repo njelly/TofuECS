@@ -216,7 +216,7 @@ namespace TofuECS.Tests
             
             // This test simply creates a large number of components in an anonymous buffer, modifies them with a system, and confirms
             // the results.
-            using (var s = new Simulation(new Tests.TestLogService(), new ISystem[] { new CoordinateSystem() }))
+            using (var s = new Simulation(new TestLogService(), new ISystem[] { new CoordinateSystem() }))
             {
                 var index = s.RegisterAnonymousComponent<Coordinate>(numCoordinates);
                 s.RegisterSingletonComponent(new CoordinateBufferData
@@ -234,6 +234,36 @@ namespace TofuECS.Tests
                 while(buffer.Next(ref i, out var c))
                     Assert.True(c.X == c.StartX + numTicks && c.Y == c.StartY + numTicks);
             }
+        }
+
+        [Test]
+        public void DestroyEntityTest()
+        {
+            using (var s = new Simulation(new TestLogService(), new ISystem[] {new SomeValueSystem()}))
+            {
+                s.RegisterSingletonComponent(new XorShiftRandom(1234)); // necessary for SomeValueSystem
+                s.RegisterComponent<SomeValueComponent>(1);
+                s.Initialize();
+
+                var e = s.CreateEntity();
+                s.Buffer<SomeValueComponent>().Set(e);
+                s.Tick();
+                
+                Assert.IsTrue(s.Buffer<SomeValueComponent>().Get(e, out var someValueComponent));
+                Assert.IsTrue(someValueComponent.IncrementingValue == 1);
+                
+                s.Destroy(e);
+                
+                Assert.IsFalse(s.Buffer<SomeValueComponent>().Get(e, out _));
+
+                e = s.CreateEntity();
+                s.Buffer<SomeValueComponent>().Set(e);
+                
+                s.Tick();
+                
+                Assert.IsTrue(s.Buffer<SomeValueComponent>().Get(e, out someValueComponent));
+                Assert.IsTrue(someValueComponent.IncrementingValue == 1);
+            } 
         }
 
         #region Test Components

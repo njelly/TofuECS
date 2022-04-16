@@ -33,6 +33,9 @@
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_NoUnity|AnyCPU' ">
+      <OutputPath>bin\Release_NoUnity\</OutputPath>
+    </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />
         <Reference Include="System.Core" />
@@ -54,6 +57,10 @@
       <ProjectReference Include="..\TofuECS\TofuECS.csproj">
         <Project>{d349dd1d-b11c-48c3-b612-5b4d8858a1a5}</Project>
         <Name>TofuECS</Name>
+      </ProjectReference>
+      <ProjectReference Include="..\UnsafeCollections\UnsafeCollections.csproj">
+        <Project>{8aa5c12f-f5ca-4ba0-bc55-d9f4480dd447}</Project>
+        <Name>UnsafeCollections</Name>
       </ProjectReference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

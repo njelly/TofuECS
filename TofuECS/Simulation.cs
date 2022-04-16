@@ -178,6 +178,15 @@ namespace Tofunaut.TofuECS
             _typeToQueries.Clear();
         }
 
+        /// <summary>
+        /// Removes the entity from all component buffers.
+        /// </summary>
+        public void Destroy(int entity)
+        {
+            foreach (var buffer in _typeToComponentBuffers.Values)
+                buffer.Remove(entity);
+        }
+
         // TODO: no op on release builds?
         /// <summary>
         /// Equivalent to Log.Debug(s).
