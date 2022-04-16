@@ -35,7 +35,10 @@ namespace Tofunaut.TofuECS
         /// </summary>
         /// <param name="bufferSize">The size of the buffer, i.e, how many entities can be assigned a component at once.
         /// This cannot be changed after the buffer is created.</param>
-        public void RegisterComponent<TComponent>(int bufferSize) where TComponent : unmanaged
+        /// <param name="canExpand">Can the buffer expand if the number of components assigned to entities exceeds the
+        /// initial bufferSize? Different implementations of EntityComponentBuffer will be used based on this value.
+        /// Defaults to true.</param>
+        public void RegisterComponent<TComponent>(int bufferSize, bool canExpand = true) where TComponent : unmanaged
         {
             if (IsInitialized)
                 throw new SimulationAlreadyInitializedException();
@@ -46,7 +49,10 @@ namespace Tofunaut.TofuECS
             if (bufferSize < 1)
                 throw new InvalidBufferSizeException<TComponent>(bufferSize);
             
-            _typeToComponentBuffers.Add(typeof(TComponent), new EntityComponentBuffer<TComponent>(bufferSize));
+            if (canExpand)
+                _typeToComponentBuffers.Add(typeof(TComponent), new EntityComponentListBuffer<TComponent>(bufferSize));
+            else
+                _typeToComponentBuffers.Add(typeof(TComponent), new EntityComponentArrayBuffer<TComponent>(bufferSize));
         }
 
         /// <summary>

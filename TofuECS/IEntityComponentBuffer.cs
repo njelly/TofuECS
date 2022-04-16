@@ -2,12 +2,13 @@ using System;
 
 namespace Tofunaut.TofuECS
 {
-    internal interface IEntityComponentBuffer : IDisposable
+    public interface IEntityComponentBuffer : IDisposable
     {
-        event EventHandler<EntityEventArgs> OnComponentAdded;
-        event EventHandler<EntityEventArgs> OnComponentRemoved;
+        event Action<int> ComponentAddedToEntity;
+        event Action<int> ComponentRemovedFromEntity;
         bool HasEntityAssignment(int entityId);
         bool Remove(int entityId);
+        void GetEntityAssignments(int[] entityAssignments);
     }
 
     public class EntityEventArgs : EventArgs

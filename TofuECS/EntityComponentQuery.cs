@@ -24,8 +24,8 @@ namespace Tofunaut.TofuECS
             _parent = null;
             _entities = entities;
 
-            buffer.OnComponentAdded += OnComponentAdded;
-            buffer.OnComponentRemoved += OnComponentRemoved;
+            _buffer.ComponentAddedToEntity += OnComponentAddedToEntity;
+            _buffer.ComponentRemovedFromEntity += OnComponentRemovedFromEntity;
         }
 
         private EntityComponentQuery(EntityComponentQuery parent, IEntityComponentBuffer buffer)
@@ -40,25 +40,25 @@ namespace Tofunaut.TofuECS
                 if (buffer.HasEntityAssignment(entity))
                     _entities.Add(entity);
 
-            buffer.OnComponentAdded += OnComponentAdded;
-            buffer.OnComponentRemoved += OnComponentRemoved;
+            _buffer.ComponentAddedToEntity += OnComponentAddedToEntity;
+            _buffer.ComponentRemovedFromEntity += OnComponentRemovedFromEntity;
         }
 
-        private void OnComponentAdded(object sender, EntityEventArgs args)
+        private void OnComponentAddedToEntity(int entityId)
         {
             var p = _parent;
             while (p != null)
             {
-                if (!p._buffer.HasEntityAssignment(args.Entity))
+                if (!p._buffer.HasEntityAssignment(entityId))
                     return;
                 
                 p = p._parent;
             }
             
-            _entities.Add(args.Entity);
+            _entities.Add(entityId);
             
             foreach (var kvp in _typeToChildren)
-                kvp.Value.OnComponentAddedInternal(args.Entity);
+                kvp.Value.OnComponentAddedInternal(entityId);
         }
 
         private void OnComponentAddedInternal(int entity)
@@ -72,12 +72,12 @@ namespace Tofunaut.TofuECS
                 kvp.Value.OnComponentAddedInternal(entity);
         }
 
-        private void OnComponentRemoved(object sender, EntityEventArgs args)
+        private void OnComponentRemovedFromEntity(int entityId)
         {
-            _entities.Remove(args.Entity);
+            _entities.Remove(entityId);
 
             foreach (var kvp in _typeToChildren)
-                kvp.Value.OnComponentRemoved(sender, args);
+                kvp.Value.OnComponentRemovedFromEntity(entityId);
         }
 
         /// <summary>

@@ -43,7 +43,9 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="AnonymousBuffer.cs" />
+        <Compile Include="EntityComponentArrayBuffer.cs" />
         <Compile Include="EntityComponentBuffer.cs" />
+        <Compile Include="EntityComponentListBuffer.cs" />
         <Compile Include="EntityComponentQuery.cs" />
         <Compile Include="IAnonymousComponentBuffer.cs" />
         <Compile Include="IEntityComponentBuffer.cs" />
