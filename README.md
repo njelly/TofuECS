@@ -70,7 +70,7 @@ The utilities included in `TofuECS.Utilities` are simply there because I thought
 - Q: *"How do I rollback my simulation to a previous state?"* A: Use `GetState<TComponent>` for tracking your state and `SetState<TComponent>` when going back in time to some other state. Look at `RollbackTest()` in TofuECS.Tests.  
 
 
-- Q: *"I keep getting `BufferFullException` when running my simulation, how do I resize my buffer when I run out of space?"* A: You don't, sorry. Increase the size of your buffer when registering the component or consider some fundamental change to the structure of your `Simulation`.
+- Q: *"I keep getting `BufferFullException` when running my simulation, how do I resize my buffer when I run out of space?"* A: Make sure you're passing in `true` (or nothing at all, `true` is the default param) when calling `s.RegisterComponent<TComponent>()`. However, `AnonymousBuffer`s cannot currently be expanded.  
 
 
 - Q: *"How do I get all entities that share a set of components?"* A: use `s.Query<Foo>().And<Bar>().Entities;` to get all entities with the components `Foo` and `Bar`. You can even curry together `And<TComponent>()` as many times as you'd like! Queries are cached and automatically updated as components are added to or removed from entities.
