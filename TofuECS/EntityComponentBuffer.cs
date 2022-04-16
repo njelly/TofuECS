@@ -3,9 +3,12 @@ using System.Collections.Generic;
 
 namespace Tofunaut.TofuECS
 {
+    /// <summary>
+    /// A buffer containing the state information for the ECS.
+    /// </summary>
+    /// <typeparam name="TComponent">An unmanaged component type.</typeparam>
     public abstract unsafe class EntityComponentBuffer<TComponent> : IEntityComponentBuffer where TComponent : unmanaged
     {
-
         public event Action<int> ComponentAddedToEntity;
         public event Action<int> ComponentRemovedFromEntity;
 

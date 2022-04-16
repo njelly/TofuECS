@@ -3,10 +3,6 @@ using UnsafeCollections.Collections.Unsafe;
 
 namespace Tofunaut.TofuECS
 {
-    /// <summary>
-    /// A buffer containing the state information for the ECS. Array implementation.
-    /// </summary>
-    /// <typeparam name="TComponent">An unmanaged component type.</typeparam>
     internal unsafe class EntityComponentArrayBuffer<TComponent> : EntityComponentBuffer<TComponent> where TComponent : unmanaged
     {
         public override int Size => UnsafeArray.GetLength(_arr);
