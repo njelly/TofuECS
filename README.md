@@ -4,7 +4,7 @@ This is an entity component system (ECS) framework written in C# that can be eas
 
 ***If you just want to get started quickly by looking at some examples, here's a list of other repos using TofuECS:***
 - [TofuECS_CGOL](https://github.com/njelly/TofuECS_CGOL): An implementation of Conway's Game of Life showcasing a basic Unity project setup.
-- [TofuECS_Rogue](https://github.com/njelly/TofuECS_Rogue): A rogue-like I may work on from time to time as a practical example of a project using TofuECS.
+- [TofuECS_Boids](https://github.com/njelly/TofuECS_Boids): A 2D BOID simulation as another example of a Unity project setup.
 
 *If you are using this framework and would like to mention your open-source project here, please open an issue on this repo!*
 
