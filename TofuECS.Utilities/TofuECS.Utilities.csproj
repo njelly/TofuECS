@@ -28,7 +28,7 @@
         <DebugType>pdbonly</DebugType>
         <Optimize>true</Optimize>
         <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
+        <DefineConstants>TRACE;UNITY</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
@@ -44,6 +44,7 @@
     <ItemGroup>
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="ArrayQuickSort.cs" />
+        <Compile Include="UnityLogService.cs" />
         <Compile Include="XorShiftRandom.cs" />
     </ItemGroup>
     <ItemGroup>
@@ -51,6 +52,11 @@
         <Project>{d349dd1d-b11c-48c3-b612-5b4d8858a1a5}</Project>
         <Name>TofuECS</Name>
       </ProjectReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>..\..\..\..\..\..\Applications\Unity\Hub\Editor\2021.3.3f1\Unity.app\Contents\Managed\UnityEngine.dll</HintPath>
+      </Reference>
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

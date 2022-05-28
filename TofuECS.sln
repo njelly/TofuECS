@@ -25,8 +25,8 @@ Global
 		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release_NoUnity|Any CPU.ActiveCfg = Release|Any CPU
-		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release_NoUnity|Any CPU.Build.0 = Release|Any CPU
+		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release_NoUnity|Any CPU.ActiveCfg = Release_NoUnity|Any CPU
+		{99F08A9F-4FEA-4E7E-A76F-4C3DB0875BE0}.Release_NoUnity|Any CPU.Build.0 = Release_NoUnity|Any CPU
 		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A6D0856-DE6E-4E28-AA86-FC0482A9D806}.Release|Any CPU.Build.0 = Release|Any CPU
@@ -35,7 +35,7 @@ Global
 		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release|Any CPU.ActiveCfg = Unity|Any CPU
 		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release|Any CPU.Build.0 = Unity|Any CPU
-		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release_NoUnity|Any CPU.ActiveCfg = Release|Any CPU
-		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release_NoUnity|Any CPU.Build.0 = Release|Any CPU
+		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release_NoUnity|Any CPU.ActiveCfg = Release_NoUnity|Any CPU
+		{8AA5C12F-F5CA-4BA0-BC55-D9F4480DD447}.Release_NoUnity|Any CPU.Build.0 = Release_NoUnity|Any CPU
 	EndGlobalSection
 EndGlobal
